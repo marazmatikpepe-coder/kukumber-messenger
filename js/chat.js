@@ -1,11 +1,12 @@
 // ========================================
-// KUKUMBER MESSENGER - CHAT (С ГРУППАМИ И КАНАЛАМИ)
+// KUKUMBER MESSENGER - CHAT (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 // ========================================
 
 let currentTab = 'all';
 let selectedGroupMembers = [];
 let groupAvatarFile = null;
 let channelAvatarFile = null;
+let allUsersCache = {};
 
 // ========================================
 // ЗАГРУЗКА ЧАТОВ
@@ -44,11 +45,12 @@ function loadChats() {
         }
         
         chats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
-        renderChatsList(chats);
+        
+        await renderChatsList(chats);
     });
 }
 
-function renderChatsList(chats) {
+async function renderChatsList(chats) {
     const chatsList = document.getElementById('chats-list');
     chatsList.innerHTML = '';
     
@@ -65,10 +67,10 @@ function renderChatsList(chats) {
         return;
     }
     
-    filtered.forEach(chat => {
-        const chatItem = createChatItemElement(chat);
+    for (const chat of filtered) {
+        const chatItem = await createChatItemElement(chat);
         chatsList.appendChild(chatItem);
-    });
+    }
 }
 
 async function createChatItemElement(chat) {
@@ -83,11 +85,11 @@ async function createChatItemElement(chat) {
     
     if (chat.type === 'group') {
         name = chat.name || 'Группа';
-        avatar = chat.avatar || '👥';
+        avatar = chat.avatar || '';
         badge = '<span class="chat-type-badge">👥</span>';
     } else if (chat.type === 'channel') {
         name = chat.name || 'Канал';
-        avatar = chat.avatar || '📢';
+        avatar = chat.avatar || '';
         badge = '<span class="chat-type-badge">📢</span>';
     } else {
         const otherUserId = chat.participants?.find(id => id !== currentUser.uid);
@@ -96,19 +98,26 @@ async function createChatItemElement(chat) {
                 const userSnap = await database.ref('users/' + otherUserId).once('value');
                 const userData = userSnap.val();
                 name = userData?.username || 'Пользователь';
-                avatar = userData?.avatar || '👤';
+                avatar = userData?.avatar || '';
                 isOnline = userData?.status?.online || false;
                 chat.otherUserId = otherUserId;
                 chat.otherUser = userData;
             } catch (e) {
                 name = 'Пользователь';
-                avatar = '👤';
             }
         }
     }
     
-    const avatarStyle = avatar.startsWith('http') ? `background-image: url(${avatar}); font-size: 0;` : '';
-    const avatarContent = avatar.startsWith('http') ? '' : avatar;
+    let avatarContent = '';
+    let avatarStyle = '';
+    
+    if (avatar && avatar.startsWith('http')) {
+        avatarStyle = `background-image: url(${avatar}); background-size: cover;`;
+        avatarContent = '';
+    } else {
+        avatarContent = chat.type === 'group' ? '👥' : (chat.type === 'channel' ? '📢' : '👤');
+    }
+    
     const time = chat.lastMessageTime ? formatTime(chat.lastMessageTime) : '';
     const preview = chat.lastMessage || 'Нет сообщений';
     
@@ -139,7 +148,7 @@ async function createChatItemElement(chat) {
 function switchTab(tab) {
     currentTab = tab;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+    event.target.classList.add('active');
     loadChats();
 }
 
@@ -162,19 +171,24 @@ async function openChat(chat) {
     
     if (chat.type === 'group') {
         name = chat.name;
-        avatar = chat.avatar || '👥';
+        avatar = chat.avatar || '';
         const membersCount = chat.members ? Object.keys(chat.members).length : 0;
         status = `${membersCount} участник(ов)`;
+        
+        // Скрываем кнопки звонков для групп
         document.querySelectorAll('.call-btn').forEach(btn => btn.style.display = 'none');
         document.getElementById('message-input-area').classList.remove('hidden');
         document.getElementById('channel-footer').classList.add('hidden');
+        
     } else if (chat.type === 'channel') {
         name = chat.name;
-        avatar = chat.avatar || '📢';
+        avatar = chat.avatar || '';
         const subsCount = chat.subscribers ? Object.keys(chat.subscribers).length : 0;
         status = `${subsCount} подписчик(ов)`;
+        
         document.querySelectorAll('.call-btn').forEach(btn => btn.style.display = 'none');
         
+        // Проверяем, является ли пользователь админом
         const isAdmin = chat.admins && chat.admins[currentUser.uid];
         if (isAdmin) {
             document.getElementById('message-input-area').classList.remove('hidden');
@@ -183,10 +197,13 @@ async function openChat(chat) {
             document.getElementById('message-input-area').classList.add('hidden');
             document.getElementById('channel-footer').classList.remove('hidden');
         }
+        
     } else {
+        // Личный чат
         name = chat.otherUser?.username || 'Пользователь';
-        avatar = chat.otherUser?.avatar || '👤';
+        avatar = chat.otherUser?.avatar || '';
         status = chat.otherUser?.status?.online ? 'в сети' : 'был(а) недавно';
+        
         document.querySelectorAll('.call-btn').forEach(btn => btn.style.display = '');
         document.getElementById('message-input-area').classList.remove('hidden');
         document.getElementById('channel-footer').classList.add('hidden');
@@ -196,14 +213,22 @@ async function openChat(chat) {
     document.getElementById('chat-status').textContent = status;
     
     const chatAvatar = document.getElementById('chat-avatar');
-    if (avatar.startsWith('http')) {
+    if (avatar && avatar.startsWith('http')) {
         chatAvatar.style.backgroundImage = `url(${avatar})`;
+        chatAvatar.style.backgroundSize = 'cover';
         chatAvatar.textContent = '';
     } else {
         chatAvatar.style.backgroundImage = '';
-        chatAvatar.textContent = avatar;
+        if (chat.type === 'group') {
+            chatAvatar.textContent = '👥';
+        } else if (chat.type === 'channel') {
+            chatAvatar.textContent = '📢';
+        } else {
+            chatAvatar.textContent = '👤';
+        }
     }
     
+    // Убираем выделение со всех чатов
     document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
     
     loadMessages(chat.chatId);
@@ -250,6 +275,7 @@ async function createMessageElement(message) {
     const isSent = message.senderId === currentUser.uid;
     div.className = `message ${isSent ? 'sent' : 'received'}`;
     
+    // Показываем имя отправителя в группах и каналах
     let senderName = '';
     if (!isSent && (currentChatUser?.type === 'group' || currentChatUser?.type === 'channel')) {
         try {
@@ -321,10 +347,12 @@ function handleMessageKeyPress(event) {
     }
 }
 
-function handleTyping() {}
+function handleTyping() {
+    // Можно добавить индикатор набора текста
+}
 
 // ========================================
-// ПОИСК
+// ПОИСК ЧАТОВ
 // ========================================
 
 function searchChats() {
@@ -341,16 +369,17 @@ function searchChats() {
 
 function showNewChatDialog() {
     document.getElementById('new-chat-modal').classList.remove('hidden');
-    loadAllUsers();
+    document.getElementById('new-chat-search').value = '';
+    loadAllUsers('users-list');
 }
 
 function closeNewChatDialog() {
     document.getElementById('new-chat-modal').classList.add('hidden');
 }
 
-async function loadAllUsers() {
-    const list = document.getElementById('users-list');
-    list.innerHTML = '<div class="loading-users">Загрузка...</div>';
+async function loadAllUsers(containerId) {
+    const list = document.getElementById(containerId);
+    list.innerHTML = '<div class="loading-users">Загрузка пользователей...</div>';
     
     try {
         const snapshot = await database.ref('users').once('value');
@@ -361,21 +390,37 @@ async function loadAllUsers() {
             return;
         }
         
+        // Сохраняем в кэш
+        allUsersCache = users;
+        
         list.innerHTML = '';
+        let count = 0;
         
         Object.keys(users).forEach(userId => {
             if (userId === currentUser.uid) return;
+            
             const user = users[userId];
+            count++;
             
             const div = document.createElement('div');
             div.className = 'user-item';
+            div.setAttribute('data-userid', userId);
+            div.setAttribute('data-username', (user.username || '').toLowerCase());
+            div.setAttribute('data-email', (user.email || '').toLowerCase());
+            
             div.onclick = () => startPrivateChat(userId, user);
             
-            const avatar = user.avatar || '👤';
-            const avatarStyle = avatar.startsWith('http') ? `background-image: url(${avatar}); font-size: 0;` : '';
+            const avatar = user.avatar || '';
+            let avatarContent = '👤';
+            let avatarStyle = '';
+            
+            if (avatar && avatar.startsWith('http')) {
+                avatarStyle = `background-image: url(${avatar}); background-size: cover;`;
+                avatarContent = '';
+            }
             
             div.innerHTML = `
-                <div class="avatar" style="${avatarStyle}">${avatar.startsWith('http') ? '' : avatar}</div>
+                <div class="avatar" style="${avatarStyle}">${avatarContent}</div>
                 <div class="user-item-info">
                     <h4>${escapeHtml(user.username || 'Пользователь')}</h4>
                     <p>${escapeHtml(user.email || '')}</p>
@@ -385,20 +430,29 @@ async function loadAllUsers() {
             list.appendChild(div);
         });
         
-        if (list.children.length === 0) {
-            list.innerHTML = '<div class="no-users">Пользователей не найдено</div>';
+        if (count === 0) {
+            list.innerHTML = '<div class="no-users">Других пользователей пока нет</div>';
         }
+        
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        list.innerHTML = '<div class="no-users">Ошибка загрузки</div>';
+        console.error('Ошибка загрузки пользователей:', error);
+        list.innerHTML = '<div class="no-users">Ошибка загрузки. Попробуйте позже.</div>';
     }
 }
 
 function searchUsers() {
-    const text = document.getElementById('new-chat-search').value.toLowerCase();
-    document.querySelectorAll('#users-list .user-item').forEach(item => {
-        const name = item.textContent.toLowerCase();
-        item.style.display = name.includes(text) ? 'flex' : 'none';
+    const text = document.getElementById('new-chat-search').value.toLowerCase().trim();
+    const items = document.querySelectorAll('#users-list .user-item');
+    
+    items.forEach(item => {
+        const username = item.getAttribute('data-username') || '';
+        const email = item.getAttribute('data-email') || '';
+        
+        if (username.includes(text) || email.includes(text)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
     });
 }
 
@@ -427,11 +481,14 @@ async function startPrivateChat(otherUserId, otherUser) {
             chatId,
             type: 'private',
             otherUserId,
-            otherUser
+            otherUser,
+            participants: [currentUser.uid, otherUserId]
         });
         
+        showNotification('Чат создан!', 'success');
+        
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Ошибка создания чата:', error);
         showNotification('Ошибка создания чата', 'error');
     }
 }
@@ -464,6 +521,7 @@ function previewGroupAvatar(event) {
         reader.onload = (e) => {
             const preview = document.getElementById('group-avatar-preview');
             preview.style.backgroundImage = `url(${e.target.result})`;
+            preview.style.backgroundSize = 'cover';
             preview.textContent = '';
         };
         reader.readAsDataURL(file);
@@ -495,34 +553,47 @@ async function loadGroupMembersList() {
         const snapshot = await database.ref('users').once('value');
         const users = snapshot.val();
         
+        if (!users) {
+            list.innerHTML = '<div class="no-users">Пользователи не найдены</div>';
+            return;
+        }
+        
         list.innerHTML = '';
         
         Object.keys(users).forEach(userId => {
             if (userId === currentUser.uid) return;
+            
             const user = users[userId];
+            const isSelected = selectedGroupMembers.some(m => m.id === userId);
             
             const div = document.createElement('div');
-            div.className = 'user-item';
-            if (selectedGroupMembers.find(m => m.id === userId)) {
-                div.classList.add('selected');
-            }
+            div.className = 'user-item' + (isSelected ? ' selected' : '');
+            div.setAttribute('data-username', (user.username || '').toLowerCase());
             
             div.onclick = () => toggleGroupMember(userId, user);
             
-            const avatar = user.avatar || '👤';
-            const avatarStyle = avatar.startsWith('http') ? `background-image: url(${avatar}); font-size: 0;` : '';
+            const avatar = user.avatar || '';
+            let avatarContent = '👤';
+            let avatarStyle = '';
+            
+            if (avatar && avatar.startsWith('http')) {
+                avatarStyle = `background-image: url(${avatar}); background-size: cover;`;
+                avatarContent = '';
+            }
             
             div.innerHTML = `
-                <div class="avatar" style="${avatarStyle}">${avatar.startsWith('http') ? '' : avatar}</div>
+                <div class="avatar" style="${avatarStyle}">${avatarContent}</div>
                 <div class="user-item-info">
                     <h4>${escapeHtml(user.username || 'Пользователь')}</h4>
                 </div>
-                <span class="check-mark">${selectedGroupMembers.find(m => m.id === userId) ? '✓' : ''}</span>
+                <span class="check-mark">${isSelected ? '✓' : ''}</span>
             `;
             
             list.appendChild(div);
         });
+        
     } catch (error) {
+        console.error('Ошибка:', error);
         list.innerHTML = '<div class="no-users">Ошибка загрузки</div>';
     }
 }
@@ -533,7 +604,7 @@ function toggleGroupMember(userId, user) {
     if (index > -1) {
         selectedGroupMembers.splice(index, 1);
     } else {
-        selectedGroupMembers.push({ id: userId, ...user });
+        selectedGroupMembers.push({ id: userId, username: user.username, avatar: user.avatar });
     }
     
     renderSelectedMembers();
@@ -542,10 +613,16 @@ function toggleGroupMember(userId, user) {
 
 function renderSelectedMembers() {
     const container = document.getElementById('selected-members');
+    
+    if (selectedGroupMembers.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
     container.innerHTML = selectedGroupMembers.map(m => `
         <div class="selected-member-chip">
             <span>${escapeHtml(m.username || 'Пользователь')}</span>
-            <button onclick="removeSelectedMember('${m.id}')">&times;</button>
+            <button type="button" onclick="removeSelectedMember('${m.id}')">&times;</button>
         </div>
     `).join('');
 }
@@ -557,10 +634,10 @@ function removeSelectedMember(userId) {
 }
 
 function searchGroupMembers() {
-    const text = document.getElementById('group-members-search').value.toLowerCase();
+    const text = document.getElementById('group-members-search').value.toLowerCase().trim();
     document.querySelectorAll('#group-members-list .user-item').forEach(item => {
-        const name = item.textContent.toLowerCase();
-        item.style.display = name.includes(text) ? 'flex' : 'none';
+        const username = item.getAttribute('data-username') || '';
+        item.style.display = username.includes(text) ? 'flex' : 'none';
     });
 }
 
@@ -573,18 +650,37 @@ async function createGroup() {
         return;
     }
     
+    // Блокируем кнопку
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Создание...';
+    
     try {
         let avatarUrl = '';
+        
+        // Загружаем аватар если есть
         if (groupAvatarFile) {
-            const imgData = await uploadImageToImgBB(groupAvatarFile);
-            if (imgData) avatarUrl = imgData.url;
+            try {
+                const imgData = await uploadImageToImgBB(groupAvatarFile);
+                if (imgData && imgData.url) {
+                    avatarUrl = imgData.url;
+                }
+            } catch (e) {
+                console.log('Аватар не загружен, продолжаем без него');
+            }
         }
         
+        // Генерируем ID группы
         const chatId = 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
-        const members = { [currentUser.uid]: true };
-        selectedGroupMembers.forEach(m => members[m.id] = true);
+        // Собираем участников
+        const members = {};
+        members[currentUser.uid] = true;
+        selectedGroupMembers.forEach(m => {
+            members[m.id] = true;
+        });
         
+        // Создаём группу
         await database.ref('chats/' + chatId).set({
             type: 'group',
             name: name,
@@ -598,17 +694,23 @@ async function createGroup() {
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP
         });
         
+        // Добавляем чат всем участникам
         await database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
+        
         for (const member of selectedGroupMembers) {
             await database.ref('userChats/' + member.id + '/' + chatId).set(true);
         }
         
         closeCreateGroupDialog();
-        showNotification('Группа создана!', 'success');
+        showNotification('Группа "' + name + '" создана!', 'success');
+        loadChats();
         
     } catch (error) {
-        console.error('Ошибка:', error);
-        showNotification('Ошибка создания группы', 'error');
+        console.error('Ошибка создания группы:', error);
+        showNotification('Ошибка создания группы: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Создать группу';
     }
 }
 
@@ -624,6 +726,7 @@ function showCreateChannelDialog() {
     document.getElementById('channel-avatar-preview').style.backgroundImage = '';
     document.getElementById('channel-avatar-preview').textContent = '📢';
     document.getElementById('channel-link-hint').textContent = '';
+    document.getElementById('channel-link-hint').className = 'link-hint';
     channelAvatarFile = null;
 }
 
@@ -639,6 +742,7 @@ function previewChannelAvatar(event) {
         reader.onload = (e) => {
             const preview = document.getElementById('channel-avatar-preview');
             preview.style.backgroundImage = `url(${e.target.result})`;
+            preview.style.backgroundSize = 'cover';
             preview.textContent = '';
         };
         reader.readAsDataURL(file);
@@ -652,45 +756,78 @@ function validateChannelLink() {
     if (!link) {
         hint.textContent = '';
         hint.className = 'link-hint';
-        return;
+        return true;
     }
     
     if (!/^[a-z0-9_]+$/.test(link)) {
         hint.textContent = 'Только латинские буквы, цифры и _';
         hint.className = 'link-hint error';
-        return;
+        return false;
     }
     
     if (link.length < 3) {
         hint.textContent = 'Минимум 3 символа';
         hint.className = 'link-hint error';
-        return;
+        return false;
     }
     
-    hint.textContent = 'kukumber.com/' + link;
+    hint.textContent = '✓ kukumber.com/' + link;
     hint.className = 'link-hint success';
+    return true;
 }
 
 async function createChannel() {
     const name = document.getElementById('channel-name').value.trim();
     const description = document.getElementById('channel-description').value.trim();
     const link = document.getElementById('channel-link').value.trim().toLowerCase();
-    const isPublic = document.querySelector('input[name="channel-type"]:checked').value === 'public';
+    const typeRadio = document.querySelector('input[name="channel-type"]:checked');
+    const isPublic = typeRadio ? typeRadio.value === 'public' : true;
     
     if (!name) {
         showNotification('Введите название канала', 'error');
         return;
     }
     
+    if (link && !validateChannelLink()) {
+        showNotification('Исправьте ссылку на канал', 'error');
+        return;
+    }
+    
+    // Блокируем кнопку
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Создание...';
+    
     try {
         let avatarUrl = '';
+        
+        // Загружаем аватар если есть
         if (channelAvatarFile) {
-            const imgData = await uploadImageToImgBB(channelAvatarFile);
-            if (imgData) avatarUrl = imgData.url;
+            try {
+                const imgData = await uploadImageToImgBB(channelAvatarFile);
+                if (imgData && imgData.url) {
+                    avatarUrl = imgData.url;
+                }
+            } catch (e) {
+                console.log('Аватар не загружен, продолжаем без него');
+            }
         }
         
+        // Проверяем уникальность ссылки
+        if (link) {
+            const linkSnapshot = await database.ref('channelLinks/' + link).once('value');
+            if (linkSnapshot.exists()) {
+                showNotification('Эта ссылка уже занята', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Создать канал';
+                return;
+            }
+        }
+        
+        // Генерируем ID канала
         const chatId = 'channel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
+        // Создаём канал
         await database.ref('chats/' + chatId).set({
             type: 'channel',
             name: name,
@@ -706,18 +843,24 @@ async function createChannel() {
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP
         });
         
+        // Добавляем чат создателю
         await database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
         
+        // Сохраняем ссылку
         if (link) {
             await database.ref('channelLinks/' + link).set(chatId);
         }
         
         closeCreateChannelDialog();
-        showNotification('Канал создан!', 'success');
+        showNotification('Канал "' + name + '" создан!', 'success');
+        loadChats();
         
     } catch (error) {
-        console.error('Ошибка:', error);
-        showNotification('Ошибка создания канала', 'error');
+        console.error('Ошибка создания канала:', error);
+        showNotification('Ошибка создания канала: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Создать канал';
     }
 }
 
@@ -733,9 +876,14 @@ async function showChatInfo() {
     
     const chat = currentChatUser;
     
-    document.getElementById('info-title').textContent = 
-        chat.type === 'group' ? 'Информация о группе' :
-        chat.type === 'channel' ? 'Информация о канале' : 'Информация';
+    // Заголовок
+    if (chat.type === 'group') {
+        document.getElementById('info-title').textContent = 'Информация о группе';
+    } else if (chat.type === 'channel') {
+        document.getElementById('info-title').textContent = 'Информация о канале';
+    } else {
+        document.getElementById('info-title').textContent = 'Информация';
+    }
     
     let name = '';
     let avatar = '';
@@ -743,8 +891,8 @@ async function showChatInfo() {
     let description = '';
     
     if (chat.type === 'group') {
-        name = chat.name;
-        avatar = chat.avatar || '👥';
+        name = chat.name || 'Группа';
+        avatar = chat.avatar || '';
         const count = chat.members ? Object.keys(chat.members).length : 0;
         status = `${count} участник(ов)`;
         description = chat.description || '';
@@ -763,8 +911,8 @@ async function showChatInfo() {
         document.getElementById('delete-btn').classList.toggle('hidden', !isAdmin);
         
     } else if (chat.type === 'channel') {
-        name = chat.name;
-        avatar = chat.avatar || '📢';
+        name = chat.name || 'Канал';
+        avatar = chat.avatar || '';
         const count = chat.subscribers ? Object.keys(chat.subscribers).length : 0;
         status = chat.isPublic ? 'Публичный канал' : 'Приватный канал';
         description = chat.description || '';
@@ -783,7 +931,7 @@ async function showChatInfo() {
         
     } else {
         name = chat.otherUser?.username || 'Пользователь';
-        avatar = chat.otherUser?.avatar || '👤';
+        avatar = chat.otherUser?.avatar || '';
         status = chat.otherUser?.status?.online ? 'в сети' : 'был(а) недавно';
         
         document.getElementById('channel-stats').classList.add('hidden');
@@ -799,12 +947,19 @@ async function showChatInfo() {
     document.getElementById('info-description').textContent = description;
     
     const infoAvatar = document.getElementById('info-avatar');
-    if (avatar.startsWith('http')) {
+    if (avatar && avatar.startsWith('http')) {
         infoAvatar.style.backgroundImage = `url(${avatar})`;
+        infoAvatar.style.backgroundSize = 'cover';
         infoAvatar.textContent = '';
     } else {
         infoAvatar.style.backgroundImage = '';
-        infoAvatar.textContent = avatar;
+        if (chat.type === 'group') {
+            infoAvatar.textContent = '👥';
+        } else if (chat.type === 'channel') {
+            infoAvatar.textContent = '📢';
+        } else {
+            infoAvatar.textContent = '👤';
+        }
     }
 }
 
@@ -825,5 +980,250 @@ async function loadMembersList(members, admins) {
             if (!user) continue;
             
             const isAdmin = admins && admins[memberId];
-            const avatar = user.avatar || '👤';
-            const avatarStyle = avatar.startsWith('http') ? `background-image: url(${avatar}); font-size: 0;` : 
+            const avatar = user.avatar || '';
+            
+            let avatarContent = '👤';
+            let avatarStyle = '';
+            if (avatar && avatar.startsWith('http')) {
+                avatarStyle = `background-image: url(${avatar}); background-size: cover;`;
+                avatarContent = '';
+            }
+            
+            const div = document.createElement('div');
+            div.className = 'member-item';
+            div.innerHTML = `
+                <div class="avatar" style="${avatarStyle}">${avatarContent}</div>
+                <span class="member-name">${escapeHtml(user.username || 'Пользователь')}</span>
+                ${isAdmin ? '<span class="member-role">админ</span>' : ''}
+            `;
+            list.appendChild(div);
+        } catch (e) {
+            console.error('Ошибка загрузки участника:', e);
+        }
+    }
+}
+
+// ========================================
+// ПОДПИСКА/ОТПИСКА НА КАНАЛ
+// ========================================
+
+async function subscribeToChannel() {
+    if (!currentChatId) return;
+    
+    try {
+        await database.ref('chats/' + currentChatId + '/subscribers/' + currentUser.uid).set(true);
+        await database.ref('userChats/' + currentUser.uid + '/' + currentChatId).set(true);
+        showNotification('Вы подписались на канал', 'success');
+        closeChatInfo();
+        loadChats();
+    } catch (e) {
+        console.error('Ошибка подписки:', e);
+        showNotification('Ошибка подписки', 'error');
+    }
+}
+
+async function unsubscribeFromChannel() {
+    if (!currentChatId) return;
+    
+    if (!confirm('Отписаться от канала?')) return;
+    
+    try {
+        await database.ref('chats/' + currentChatId + '/subscribers/' + currentUser.uid).remove();
+        await database.ref('userChats/' + currentUser.uid + '/' + currentChatId).remove();
+        showNotification('Вы отписались от канала', 'info');
+        closeChatInfo();
+        closeChat();
+        loadChats();
+    } catch (e) {
+        console.error('Ошибка отписки:', e);
+        showNotification('Ошибка', 'error');
+    }
+}
+
+async function leaveChat() {
+    if (!currentChatId) return;
+    
+    if (!confirm('Вы уверены, что хотите покинуть?')) return;
+    
+    try {
+        if (currentChatUser.type === 'group') {
+            await database.ref('chats/' + currentChatId + '/members/' + currentUser.uid).remove();
+        }
+        await database.ref('userChats/' + currentUser.uid + '/' + currentChatId).remove();
+        showNotification('Вы покинули чат', 'info');
+        closeChatInfo();
+        closeChat();
+        loadChats();
+    } catch (e) {
+        console.error('Ошибка:', e);
+        showNotification('Ошибка', 'error');
+    }
+}
+
+async function deleteChat() {
+    if (!currentChatId) return;
+    
+    if (!confirm('Удалить чат? Это действие нельзя отменить.')) return;
+    
+    try {
+        await database.ref('chats/' + currentChatId).remove();
+        await database.ref('messages/' + currentChatId).remove();
+        await database.ref('userChats/' + currentUser.uid + '/' + currentChatId).remove();
+        showNotification('Чат удален', 'info');
+        closeChatInfo();
+        closeChat();
+        loadChats();
+    } catch (e) {
+        console.error('Ошибка удаления:', e);
+        showNotification('Ошибка удаления', 'error');
+    }
+}
+
+// ========================================
+// ДОБАВЛЕНИЕ УЧАСТНИКОВ В ГРУППУ
+// ========================================
+
+function showAddMembersDialog() {
+    document.getElementById('add-members-modal').classList.remove('hidden');
+    document.getElementById('add-members-search').value = '';
+    loadAddMembersList();
+}
+
+function closeAddMembersDialog() {
+    document.getElementById('add-members-modal').classList.add('hidden');
+}
+
+async function loadAddMembersList() {
+    const list = document.getElementById('add-members-list');
+    list.innerHTML = '<div class="loading-users">Загрузка...</div>';
+    
+    const currentMembers = currentChatUser?.members || {};
+    
+    try {
+        const snapshot = await database.ref('users').once('value');
+        const users = snapshot.val();
+        
+        if (!users) {
+            list.innerHTML = '<div class="no-users">Пользователи не найдены</div>';
+            return;
+        }
+        
+        list.innerHTML = '';
+        let count = 0;
+        
+        Object.keys(users).forEach(userId => {
+            // Пропускаем уже добавленных
+            if (currentMembers[userId]) return;
+            
+            const user = users[userId];
+            count++;
+            
+            const div = document.createElement('div');
+            div.className = 'user-item';
+            div.setAttribute('data-username', (user.username || '').toLowerCase());
+            div.onclick = () => addMemberToGroup(userId);
+            
+            const avatar = user.avatar || '';
+            let avatarContent = '👤';
+            let avatarStyle = '';
+            if (avatar && avatar.startsWith('http')) {
+                avatarStyle = `background-image: url(${avatar}); background-size: cover;`;
+                avatarContent = '';
+            }
+            
+            div.innerHTML = `
+                <div class="avatar" style="${avatarStyle}">${avatarContent}</div>
+                <div class="user-item-info">
+                    <h4>${escapeHtml(user.username || 'Пользователь')}</h4>
+                </div>
+            `;
+            
+            list.appendChild(div);
+        });
+        
+        if (count === 0) {
+            list.innerHTML = '<div class="no-users">Нет пользователей для добавления</div>';
+        }
+        
+    } catch (e) {
+        console.error('Ошибка:', e);
+        list.innerHTML = '<div class="no-users">Ошибка загрузки</div>';
+    }
+}
+
+async function addMemberToGroup(userId) {
+    if (!currentChatId) return;
+    
+    try {
+        await database.ref('chats/' + currentChatId + '/members/' + userId).set(true);
+        await database.ref('userChats/' + userId + '/' + currentChatId).set(true);
+        showNotification('Участник добавлен', 'success');
+        closeAddMembersDialog();
+        
+        // Обновляем данные текущего чата
+        const chatSnap = await database.ref('chats/' + currentChatId).once('value');
+        currentChatUser = { chatId: currentChatId, ...chatSnap.val() };
+        
+        showChatInfo();
+    } catch (e) {
+        console.error('Ошибка:', e);
+        showNotification('Ошибка добавления', 'error');
+    }
+}
+
+function searchAddMembers() {
+    const text = document.getElementById('add-members-search').value.toLowerCase().trim();
+    document.querySelectorAll('#add-members-list .user-item').forEach(item => {
+        const username = item.getAttribute('data-username') || '';
+        item.style.display = username.includes(text) ? 'flex' : 'none';
+    });
+}
+
+// ========================================
+// ЭМОДЗИ И УТИЛИТЫ
+// ========================================
+
+function toggleEmojiPicker() {
+    document.getElementById('emoji-picker').classList.toggle('hidden');
+}
+
+function insertEmoji(emoji) {
+    const input = document.getElementById('message-input');
+    input.value += emoji;
+    input.focus();
+}
+
+function openLightbox(url) {
+    document.getElementById('lightbox-image').src = url;
+    document.getElementById('image-lightbox').classList.remove('hidden');
+}
+
+function closeLightbox() {
+    document.getElementById('image-lightbox').classList.add('hidden');
+}
+
+// Закрытие эмодзи при клике вне
+document.addEventListener('click', (e) => {
+    const picker = document.getElementById('emoji-picker');
+    const emojiBtn = document.querySelector('.btn-icon[title="Эмодзи"]');
+    
+    if (picker && !picker.classList.contains('hidden')) {
+        if (!picker.contains(e.target) && e.target !== emojiBtn) {
+            picker.classList.add('hidden');
+        }
+    }
+});
+
+// Закрытие по Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeLightbox();
+        closeImagePreview();
+        closeNewChatDialog();
+        closeCreateGroupDialog();
+        closeCreateChannelDialog();
+        closeChatInfo();
+        closeAddMembersDialog();
+        document.getElementById('emoji-picker').classList.add('hidden');
+    }
+});
