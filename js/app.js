@@ -1,54 +1,41 @@
-// ========================================
-// KUKUMBER MESSENGER - MAIN APP
-// ========================================
-
-// Конфигурация Firebase (С ПРАВИЛЬНЫМ DATABASE URL ДЛЯ EUROPE)
-const firebaseConfig = {
+// KUKUMBER MESSENGER - APP
+var firebaseConfig = {
     apiKey: "AIzaSyBYNJPhbs8YaNAhdjSUIdj1Ok433N19GJM",
     authDomain: "kukumber-messenger.firebaseapp.com",
     databaseURL: "https://kukumber-messenger-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "kukumber-messenger",
     storageBucket: "kukumber-messenger.firebasestorage.app",
     messagingSenderId: "738635892211",
-    appId: "1:738635892211:web:4bf2a45b562d22e41b3e86",
-    measurementId: "G-LNYKV37CHX"
+    appId: "1:738635892211:web:4bf2a45b562d22e41b3e86"
 };
 
-// Инициализация Firebase
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const database = firebase.database();
+var auth = firebase.auth();
+var database = firebase.database();
 
-// Глобальные переменные
-let currentUser = null;
-let currentUserData = null;
-let currentChatId = null;
-let currentChatUser = null;
-let messagesListener = null;
-let typingTimeout = null;
-let callTimer = null;
-let callSeconds = 0;
+var currentUser = null;
+var currentUserData = null;
+var currentChatId = null;
+var currentChatUser = null;
+var messagesListener = null;
+var currentTab = 'chats';
 
-// ========================================
-// ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
-// ========================================
-
-window.addEventListener('load', () => {
-    // Показать экран загрузки 2 секунды
-    setTimeout(() => {
+// === INIT ===
+window.addEventListener('load', function() {
+    setTimeout(function() {
         document.getElementById('loading-screen').classList.add('hidden');
         checkAuthState();
     }, 2000);
+    
+    initEmojiPicker();
 });
 
-// Проверка состояния авторизации
 function checkAuthState() {
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(function(user) {
         if (user) {
             currentUser = user;
             loadUserData();
             showMainScreen();
-            updateOnlineStatus(true);
             initializePeer();
         } else {
             currentUser = null;
@@ -57,10 +44,6 @@ function checkAuthState() {
         }
     });
 }
-
-// ========================================
-// ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
-// ========================================
 
 function showAuthScreen() {
     document.getElementById('auth-screen').classList.remove('hidden');
@@ -71,165 +54,167 @@ function showMainScreen() {
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('main-screen').classList.remove('hidden');
     loadChats();
+    loadReels();
 }
-
-// ========================================
-// ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
-// ========================================
 
 function loadUserData() {
     if (!currentUser) return;
     
-    database.ref('users/' + currentUser.uid).on('value', snapshot => {
+    database.ref('users/' + currentUser.uid).on('value', function(snapshot) {
         currentUserData = snapshot.val();
         if (currentUserData) {
-            document.getElementById('current-username').textContent = currentUserData.username || 'Пользователь';
-            
-            // Показать аватарку
-            const avatarEl = document.getElementById('user-avatar');
-            if (currentUserData.avatar) {
-                avatarEl.style.backgroundImage = `url(${currentUserData.avatar})`;
-                avatarEl.textContent = '';
+            updateUserDisplay();
+        }
+    });
+}
+
+function updateUserDisplay() {
+    if (!currentUserData) return;
+    
+    var username = currentUserData.username || 'Пользователь';
+    var avatar = currentUserData.avatar || '';
+    
+    document.getElementById('current-username').textContent = username;
+    document.getElementById('settings-username').textContent = username;
+    document.getElementById('settings-email').textContent = currentUserData.email || '';
+    document.getElementById('settings-phone').textContent = currentUserData.phone || '';
+    
+    var avatarEls = ['user-avatar', 'settings-avatar'];
+    avatarEls.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            if (avatar) {
+                el.style.backgroundImage = 'url(' + avatar + ')';
+                el.style.backgroundSize = 'cover';
+                el.textContent = '';
             } else {
-                avatarEl.style.backgroundImage = '';
-                avatarEl.textContent = '🥒';
+                el.style.backgroundImage = '';
+                el.textContent = '🥒';
             }
         }
     });
 }
 
-// Обновление онлайн статуса
-function updateOnlineStatus(online) {
-    if (!currentUser) return;
+// === TABS ===
+function switchToTab(tabName) {
+    currentTab = tabName;
     
-    const userStatusRef = database.ref('users/' + currentUser.uid + '/status');
+    // Hide all tabs
+    document.getElementById('chats-tab').classList.add('hidden');
+    document.getElementById('reels-tab').classList.add('hidden');
+    document.getElementById('settings-tab').classList.add('hidden');
     
-    userStatusRef.set({
-        online: online,
-        lastSeen: firebase.database.ServerValue.TIMESTAMP
-    });
-
-    // При отключении
-    if (online) {
-        userStatusRef.onDisconnect().set({
-            online: false,
-            lastSeen: firebase.database.ServerValue.TIMESTAMP
-        });
+    // Deactivate all nav items
+    document.getElementById('nav-chats').classList.remove('active');
+    document.getElementById('nav-reels').classList.remove('active');
+    document.getElementById('nav-settings').classList.remove('active');
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    document.getElementById('nav-' + tabName).classList.add('active');
+    
+    // Load content
+    if (tabName === 'reels') {
+        loadReels();
+    } else if (tabName === 'settings') {
+        updateUserDisplay();
     }
+    
+    // Close sidebar on mobile
+    closeSidebar();
 }
 
-// ========================================
-// УТИЛИТЫ
-// ========================================
-
-// Форматирование времени
-function formatTime(timestamp) {
-    if (!timestamp) return '';
-    
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    
-    // Меньше минуты
-    if (diff < 60000) return 'только что';
-    
-    // Меньше часа
-    if (diff < 3600000) {
-        const mins = Math.floor(diff / 60000);
-        return mins + ' мин. назад';
-    }
-    
-    // Сегодня
-    if (date.toDateString() === now.toDateString()) {
-        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    // Вчера
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) {
-        return 'вчера ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    // Другие дни
-    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+// === SIDEBAR ===
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
 }
 
-// Форматирование статуса
-function formatStatus(status) {
-    if (!status) return 'был(а) недавно';
-    
-    if (status.online) return 'в сети';
-    
-    if (status.lastSeen) {
-        return 'был(а) ' + formatTime(status.lastSeen);
-    }
-    
-    return 'был(а) недавно';
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
 }
 
-// Генерация ID чата
-function generateChatId(userId1, userId2) {
-    return userId1 < userId2 ? `${userId1}_${userId2}` : `${userId2}_${userId1}`;
-}
-
-// Экранирование HTML
+// === UTILITIES ===
 function escapeHtml(text) {
-    const div = document.createElement('div');
+    if (!text) return '';
+    var div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// ========================================
-// УВЕДОМЛЕНИЯ
-// ========================================
-
-function showNotification(message, type = 'info') {
-    const container = document.getElementById('notifications-container');
+function formatTime(timestamp) {
+    if (!timestamp) return '';
+    var date = new Date(timestamp);
+    var now = new Date();
+    var diff = now - date;
     
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
+    if (diff < 60000) return 'сейчас';
+    if (diff < 3600000) return Math.floor(diff / 60000) + ' мин';
     
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '❌';
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
     
-    notification.innerHTML = `
-        <span class="notification-icon">${icon}</span>
-        <span>${message}</span>
-    `;
-    
-    container.appendChild(notification);
-    
-    // Удалить через 4 секунды
-    setTimeout(() => {
-        notification.style.animation = 'slideIn 0.3s ease reverse';
-        setTimeout(() => notification.remove(), 300);
-    }, 4000);
+    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
 }
 
-// ========================================
-// МОБИЛЬНАЯ АДАПТАЦИЯ
-// ========================================
-
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('open');
+function generateChatId(userId1, userId2) {
+    return userId1 < userId2 ? userId1 + '_' + userId2 : userId2 + '_' + userId1;
 }
 
-function closeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.remove('open');
+function showNotification(message, type) {
+    type = type || 'info';
+    var container = document.getElementById('notifications-container');
+    var notif = document.createElement('div');
+    notif.className = 'notification ' + type;
+    notif.textContent = message;
+    container.appendChild(notif);
+    setTimeout(function() { notif.remove(); }, 3000);
 }
 
-// Закрыть боковую панель при клике вне её
-document.addEventListener('click', (e) => {
-    const sidebar = document.getElementById('sidebar');
-    const menuBtn = document.querySelector('.mobile-menu-btn');
-    
-    if (sidebar && sidebar.classList.contains('open') && 
-        !sidebar.contains(e.target) && 
-        menuBtn && !menuBtn.contains(e.target)) {
-        closeSidebar();
+// === EMOJI ===
+function initEmojiPicker() {
+    var emojis = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👎','❤️','🔥','✨','🎉','🥒','💚','🌿','🍀','🌱','👋','🙏','😊','😍','🤣','😘','😜','🙄','😴','🤮','💪','🎂','🎁','🎄','☀️','🌙','⭐','🌈'];
+    var grid = document.querySelector('.emoji-grid');
+    if (grid) {
+        grid.innerHTML = '';
+        emojis.forEach(function(emoji) {
+            var span = document.createElement('span');
+            span.textContent = emoji;
+            span.onclick = function() { insertEmoji(emoji); };
+            grid.appendChild(span);
+        });
+    }
+}
+
+function toggleEmojiPicker() {
+    document.getElementById('emoji-picker').classList.toggle('hidden');
+}
+
+function insertEmoji(emoji) {
+    var input = document.getElementById('message-input');
+    input.value += emoji;
+    input.focus();
+}
+
+// Close emoji on outside click
+document.addEventListener('click', function(e) {
+    var picker = document.getElementById('emoji-picker');
+    if (picker && !picker.classList.contains('hidden')) {
+        if (!picker.contains(e.target) && !e.target.closest('.btn-icon')) {
+            picker.classList.add('hidden');
+        }
     }
 });
+
+// ESC to close modals
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAllModals();
+    }
+});
+
+function closeAllModals() {
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function(m) { m.classList.add('hidden'); });
+    document.getElementById('emoji-picker').classList.add('hidden');
+}
