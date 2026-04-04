@@ -5,24 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#228B22">
-    <title>Kukumber - Мессенджер</title>
+    <title>Kukumber</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥒</text></svg>">
 </head>
 <body>
-    <!-- Экран загрузки -->
+    <!-- ЗАГРУЗКА -->
     <div id="loading-screen" class="loading-screen">
         <div class="logo-container">
             <div class="cucumber-logo">🥒</div>
             <h1>Kukumber</h1>
             <p class="loading-text">Свежее общение...</p>
-            <div class="loading-dots">
-                <span></span><span></span><span></span>
-            </div>
+            <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
     </div>
 
-    <!-- Экран авторизации -->
+    <!-- АВТОРИЗАЦИЯ -->
     <div id="auth-screen" class="auth-screen hidden">
         <div class="auth-container">
             <div class="auth-logo">
@@ -30,207 +28,362 @@
                 <h1>Kukumber</h1>
                 <p class="tagline">Свежее общение каждый день</p>
             </div>
-
-            <!-- Форма входа -->
             <div id="login-form" class="auth-form">
                 <h2>Вход</h2>
-                <div class="input-group">
-                    <input type="email" id="login-email" placeholder="Email" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="login-password" placeholder="Пароль" required>
-                </div>
+                <input type="email" id="login-email" placeholder="Email">
+                <input type="password" id="login-password" placeholder="Пароль">
                 <button onclick="login()" class="btn-primary">Войти</button>
-                <p class="switch-form">Нет аккаунта? <a onclick="showRegister()">Зарегистрироваться</a></p>
+                <p class="switch-form">Нет аккаунта? <a onclick="showRegister()">Регистрация</a></p>
             </div>
-
-            <!-- Форма регистрации -->
             <div id="register-form" class="auth-form hidden">
                 <h2>Регистрация</h2>
-                <div class="input-group">
-                    <input type="text" id="reg-username" placeholder="Имя пользователя" required>
-                </div>
-                <div class="input-group">
-                    <input type="email" id="reg-email" placeholder="Email" required>
-                </div>
-                <div class="input-group">
-                    <input type="tel" id="reg-phone" placeholder="Телефон (необязательно)">
-                </div>
-                <div class="input-group">
-                    <input type="password" id="reg-password" placeholder="Пароль (минимум 6 символов)" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="reg-password-confirm" placeholder="Подтвердите пароль" required>
-                </div>
+                <input type="text" id="reg-username" placeholder="Имя пользователя">
+                <input type="email" id="reg-email" placeholder="Email">
+                <input type="tel" id="reg-phone" placeholder="Телефон (необязательно)">
+                <input type="password" id="reg-password" placeholder="Пароль (мин. 6 символов)">
+                <input type="password" id="reg-password-confirm" placeholder="Подтвердите пароль">
                 <button onclick="register()" class="btn-primary">Создать аккаунт</button>
-                <p class="switch-form">Уже есть аккаунт? <a onclick="showLogin()">Войти</a></p>
+                <p class="switch-form">Есть аккаунт? <a onclick="showLogin()">Войти</a></p>
             </div>
         </div>
     </div>
 
-    <!-- Главный экран мессенджера -->
+    <!-- ГЛАВНЫЙ ЭКРАН -->
     <div id="main-screen" class="main-screen hidden">
-        <div class="messenger-container">
-            <!-- Боковая панель -->
-            <aside class="sidebar" id="sidebar">
-                <div class="sidebar-header">
-                    <div class="user-info">
-                        <label for="avatar-input" class="avatar-label">
+        
+        <!-- === ВКЛАДКА ЧАТЫ === -->
+        <div id="chats-tab" class="tab-content">
+            <div class="app-container">
+                <!-- Боковая панель -->
+                <aside class="sidebar" id="sidebar">
+                    <div class="sidebar-header">
+                        <div class="user-info" onclick="switchToTab('settings')">
                             <div class="avatar" id="user-avatar">🥒</div>
-                            <div class="avatar-edit">📷</div>
-                        </label>
-                        <input type="file" id="avatar-input" accept="image/*" onchange="handleAvatarChange(event)" style="display: none;">
-                        <div class="user-details">
-                            <h3 id="current-username">Пользователь</h3>
-                            <span class="status online">В сети</span>
-                        </div>
-                    </div>
-                    <button onclick="logout()" class="btn-logout" title="Выйти">🚪</button>
-                </div>
-
-                <div class="search-bar">
-                    <input type="text" id="search-chats" placeholder="🔍 Поиск..." oninput="searchChats()">
-                </div>
-
-                <!-- Кнопки создания -->
-                <div class="create-buttons">
-                    <button onclick="showNewChatDialog()" class="btn-create" title="Личный чат">
-                        <span>💬</span>
-                        <span>Чат</span>
-                    </button>
-                    <button onclick="showCreateGroupDialog()" class="btn-create" title="Группа">
-                        <span>👥</span>
-                        <span>Группа</span>
-                    </button>
-                    <button onclick="showCreateChannelDialog()" class="btn-create" title="Канал">
-                        <span>📢</span>
-                        <span>Канал</span>
-                    </button>
-                </div>
-
-                <!-- Вкладки -->
-                <div class="chat-tabs">
-                    <button class="tab-btn active" onclick="switchTab('all')">Все</button>
-                    <button class="tab-btn" onclick="switchTab('private')">Личные</button>
-                    <button class="tab-btn" onclick="switchTab('groups')">Группы</button>
-                    <button class="tab-btn" onclick="switchTab('channels')">Каналы</button>
-                </div>
-
-                <div class="chats-list" id="chats-list">
-                    <div class="empty-chats">
-                        <p>Пока нет чатов</p>
-                        <p>Создайте чат, группу или канал</p>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Область чата -->
-            <main class="chat-area">
-                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-
-                <div id="no-chat-selected" class="no-chat">
-                    <div class="cucumber-large">🥒</div>
-                    <h2>Выберите чат</h2>
-                    <p>Начните общение с друзьями</p>
-                </div>
-
-                <div id="active-chat" class="active-chat hidden">
-                    <!-- Шапка чата -->
-                    <div class="chat-header">
-                        <button class="back-btn" onclick="closeChat()">←</button>
-                        <div class="chat-user-info" onclick="showChatInfo()">
-                            <div class="avatar" id="chat-avatar">👤</div>
-                            <div>
-                                <h3 id="chat-username">Пользователь</h3>
-                                <span class="chat-status" id="chat-status">был(а) недавно</span>
+                            <div class="user-details">
+                                <h3 id="current-username">Пользователь</h3>
+                                <span class="status online">В сети</span>
                             </div>
                         </div>
-                        <div class="chat-actions">
-                            <button onclick="startVoiceCall()" class="btn-icon call-btn" title="Аудиозвонок">📞</button>
-                            <button onclick="startVideoCall()" class="btn-icon call-btn" title="Видеозвонок">📹</button>
-                            <button onclick="showChatInfo()" class="btn-icon" title="Инфо">ℹ️</button>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" id="search-chats" placeholder="🔍 Поиск..." oninput="searchChats()">
+                    </div>
+                    <div class="create-buttons">
+                        <button onclick="showNewChatDialog()" class="btn-create"><span>💬</span><span>Чат</span></button>
+                        <button onclick="showCreateGroupDialog()" class="btn-create"><span>👥</span><span>Группа</span></button>
+                        <button onclick="showCreateChannelDialog()" class="btn-create"><span>📢</span><span>Канал</span></button>
+                    </div>
+                    <div class="chats-list" id="chats-list">
+                        <div class="empty-chats"><p>Нет чатов</p></div>
+                    </div>
+                </aside>
+
+                <!-- Область чата -->
+                <main class="chat-area" id="chat-area">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                    
+                    <div id="no-chat-selected" class="no-chat">
+                        <div class="cucumber-large">🥒</div>
+                        <h2>Выберите чат</h2>
+                    </div>
+                    
+                    <div id="active-chat" class="active-chat hidden">
+                        <div class="chat-header">
+                            <button class="back-btn" onclick="closeChat()">←</button>
+                            <div class="chat-user-info" onclick="showChatInfo()">
+                                <div class="avatar" id="chat-avatar">👤</div>
+                                <div>
+                                    <h3 id="chat-username">Пользователь</h3>
+                                    <span id="chat-status">был(а) недавно</span>
+                                </div>
+                            </div>
+                            <div class="chat-actions">
+                                <button onclick="startVoiceCall()" class="btn-icon call-btn">📞</button>
+                                <button onclick="startVideoCall()" class="btn-icon call-btn">📹</button>
+                            </div>
+                        </div>
+                        <div class="messages-container" id="messages-container"></div>
+                        <div class="message-input-area" id="message-input-area">
+                            <label for="file-input" class="btn-icon">📎</label>
+                            <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)" style="display:none;">
+                            <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="handleMessageKeyPress(event)">
+                            <button onclick="toggleEmojiPicker()" class="btn-icon">😊</button>
+                            <button onclick="sendMessage()" class="btn-send">➤</button>
+                        </div>
+                        <div class="channel-footer hidden" id="channel-footer">
+                            <p>Только админы могут писать</p>
+                        </div>
+                        <div id="emoji-picker" class="emoji-picker hidden">
+                            <div class="emoji-grid"></div>
                         </div>
                     </div>
+                </main>
+            </div>
+        </div>
 
-                    <!-- Сообщения -->
-                    <div class="messages-container" id="messages-container"></div>
+        <!-- === ВКЛАДКА РЕЕЛСЫ === -->
+        <div id="reels-tab" class="tab-content hidden">
+            <div class="reels-container">
+                <div class="reels-header">
+                    <h2>🎬 Реелсы</h2>
+                    <button onclick="showCreateReelModal()" class="btn-create-reel">+ Создать</button>
+                </div>
+                <div class="reels-tabs">
+                    <button class="reel-tab-btn active" onclick="switchReelsTab('feed')">Лента</button>
+                    <button class="reel-tab-btn" onclick="switchReelsTab('my')">Мои</button>
+                    <button class="reel-tab-btn" onclick="switchReelsTab('liked')">Понравилось</button>
+                </div>
+                <div id="reels-feed" class="reels-feed">
+                    <!-- Реелсы загрузятся сюда -->
+                </div>
+            </div>
+        </div>
 
-                    <!-- Индикатор набора -->
-                    <div class="typing-indicator hidden" id="typing-indicator">
-                        <span id="typing-username">Пользователь</span> печатает...
+        <!-- === ВКЛАДКА НАСТРОЙКИ === -->
+        <div id="settings-tab" class="tab-content hidden">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h2>⚙️ Настройки</h2>
+                </div>
+                
+                <!-- Профиль -->
+                <div class="settings-profile" onclick="showEditProfileModal()">
+                    <div class="settings-avatar" id="settings-avatar">🥒</div>
+                    <div class="settings-profile-info">
+                        <h3 id="settings-username">Пользователь</h3>
+                        <p id="settings-email">email@example.com</p>
+                        <p id="settings-phone"></p>
                     </div>
+                    <span class="arrow">›</span>
+                </div>
 
-                    <!-- Поле ввода -->
-                    <div class="message-input-area" id="message-input-area">
-                        <label for="file-input" class="btn-icon attach-btn" title="Прикрепить">📎</label>
-                        <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)" style="display: none;">
-                        
-                        <input type="text" id="message-input" placeholder="Сообщение..." 
-                               onkeypress="handleMessageKeyPress(event)" oninput="handleTyping()">
-                        
-                        <button onclick="toggleEmojiPicker()" class="btn-icon" title="Эмодзи">😊</button>
-                        <button onclick="sendMessage()" class="btn-send" title="Отправить">➤</button>
+                <!-- Пункты настроек -->
+                <div class="settings-section">
+                    <div class="settings-item" onclick="showNotificationSettings()">
+                        <span class="settings-icon">🔔</span>
+                        <span>Уведомления</span>
+                        <span class="arrow">›</span>
                     </div>
-
-                    <!-- Только для каналов (если не админ) -->
-                    <div class="channel-footer hidden" id="channel-footer">
-                        <p>Только администраторы могут отправлять сообщения</p>
+                    <div class="settings-item" onclick="showPrivacySettings()">
+                        <span class="settings-icon">🔒</span>
+                        <span>Конфиденциальность</span>
+                        <span class="arrow">›</span>
                     </div>
-
-                    <!-- Эмодзи -->
-                    <div id="emoji-picker" class="emoji-picker hidden">
-                        <div class="emoji-list">
-                            <span onclick="insertEmoji('😀')">😀</span>
-                            <span onclick="insertEmoji('😂')">😂</span>
-                            <span onclick="insertEmoji('🥰')">🥰</span>
-                            <span onclick="insertEmoji('😎')">😎</span>
-                            <span onclick="insertEmoji('🤔')">🤔</span>
-                            <span onclick="insertEmoji('😢')">😢</span>
-                            <span onclick="insertEmoji('😡')">😡</span>
-                            <span onclick="insertEmoji('👍')">👍</span>
-                            <span onclick="insertEmoji('👎')">👎</span>
-                            <span onclick="insertEmoji('❤️')">❤️</span>
-                            <span onclick="insertEmoji('🔥')">🔥</span>
-                            <span onclick="insertEmoji('✨')">✨</span>
-                            <span onclick="insertEmoji('🎉')">🎉</span>
-                            <span onclick="insertEmoji('🥒')">🥒</span>
-                            <span onclick="insertEmoji('💚')">💚</span>
-                            <span onclick="insertEmoji('🌿')">🌿</span>
-                            <span onclick="insertEmoji('🍀')">🍀</span>
-                            <span onclick="insertEmoji('🌱')">🌱</span>
-                            <span onclick="insertEmoji('👋')">👋</span>
-                            <span onclick="insertEmoji('🙏')">🙏</span>
-                        </div>
+                    <div class="settings-item" onclick="showThemeSettings()">
+                        <span class="settings-icon">🎨</span>
+                        <span>Оформление</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showLanguageSettings()">
+                        <span class="settings-icon">🌍</span>
+                        <span>Язык</span>
+                        <span class="settings-value">Русский</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showStorageSettings()">
+                        <span class="settings-icon">💾</span>
+                        <span>Данные и память</span>
+                        <span class="arrow">›</span>
                     </div>
                 </div>
-            </main>
+
+                <div class="settings-section">
+                    <div class="settings-item" onclick="showAbout()">
+                        <span class="settings-icon">ℹ️</span>
+                        <span>О приложении</span>
+                        <span class="settings-value">v1.0</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showHelp()">
+                        <span class="settings-icon">❓</span>
+                        <span>Помощь</span>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item danger" onclick="logout()">
+                        <span class="settings-icon">🚪</span>
+                        <span>Выйти из аккаунта</span>
+                    </div>
+                </div>
+
+                <div class="settings-footer">
+                    <p>Kukumber Messenger</p>
+                    <p>Свежее общение каждый день 🥒</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- НИЖНЯЯ НАВИГАЦИЯ -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <button onclick="switchToTab('chats')" class="nav-item active" id="nav-chats">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">Чаты</span>
+            </button>
+            <button onclick="switchToTab('reels')" class="nav-item" id="nav-reels">
+                <span class="nav-icon">🎬</span>
+                <span class="nav-label">Реелсы</span>
+            </button>
+            <button onclick="switchToTab('settings')" class="nav-item" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Настройки</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    
+    <!-- Новый чат -->
+    <div id="new-chat-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>💬 Новый чат</h3><button onclick="closeNewChatDialog()" class="btn-close">×</button></div>
+            <input type="text" id="new-chat-search" placeholder="Поиск..." oninput="searchUsers()">
+            <div id="users-list" class="users-list"></div>
         </div>
     </div>
 
-    <!-- Модальное окно видеозвонка -->
+    <!-- Создать группу -->
+    <div id="create-group-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>👥 Группа</h3><button onclick="closeCreateGroupDialog()" class="btn-close">×</button></div>
+            <div id="group-step-1">
+                <div class="avatar-upload"><div class="avatar-preview" id="group-avatar-preview">👥</div><label>Загрузить фото<input type="file" accept="image/*" onchange="previewGroupAvatar(event)" style="display:none;"></label></div>
+                <input type="text" id="group-name" placeholder="Название группы">
+                <textarea id="group-description" placeholder="Описание"></textarea>
+                <button onclick="goToGroupStep2()" class="btn-primary">Далее</button>
+            </div>
+            <div id="group-step-2" class="hidden">
+                <p>Добавьте участников:</p>
+                <input type="text" id="group-members-search" placeholder="Поиск..." oninput="searchGroupMembers()">
+                <div id="selected-members" class="selected-members"></div>
+                <div id="group-members-list" class="users-list"></div>
+                <div class="modal-buttons"><button onclick="goToGroupStep1()" class="btn-secondary">Назад</button><button onclick="createGroup()" class="btn-primary">Создать</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Создать канал -->
+    <div id="create-channel-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>📢 Канал</h3><button onclick="closeCreateChannelDialog()" class="btn-close">×</button></div>
+            <div class="avatar-upload"><div class="avatar-preview" id="channel-avatar-preview">📢</div><label>Загрузить фото<input type="file" accept="image/*" onchange="previewChannelAvatar(event)" style="display:none;"></label></div>
+            <input type="text" id="channel-name" placeholder="Название канала">
+            <textarea id="channel-description" placeholder="Описание"></textarea>
+            <div class="channel-type-options">
+                <label><input type="radio" name="channel-type" value="public" checked> 🌍 Публичный</label>
+                <label><input type="radio" name="channel-type" value="private"> 🔒 Приватный</label>
+            </div>
+            <input type="text" id="channel-link" placeholder="Ссылка (например: mychannel)" oninput="validateChannelLink()">
+            <p id="channel-link-hint" class="hint"></p>
+            <button onclick="createChannel()" class="btn-primary">Создать</button>
+        </div>
+    </div>
+
+    <!-- Информация о чате -->
+    <div id="chat-info-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="info-title">Информация</h3><button onclick="closeChatInfo()" class="btn-close">×</button></div>
+            <div class="chat-info-body">
+                <div class="info-avatar" id="info-avatar">👤</div>
+                <h2 id="info-name">Имя</h2>
+                <p id="info-status"></p>
+                <p id="info-description"></p>
+                <div id="channel-stats" class="hidden"><span id="subscribers-count">0</span> подписчиков</div>
+                <div id="group-members-section" class="hidden">
+                    <h4>Участники (<span id="members-count">0</span>)</h4>
+                    <button onclick="showAddMembersDialog()" id="add-member-btn" class="btn-small">+ Добавить</button>
+                    <div id="info-members-list"></div>
+                </div>
+                <div class="info-actions">
+                    <button id="leave-btn" onclick="leaveChat()" class="btn-danger hidden">Покинуть</button>
+                    <button id="subscribe-btn" onclick="subscribeToChannel()" class="btn-primary hidden">Подписаться</button>
+                    <button id="unsubscribe-btn" onclick="unsubscribeFromChannel()" class="btn-secondary hidden">Отписаться</button>
+                    <button id="delete-btn" onclick="deleteChat()" class="btn-danger hidden">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Добавить участников -->
+    <div id="add-members-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Добавить участников</h3><button onclick="closeAddMembersDialog()" class="btn-close">×</button></div>
+            <input type="text" id="add-members-search" placeholder="Поиск..." oninput="searchAddMembers()">
+            <div id="add-members-list" class="users-list"></div>
+        </div>
+    </div>
+
+    <!-- Создать реелс -->
+    <div id="create-reel-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>🎬 Новый реелс</h3><button onclick="closeCreateReelModal()" class="btn-close">×</button></div>
+            <div class="reel-upload-area" id="reel-upload-area" onclick="document.getElementById('reel-file-input').click()">
+                <span>📹</span>
+                <p>Нажмите чтобы выбрать видео или фото</p>
+                <input type="file" id="reel-file-input" accept="image/*,video/*" onchange="previewReelMedia(event)" style="display:none;">
+            </div>
+            <div id="reel-preview" class="reel-preview hidden"></div>
+            <textarea id="reel-caption" placeholder="Описание..." maxlength="500"></textarea>
+            <div class="reel-options">
+                <label><input type="checkbox" id="reel-comments-enabled" checked> Разрешить комментарии</label>
+            </div>
+            <button onclick="publishReel()" class="btn-primary">Опубликовать</button>
+        </div>
+    </div>
+
+    <!-- Редактировать профиль -->
+    <div id="edit-profile-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Редактировать профиль</h3><button onclick="closeEditProfileModal()" class="btn-close">×</button></div>
+            <div class="avatar-upload">
+                <div class="avatar-preview" id="edit-avatar-preview">🥒</div>
+                <label>Изменить фото<input type="file" id="edit-avatar-input" accept="image/*" onchange="previewEditAvatar(event)" style="display:none;"></label>
+            </div>
+            <input type="text" id="edit-username" placeholder="Имя пользователя">
+            <input type="text" id="edit-bio" placeholder="О себе">
+            <button onclick="saveProfile()" class="btn-primary">Сохранить</button>
+        </div>
+    </div>
+
+    <!-- Просмотр реелса -->
+    <div id="view-reel-modal" class="modal hidden">
+        <div class="reel-viewer">
+            <button class="reel-close-btn" onclick="closeViewReelModal()">×</button>
+            <div class="reel-media" id="reel-media-container"></div>
+            <div class="reel-info">
+                <div class="reel-author">
+                    <div class="avatar" id="reel-author-avatar">👤</div>
+                    <span id="reel-author-name">Автор</span>
+                </div>
+                <p id="reel-caption-view"></p>
+            </div>
+            <div class="reel-actions-bar">
+                <button onclick="likeReel()" class="reel-action" id="like-reel-btn">❤️ <span id="reel-likes-count">0</span></button>
+                <button onclick="showReelComments()" class="reel-action">💬 <span id="reel-comments-count">0</span></button>
+                <button onclick="shareReel()" class="reel-action">↗️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Звонок -->
     <div id="call-modal" class="modal hidden">
         <div class="call-container">
-            <div class="call-header">
-                <h3 id="call-username">Звонок...</h3>
-                <span id="call-status">Соединение...</span>
-                <span id="call-timer" class="call-timer">00:00</span>
-            </div>
+            <div class="call-header"><h3 id="call-username">Звонок</h3><span id="call-status">Соединение...</span><span id="call-timer">00:00</span></div>
             <div class="video-container">
                 <video id="remote-video" autoplay playsinline></video>
                 <video id="local-video" autoplay playsinline muted></video>
-                <div id="call-avatar" class="call-avatar hidden">
-                    <div class="avatar-large">👤</div>
-                </div>
+                <div id="call-avatar" class="call-avatar"><div class="avatar-large">👤</div></div>
             </div>
             <div class="call-controls">
-                <button onclick="toggleMute()" class="btn-call" id="mute-btn" title="Микрофон">🎤</button>
-                <button onclick="toggleVideo()" class="btn-call" id="video-btn" title="Камера">📹</button>
-                <button onclick="endCall()" class="btn-call btn-end-call" title="Завершить">📵</button>
+                <button onclick="toggleMute()" class="btn-call" id="mute-btn">🎤</button>
+                <button onclick="toggleVideo()" class="btn-call" id="video-btn">📹</button>
+                <button onclick="endCall()" class="btn-call btn-end-call">📵</button>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно входящего звонка -->
+    <!-- Входящий звонок -->
     <div id="incoming-call-modal" class="modal hidden">
         <div class="incoming-call-container">
             <div class="incoming-call-avatar">👤</div>
@@ -243,191 +396,37 @@
         </div>
     </div>
 
-    <!-- Модальное окно нового личного чата -->
-    <div id="new-chat-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>💬 Новый чат</h3>
-                <button onclick="closeNewChatDialog()" class="btn-close">✕</button>
-            </div>
-            <input type="text" id="new-chat-search" placeholder="Поиск пользователя..." oninput="searchUsers()">
-            <div id="users-list" class="users-list">
-                <div class="loading-users">Загрузка...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно создания группы -->
-    <div id="create-group-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>👥 Создать группу</h3>
-                <button onclick="closeCreateGroupDialog()" class="btn-close">✕</button>
-            </div>
-            
-            <div class="create-group-step" id="group-step-1">
-                <div class="group-avatar-upload">
-                    <label for="group-avatar-input" class="group-avatar-label">
-                        <div class="group-avatar-preview" id="group-avatar-preview">👥</div>
-                        <span>Добавить фото</span>
-                    </label>
-                    <input type="file" id="group-avatar-input" accept="image/*" onchange="previewGroupAvatar(event)" style="display: none;">
-                </div>
-                <input type="text" id="group-name" placeholder="Название группы" maxlength="50">
-                <textarea id="group-description" placeholder="Описание (необязательно)" maxlength="200"></textarea>
-                <button onclick="goToGroupStep2()" class="btn-primary">Далее</button>
-            </div>
-            
-            <div class="create-group-step hidden" id="group-step-2">
-                <p class="step-title">Добавьте участников:</p>
-                <input type="text" id="group-members-search" placeholder="Поиск..." oninput="searchGroupMembers()">
-                <div id="selected-members" class="selected-members"></div>
-                <div id="group-members-list" class="users-list"></div>
-                <div class="modal-footer">
-                    <button onclick="goToGroupStep1()" class="btn-secondary">Назад</button>
-                    <button onclick="createGroup()" class="btn-primary">Создать группу</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно создания канала -->
-    <div id="create-channel-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>📢 Создать канал</h3>
-                <button onclick="closeCreateChannelDialog()" class="btn-close">✕</button>
-            </div>
-            
-            <div class="group-avatar-upload">
-                <label for="channel-avatar-input" class="group-avatar-label">
-                    <div class="group-avatar-preview" id="channel-avatar-preview">📢</div>
-                    <span>Добавить фото</span>
-                </label>
-                <input type="file" id="channel-avatar-input" accept="image/*" onchange="previewChannelAvatar(event)" style="display: none;">
-            </div>
-            
-            <input type="text" id="channel-name" placeholder="Название канала" maxlength="50">
-            <textarea id="channel-description" placeholder="Описание канала" maxlength="500"></textarea>
-            
-            <div class="channel-type-selector">
-                <label class="channel-type">
-                    <input type="radio" name="channel-type" value="public" checked>
-                    <span class="type-icon">🌍</span>
-                    <span class="type-info">
-                        <strong>Публичный</strong>
-                        <small>Любой может найти и подписаться</small>
-                    </span>
-                </label>
-                <label class="channel-type">
-                    <input type="radio" name="channel-type" value="private">
-                    <span class="type-icon">🔒</span>
-                    <span class="type-info">
-                        <strong>Приватный</strong>
-                        <small>Только по приглашению</small>
-                    </span>
-                </label>
-            </div>
-            
-            <input type="text" id="channel-link" placeholder="Ссылка: kukumber.com/channel/" maxlength="30" oninput="validateChannelLink()">
-            <p class="link-hint" id="channel-link-hint"></p>
-            
-            <button onclick="createChannel()" class="btn-primary">Создать канал</button>
-        </div>
-    </div>
-
-    <!-- Модальное окно информации о чате/группе/канале -->
-    <div id="chat-info-modal" class="modal hidden">
-        <div class="modal-content chat-info-content">
-            <div class="modal-header">
-                <h3 id="info-title">Информация</h3>
-                <button onclick="closeChatInfo()" class="btn-close">✕</button>
-            </div>
-            
-            <div class="chat-info-body">
-                <div class="info-avatar" id="info-avatar">👤</div>
-                <h2 id="info-name">Название</h2>
-                <p id="info-status" class="info-status"></p>
-                <p id="info-description" class="info-description"></p>
-                
-                <!-- Статистика для каналов -->
-                <div id="channel-stats" class="channel-stats hidden">
-                    <div class="stat">
-                        <span class="stat-value" id="subscribers-count">0</span>
-                        <span class="stat-label">подписчиков</span>
-                    </div>
-                </div>
-                
-                <!-- Участники группы -->
-                <div id="group-members-section" class="members-section hidden">
-                    <div class="section-header">
-                        <h4>Участники (<span id="members-count">0</span>)</h4>
-                        <button onclick="showAddMembersDialog()" class="btn-add-member" id="add-member-btn">+ Добавить</button>
-                    </div>
-                    <div id="info-members-list" class="members-list"></div>
-                </div>
-                
-                <!-- Действия -->
-                <div class="info-actions">
-                    <button id="leave-btn" onclick="leaveChat()" class="btn-danger hidden">Покинуть</button>
-                    <button id="subscribe-btn" onclick="subscribeToChannel()" class="btn-primary hidden">Подписаться</button>
-                    <button id="unsubscribe-btn" onclick="unsubscribeFromChannel()" class="btn-secondary hidden">Отписаться</button>
-                    <button id="delete-btn" onclick="deleteChat()" class="btn-danger hidden">Удалить</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно добавления участников -->
-    <div id="add-members-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Добавить участников</h3>
-                <button onclick="closeAddMembersDialog()" class="btn-close">✕</button>
-            </div>
-            <input type="text" id="add-members-search" placeholder="Поиск..." oninput="searchAddMembers()">
-            <div id="add-members-list" class="users-list"></div>
-        </div>
-    </div>
-
-    <!-- Модальное окно предпросмотра изображения -->
+    <!-- Предпросмотр изображения -->
     <div id="image-preview-modal" class="modal hidden">
         <div class="image-preview-container">
-            <div class="image-preview-header">
-                <h3>Отправить изображение</h3>
-                <button onclick="closeImagePreview()" class="btn-close">✕</button>
-            </div>
-            <div class="image-preview-body">
-                <img id="preview-image" src="" alt="Preview">
-            </div>
-            <div class="image-preview-footer">
-                <input type="text" id="image-caption" placeholder="Подпись...">
-                <button onclick="confirmImageSend()" class="btn-primary">Отправить</button>
-            </div>
+            <div class="modal-header"><h3>Отправить</h3><button onclick="closeImagePreview()" class="btn-close">×</button></div>
+            <img id="preview-image" src="">
+            <input type="text" id="image-caption" placeholder="Подпись...">
+            <button onclick="confirmImageSend()" class="btn-primary">Отправить</button>
         </div>
     </div>
 
     <!-- Lightbox -->
     <div id="image-lightbox" class="image-lightbox hidden" onclick="closeLightbox()">
-        <img id="lightbox-image" src="" alt="Image">
+        <img id="lightbox-image" src="">
     </div>
 
     <!-- Уведомления -->
     <div id="notifications-container" class="notifications-container"></div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-    <!-- PeerJS -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
-    <!-- Наши скрипты -->
+    <!-- Scripts -->
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/calls.js"></script>
     <script src="js/upload.js"></script>
+    <script src="js/reels.js"></script>
+    <script src="js/settings.js"></script>
 </body>
 </html>
