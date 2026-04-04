@@ -8,6 +8,8 @@ let currentCall = null;
 let incomingCall = null;
 let isVideoEnabled = true;
 let isAudioEnabled = true;
+let callTimer = null;
+let callSeconds = 0;
 
 // ========================================
 // ИНИЦИАЛИЗАЦИЯ PEERJS
@@ -17,41 +19,92 @@ function initializePeer() {
     if (peer) return;
     if (!currentUser) return;
     
-    peer = new Peer(currentUser.uid, {
-        config: {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
-            ]
-        }
-    });
+    try {
+        peer = new Peer(currentUser.uid, {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' }
+                ]
+            }
+        });
 
-    peer.on('open', (id) => {
-        console.log('PeerJS подключен, ID:', id);
-    });
+        peer.on('open', (id) => {
+            console.log('PeerJS подключен, ID:', id);
+        });
 
-    peer.on('call', (call) => {
-        console.log('Входящий звонок от:', call.peer);
-        handleIncomingCall(call);
-    });
+        peer.on('call', (call) => {
+            console.log('Входящий звонок от:', call.peer);
+            handleIncomingCall(call);
+        });
 
-    peer.on('error', (error) => {
-        console.error('PeerJS ошибка:', error);
+        peer.on('error', (error) => {
+            console.error('PeerJS ошибка:', error);
+            // Не показываем ошибку пользователю при потере соединения
+            if (error.type === 'peer-unavailable') {
+                showNotification('Пользователь недоступен', 'error');
+            }
+            endCall();
+        });
         
-        if (error.type === 'peer-unavailable') {
-            showNotification('Пользователь недоступен', 'error');
-        } else {
-            showNotification('Ошибка соединения', 'error');
-        }
-        
-        endCall();
-    });
+        peer.on('disconnected', () => {
+            console.log('PeerJS отключен');
+            // Пытаемся переподключиться
+            if (peer && !peer.destroyed) {
+                setTimeout(() => {
+                    try {
+                        peer.reconnect();
+                    } catch (e) {
+                        console.log('Не удалось переподключиться');
+                    }
+                }, 3000);
+            }
+        });
+    } catch (e) {
+        console.error('Ошибка инициализации PeerJS:', e);
+    }
+}
+
+// ========================================
+// ТАЙМЕР ЗВОНКА
+// ========================================
+
+function startCallTimer() {
+    callSeconds = 0;
+    updateCallTimerDisplay();
     
-    peer.on('disconnected', () => {
-        console.log('PeerJS отключен, переподключаем...');
-        peer.reconnect();
-    });
+    if (callTimer) {
+        clearInterval(callTimer);
+    }
+    
+    callTimer = setInterval(() => {
+        callSeconds++;
+        updateCallTimerDisplay();
+    }, 1000);
+}
+
+function stopCallTimer() {
+    if (callTimer) {
+        clearInterval(callTimer);
+        callTimer = null;
+    }
+    callSeconds = 0;
+    
+    const timerEl = document.getElementById('call-timer');
+    if (timerEl) {
+        timerEl.textContent = '00:00';
+    }
+}
+
+function updateCallTimerDisplay() {
+    const mins = Math.floor(callSeconds / 60).toString().padStart(2, '0');
+    const secs = (callSeconds % 60).toString().padStart(2, '0');
+    
+    const timerEl = document.getElementById('call-timer');
+    if (timerEl) {
+        timerEl.textContent = `${mins}:${secs}`;
+    }
 }
 
 // ========================================
@@ -72,7 +125,18 @@ async function startCall(withVideo) {
         return;
     }
     
+    // Проверяем тип чата
+    if (currentChatUser.type === 'group' || currentChatUser.type === 'channel') {
+        showNotification('Звонки доступны только в личных чатах', 'info');
+        return;
+    }
+    
     initializePeer();
+    
+    if (!peer) {
+        showNotification('Ошибка подключения', 'error');
+        return;
+    }
     
     try {
         // Запрашиваем доступ к медиа
@@ -88,17 +152,28 @@ async function startCall(withVideo) {
         showCallModal(withVideo);
         
         // Показываем локальное видео
+        const localVideo = document.getElementById('local-video');
+        if (localVideo) {
+            localVideo.srcObject = localStream;
+        }
+        
         if (withVideo) {
-            document.getElementById('local-video').srcObject = localStream;
             document.getElementById('call-avatar').classList.add('hidden');
         } else {
             document.getElementById('call-avatar').classList.remove('hidden');
         }
         
         // Получаем ID собеседника
-        const otherUserId = currentChatUser.odUserId;
+        const otherUserId = currentChatUser.otherUserId;
         
-        document.getElementById('call-username').textContent = currentChatUser.username || 'Пользователь';
+        if (!otherUserId) {
+            showNotification('Не удалось определить собеседника', 'error');
+            endCall();
+            return;
+        }
+        
+        const chatUsername = document.getElementById('chat-username');
+        document.getElementById('call-username').textContent = chatUsername ? chatUsername.textContent : 'Пользователь';
         document.getElementById('call-status').textContent = 'Вызов...';
         
         // Звоним
@@ -109,7 +184,12 @@ async function startCall(withVideo) {
             }
         });
         
-        setupCallListeners(currentCall);
+        if (currentCall) {
+            setupCallListeners(currentCall);
+        } else {
+            showNotification('Не удалось начать звонок', 'error');
+            endCall();
+        }
         
     } catch (error) {
         console.error('Ошибка начала звонка:', error);
@@ -137,11 +217,15 @@ function handleIncomingCall(call) {
     const isVideo = call.metadata?.isVideo || false;
     
     // Показываем модальное окно входящего звонка
-    document.getElementById('incoming-call-username').textContent = callerName;
-    document.getElementById('incoming-call-type').textContent = isVideo ? 'Видеозвонок' : 'Аудиозвонок';
-    document.getElementById('incoming-call-modal').classList.remove('hidden');
+    const usernameEl = document.getElementById('incoming-call-username');
+    const typeEl = document.getElementById('incoming-call-type');
+    const modal = document.getElementById('incoming-call-modal');
     
-    // Воспроизводим звук звонка (опционально)
+    if (usernameEl) usernameEl.textContent = callerName;
+    if (typeEl) typeEl.textContent = isVideo ? 'Видеозвонок' : 'Аудиозвонок';
+    if (modal) modal.classList.remove('hidden');
+    
+    // Воспроизводим звук звонка
     playRingtone();
 }
 
@@ -161,14 +245,19 @@ async function acceptCall() {
         isAudioEnabled = true;
         
         // Скрываем окно входящего звонка
-        document.getElementById('incoming-call-modal').classList.add('hidden');
+        const incomingModal = document.getElementById('incoming-call-modal');
+        if (incomingModal) incomingModal.classList.add('hidden');
         stopRingtone();
         
         // Показываем окно звонка
         showCallModal(isVideo);
         
+        const localVideo = document.getElementById('local-video');
+        if (localVideo) {
+            localVideo.srcObject = localStream;
+        }
+        
         if (isVideo) {
-            document.getElementById('local-video').srcObject = localStream;
             document.getElementById('call-avatar').classList.add('hidden');
         } else {
             document.getElementById('call-avatar').classList.remove('hidden');
@@ -193,11 +282,14 @@ async function acceptCall() {
 
 function rejectCall() {
     if (incomingCall) {
-        incomingCall.close();
+        try {
+            incomingCall.close();
+        } catch (e) {}
         incomingCall = null;
     }
     
-    document.getElementById('incoming-call-modal').classList.add('hidden');
+    const modal = document.getElementById('incoming-call-modal');
+    if (modal) modal.classList.add('hidden');
     stopRingtone();
 }
 
@@ -206,10 +298,17 @@ function rejectCall() {
 // ========================================
 
 function setupCallListeners(call) {
+    if (!call) return;
+    
     call.on('stream', (remoteStream) => {
         console.log('Получен удалённый поток');
-        document.getElementById('remote-video').srcObject = remoteStream;
-        document.getElementById('call-status').textContent = 'Подключено';
+        const remoteVideo = document.getElementById('remote-video');
+        if (remoteVideo) {
+            remoteVideo.srcObject = remoteStream;
+        }
+        
+        const statusEl = document.getElementById('call-status');
+        if (statusEl) statusEl.textContent = 'Подключено';
         
         // Запускаем таймер
         startCallTimer();
@@ -222,7 +321,6 @@ function setupCallListeners(call) {
     
     call.on('error', (error) => {
         console.error('Ошибка звонка:', error);
-        showNotification('Ошибка во время звонка', 'error');
         endCall();
     });
 }
@@ -234,28 +332,32 @@ function setupCallListeners(call) {
 function toggleMute() {
     if (!localStream) return;
     
-    const audioTrack = localStream.getAudioTracks()[0];
-    if (audioTrack) {
+    const audioTracks = localStream.getAudioTracks();
+    if (audioTracks.length > 0) {
         isAudioEnabled = !isAudioEnabled;
-        audioTrack.enabled = isAudioEnabled;
+        audioTracks.forEach(track => track.enabled = isAudioEnabled);
         
         const btn = document.getElementById('mute-btn');
-        btn.textContent = isAudioEnabled ? '🎤' : '🔇';
-        btn.classList.toggle('muted', !isAudioEnabled);
+        if (btn) {
+            btn.textContent = isAudioEnabled ? '🎤' : '🔇';
+            btn.classList.toggle('muted', !isAudioEnabled);
+        }
     }
 }
 
 function toggleVideo() {
     if (!localStream) return;
     
-    const videoTrack = localStream.getVideoTracks()[0];
-    if (videoTrack) {
+    const videoTracks = localStream.getVideoTracks();
+    if (videoTracks.length > 0) {
         isVideoEnabled = !isVideoEnabled;
-        videoTrack.enabled = isVideoEnabled;
+        videoTracks.forEach(track => track.enabled = isVideoEnabled);
         
         const btn = document.getElementById('video-btn');
-        btn.textContent = isVideoEnabled ? '📹' : '📷';
-        btn.classList.toggle('muted', !isVideoEnabled);
+        if (btn) {
+            btn.textContent = isVideoEnabled ? '📹' : '📷';
+            btn.classList.toggle('muted', !isVideoEnabled);
+        }
     }
 }
 
@@ -265,40 +367,112 @@ function endCall() {
     
     // Закрываем звонок
     if (currentCall) {
-        currentCall.close();
+        try {
+            currentCall.close();
+        } catch (e) {}
         currentCall = null;
     }
     
     // Останавливаем медиа потоки
     if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
+        localStream.getTracks().forEach(track => {
+            try {
+                track.stop();
+            } catch (e) {}
+        });
         localStream = null;
     }
     
     // Очищаем видео элементы
-    document.getElementById('local-video').srcObject = null;
-    document.getElementById('remote-video').srcObject = null;
+    const localVideo = document.getElementById('local-video');
+    const remoteVideo = document.getElementById('remote-video');
+    if (localVideo) localVideo.srcObject = null;
+    if (remoteVideo) remoteVideo.srcObject = null;
     
     // Скрываем модальное окно
-    document.getElementById('call-modal').classList.add('hidden');
+    const modal = document.getElementById('call-modal');
+    if (modal) modal.classList.add('hidden');
     
     // Сбрасываем состояние
     isVideoEnabled = true;
     isAudioEnabled = true;
     
-    document.getElementById('mute-btn').textContent = '🎤';
-    document.getElementById('mute-btn').classList.remove('muted');
-    document.getElementById('video-btn').textContent = '📹';
-    document.getElementById('video-btn').classList.remove('muted');
+    const muteBtn = document.getElementById('mute-btn');
+    const videoBtn = document.getElementById('video-btn');
+    
+    if (muteBtn) {
+        muteBtn.textContent = '🎤';
+        muteBtn.classList.remove('muted');
+    }
+    if (videoBtn) {
+        videoBtn.textContent = '📹';
+        videoBtn.classList.remove('muted');
+    }
 }
 
 function showCallModal(isVideo) {
-    document.getElementById('call-modal').classList.remove('hidden');
-    document.getElementById('video-btn').style.display = isVideo ? 'flex' : 'none';
+    const modal = document.getElementById('call-modal');
+    if (modal) modal.classList.remove('hidden');
     
-    if (!isVideo) {
-        document.getElementById('local-video').style.display = 'none';
-    } else {
-        document.getElementById('local-video').style.display = 'block';
+    const videoBtn = document.getElementById('video-btn');
+    if (videoBtn) videoBtn.style.display = isVideo ? 'flex' : 'none';
+    
+    const localVideo = document.getElementById('local-video');
+    if (localVideo) localVideo.style.display = isVideo ? 'block' : 'none';
+}
+
+// ========================================
+// ЗВУК ЗВОНКА
+// ========================================
+
+let ringtoneAudio = null;
+let ringtoneContext = null;
+
+function playRingtone() {
+    try {
+        // Используем Web Audio API для простого звука
+        ringtoneContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playBeep() {
+            if (!ringtoneContext) return;
+            
+            const oscillator = ringtoneContext.createOscillator();
+            const gainNode = ringtoneContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ringtoneContext.destination);
+            
+            oscillator.frequency.value = 440;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+            
+            oscillator.start();
+            
+            setTimeout(() => {
+                oscillator.stop();
+            }, 200);
+        }
+        
+        playBeep();
+        ringtoneAudio = setInterval(playBeep, 1000);
+        
+        // Останавливаем через 30 секунд
+        setTimeout(stopRingtone, 30000);
+        
+    } catch (e) {
+        console.log('Не удалось воспроизвести звук:', e);
+    }
+}
+
+function stopRingtone() {
+    if (ringtoneAudio) {
+        clearInterval(ringtoneAudio);
+        ringtoneAudio = null;
+    }
+    if (ringtoneContext) {
+        try {
+            ringtoneContext.close();
+        } catch (e) {}
+        ringtoneContext = null;
     }
 }
