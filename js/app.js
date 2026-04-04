@@ -2,11 +2,11 @@
 // KUKUMBER MESSENGER - MAIN APP
 // ========================================
 
-// Конфигурация Firebase (ПОЛНАЯ ВЕРСИЯ С DATABASE URL)
+// Конфигурация Firebase (С ПРАВИЛЬНЫМ DATABASE URL ДЛЯ EUROPE)
 const firebaseConfig = {
     apiKey: "AIzaSyBYNJPhbs8YaNAhdjSUIdj1Ok433N19GJM",
     authDomain: "kukumber-messenger.firebaseapp.com",
-    databaseURL: "https://kukumber-messenger-default-rtdb.firebaseio.com",
+    databaseURL: "https://kukumber-messenger-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "kukumber-messenger",
     storageBucket: "kukumber-messenger.firebasestorage.app",
     messagingSenderId: "738635892211",
