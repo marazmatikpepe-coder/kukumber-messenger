@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#228B22">
     <title>Kukumber</title>
@@ -66,12 +66,13 @@
                         </div>
                     </div>
                     <div class="search-bar">
-                        <input type="text" id="search-chats" placeholder="🔍 Поиск..." oninput="searchChats()">
+                        <input type="text" id="search-chats" placeholder="🔍 Поиск по чатам..." oninput="searchChats()">
                     </div>
                     <div class="create-buttons">
                         <button onclick="showNewChatDialog()" class="btn-create"><span>💬</span><span>Чат</span></button>
                         <button onclick="showCreateGroupDialog()" class="btn-create"><span>👥</span><span>Группа</span></button>
                         <button onclick="showCreateChannelDialog()" class="btn-create"><span>📢</span><span>Канал</span></button>
+                        <button onclick="showGlobalSearch()" class="btn-create"><span>🔍</span><span>Найти</span></button>
                     </div>
                     <div class="chats-list" id="chats-list">
                         <div class="empty-chats"><p>Нет чатов</p></div>
@@ -106,7 +107,9 @@
                         <div class="message-input-area" id="message-input-area">
                             <label for="file-input" class="btn-icon">📎</label>
                             <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)" style="display:none;">
-                            <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="handleMessageKeyPress(event)">
+                            <button id="voice-record-btn" class="btn-icon">🎙️</button>
+                            <button id="video-record-btn" class="btn-icon">📹</button>
+                            <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="handleMessageKeyPress(event)" oninput="onTyping()">
                             <button onclick="toggleEmojiPicker()" class="btn-icon">😊</button>
                             <button onclick="sendMessage()" class="btn-send">➤</button>
                         </div>
@@ -133,9 +136,7 @@
                     <button class="reel-tab-btn" onclick="switchReelsTab('my')">Мои</button>
                     <button class="reel-tab-btn" onclick="switchReelsTab('liked')">Понравилось</button>
                 </div>
-                <div id="reels-feed" class="reels-feed">
-                    <!-- Реелсы загрузятся сюда -->
-                </div>
+                <div id="reels-feed" class="reels-feed"></div>
             </div>
         </div>
 
@@ -151,13 +152,11 @@
                     <div class="settings-avatar" id="settings-avatar">🥒</div>
                     <div class="settings-profile-info">
                         <h3 id="settings-username">Пользователь</h3>
-                        <p id="settings-email">email@example.com</p>
                         <p id="settings-phone"></p>
                     </div>
                     <span class="arrow">›</span>
                 </div>
 
-                <!-- Пункты настроек -->
                 <div class="settings-section">
                     <div class="settings-item" onclick="showNotificationSettings()">
                         <span class="settings-icon">🔔</span>
@@ -233,12 +232,21 @@
     </div>
 
     <!-- МОДАЛЬНЫЕ ОКНА -->
-    
-    <!-- Новый чат -->
+
+    <!-- Глобальный поиск и добавление в контакты -->
+    <div id="global-search-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header"><h3>🔍 Поиск пользователей</h3><button onclick="closeGlobalSearch()" class="btn-close">×</button></div>
+            <input type="text" id="global-search-input" placeholder="Имя" oninput="searchGlobalUsers()">
+            <div id="global-users-list" class="users-list"></div>
+        </div>
+    </div>
+
+    <!-- Новый чат (только контакты) -->
     <div id="new-chat-modal" class="modal hidden">
         <div class="modal-content">
-            <div class="modal-header"><h3>💬 Новый чат</h3><button onclick="closeNewChatDialog()" class="btn-close">×</button></div>
-            <input type="text" id="new-chat-search" placeholder="Поиск..." oninput="searchUsers()">
+            <div class="modal-header"><h3>💬 Новый чат (из контактов)</h3><button onclick="closeNewChatDialog()" class="btn-close">×</button></div>
+            <input type="text" id="new-chat-search" placeholder="Поиск среди контактов..." oninput="searchContacts()">
             <div id="users-list" class="users-list"></div>
         </div>
     </div>
@@ -254,7 +262,7 @@
                 <button onclick="goToGroupStep2()" class="btn-primary">Далее</button>
             </div>
             <div id="group-step-2" class="hidden">
-                <p>Добавьте участников:</p>
+                <p>Добавьте участников (из контактов):</p>
                 <input type="text" id="group-members-search" placeholder="Поиск..." oninput="searchGroupMembers()">
                 <div id="selected-members" class="selected-members"></div>
                 <div id="group-members-list" class="users-list"></div>
@@ -305,7 +313,7 @@
         </div>
     </div>
 
-    <!-- Добавить участников -->
+    <!-- Добавить участников в группу -->
     <div id="add-members-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header"><h3>Добавить участников</h3><button onclick="closeAddMembersDialog()" class="btn-close">×</button></div>
@@ -362,6 +370,7 @@
                 <button onclick="likeReel()" class="reel-action" id="like-reel-btn">❤️ <span id="reel-likes-count">0</span></button>
                 <button onclick="showReelComments()" class="reel-action">💬 <span id="reel-comments-count">0</span></button>
                 <button onclick="shareReel()" class="reel-action">↗️</button>
+                <button id="delete-reel-btn" onclick="deleteCurrentReel()" class="reel-action" style="display:none;">🗑️</button>
             </div>
         </div>
     </div>
@@ -414,13 +423,14 @@
     <!-- Уведомления -->
     <div id="notifications-container" class="notifications-container"></div>
 
-    <!-- Firebase -->
+    <!-- Firebase + PeerJS -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
-    <!-- Scripts -->
+    <!-- Скрипты -->
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chat.js"></script>
