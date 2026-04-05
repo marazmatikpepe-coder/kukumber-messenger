@@ -252,53 +252,15 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .notification.error { background: var(--error); }
 .notification.info { background: var(--olive); }
 
-/* === НОВЫЕ СТИЛИ ДЛЯ ГОЛОСОВЫХ, ВИДЕО-КРУЖКОВ, ЗАПИСИ === */
-.audio-message {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0,0,0,0.05);
-    padding: 6px 12px;
-    border-radius: 20px;
-}
-.audio-message button {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-}
-.message.sent .audio-message {
-    background: rgba(255,255,255,0.2);
-}
-.video-message video {
-    max-width: 200px;
-    border-radius: 12px;
-}
-#voice-record-btn.recording, #video-record-btn.recording {
-    background: var(--error);
-    color: white;
-    border-radius: 50%;
-    animation: pulse 1s infinite;
-}
-.typing-indicator {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-style: italic;
-}
-#global-search-modal .user-item button {
-    background: var(--forest);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 20px;
-    margin-left: auto;
-    cursor: pointer;
-}
-#delete-reel-btn {
-    background: var(--error);
-    padding: 5px 10px;
-    border-radius: 20px;
-}
+/* === ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ НОВЫХ ФУНКЦИЙ === */
+.audio-message { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 6px 12px; border-radius: 20px; }
+.audio-message button { background: none; border: none; font-size: 20px; cursor: pointer; }
+.message.sent .audio-message { background: rgba(255,255,255,0.2); }
+.video-message video { max-width: 200px; border-radius: 12px; }
+#voice-record-btn.recording, #video-record-btn.recording { background: var(--error); color: white; border-radius: 50%; animation: pulse 1s infinite; }
+.typing-indicator { font-size: 12px; color: var(--text-muted); font-style: italic; }
+#global-search-modal .user-item button { background: var(--forest); color: white; border: none; padding: 6px 12px; border-radius: 20px; margin-left: auto; cursor: pointer; }
+#delete-reel-btn { background: var(--error); padding: 5px 10px; border-radius: 20px; }
 
 /* === MOBILE === */
 @media (max-width: 768px) {
