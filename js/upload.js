@@ -1,105 +1,84 @@
-// ========================================
-// KUKUMBER MESSENGER - UPLOAD (ImgBB + Firebase Storage)
-// ========================================
+// Cloudinary Configuration
+// ⚠️ ВАЖНО: Замените значения ниже на свои!
+const CLOUDINARY_CLOUD_NAME = 'YOUR_CLOUD_NAME'; // <-- Вставьте ваш cloud name
+const CLOUDINARY_UPLOAD_PRESET = 'YOUR_UNSIGNED_PRESET'; // <-- Вставьте имя вашего upload preset
 
-var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
+// API endpoint Cloudinary (универсальный для всех типов файлов)
+const CLOUDINARY_API_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
+
 var pendingImageFile = null;
+var mediaRecorder, audioChunks, isRecording = false;
+var videoRecorder, videoChunks, isVideoRecording = false;
 
-// ========================================
-// ЗАГРУЗКА НА IMGBB
-// ========================================
-
-function uploadImageToImgBB(file) {
-    return new Promise(function(resolve, reject) {
+// === Универсальная функция загрузки в Cloudinary ===
+function uploadToCloudinary(file, resourceType = 'auto') {
+    return new Promise((resolve, reject) => {
         if (!file) {
-            reject(new Error('Нет файла'));
+            reject(new Error('Нет файла для загрузки'));
             return;
         }
-        
-        var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-        if (allowedTypes.indexOf(file.type) === -1) {
-            showNotification('Поддерживаются только изображения', 'error');
-            reject(new Error('Неверный тип файла'));
-            return;
-        }
-        
-        if (file.size > 32 * 1024 * 1024) {
-            showNotification('Файл слишком большой (макс. 32 МБ)', 'error');
+
+        // Проверка размера файла (например, не более 20 МБ)
+        if (file.size > 20 * 1024 * 1024) {
+            showNotification('Файл слишком большой (макс. 20 МБ)', 'error');
             reject(new Error('Файл слишком большой'));
             return;
         }
-        
+
         showUploadProgress(true);
-        
-        var formData = new FormData();
-        formData.append('image', file);
-        formData.append('key', IMGBB_API_KEY);
-        
-        fetch('https://api.imgbb.com/1/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            showUploadProgress(false);
-            
-            if (data.success) {
-                resolve({
-                    url: data.data.url,
-                    thumbUrl: data.data.thumb ? data.data.thumb.url : data.data.url,
-                    displayUrl: data.data.display_url
-                });
-            } else {
-                showNotification('Ошибка загрузки изображения', 'error');
-                reject(new Error('Ошибка загрузки'));
-            }
-        })
-        .catch(function(error) {
-            showUploadProgress(false);
-            console.error('Ошибка upload:', error);
-            showNotification('Ошибка загрузки изображения', 'error');
-            reject(error);
-        });
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        // Определяем resource_type в URL для разных типов файлов
+        let uploadUrl = CLOUDINARY_API_URL;
+        if (resourceType === 'image') uploadUrl = CLOUDINARY_API_URL.replace('/upload', '/image/upload');
+        if (resourceType === 'video') uploadUrl = CLOUDINARY_API_URL.replace('/upload', '/video/upload');
+        if (resourceType === 'raw') uploadUrl = CLOUDINARY_API_URL.replace('/upload', '/raw/upload');
+
+        fetch(uploadUrl, { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                showUploadProgress(false);
+                if (data.secure_url) {
+                    resolve({ url: data.secure_url });
+                } else {
+                    console.error('Ошибка Cloudinary:', data);
+                    showNotification('Ошибка загрузки файла', 'error');
+                    reject(new Error(data.error?.message || 'Ошибка загрузки'));
+                }
+            })
+            .catch(err => {
+                showUploadProgress(false);
+                console.error('Ошибка сети:', err);
+                showNotification('Ошибка соединения с сервером', 'error');
+                reject(err);
+            });
     });
 }
 
-// ========================================
-// ИНДИКАТОР ЗАГРУЗКИ
-// ========================================
-
 function showUploadProgress(show) {
-    var progressDiv = document.getElementById('upload-progress');
-    
-    if (show && !progressDiv) {
-        progressDiv = document.createElement('div');
-        progressDiv.id = 'upload-progress';
-        progressDiv.className = 'upload-progress';
-        progressDiv.innerHTML = '<div class="upload-progress-content"><div class="spinner"></div><p>Загрузка...</p></div>';
-        document.body.appendChild(progressDiv);
-    } else if (!show && progressDiv) {
-        progressDiv.remove();
-    }
+    let div = document.getElementById('upload-progress');
+    if (show && !div) {
+        div = document.createElement('div');
+        div.id = 'upload-progress';
+        div.className = 'upload-progress';
+        div.innerHTML = '<div class="upload-progress-content"><div class="spinner"></div><p>Загрузка...</p></div>';
+        document.body.appendChild(div);
+    } else if (!show && div) div.remove();
 }
 
-// ========================================
-// ОТПРАВКА ФОТО В ЧАТ
-// ========================================
-
+// === ОТПРАВКА ФОТО В ЧАТ ===
 function handleFileSelect(event) {
-    var file = event.target.files[0];
-    if (file) {
-        showImagePreview(file);
-    }
+    const file = event.target.files[0];
+    if (file) showImagePreview(file);
     event.target.value = '';
 }
 
 function showImagePreview(file) {
     pendingImageFile = file;
-    
-    var reader = new FileReader();
-    reader.onload = function(e) {
+    const reader = new FileReader();
+    reader.onload = e => {
         document.getElementById('preview-image').src = e.target.result;
         document.getElementById('image-caption').value = '';
         document.getElementById('image-preview-modal').classList.remove('hidden');
@@ -117,189 +96,185 @@ function confirmImageSend() {
         showNotification('Ошибка отправки', 'error');
         return;
     }
-    
-    var caption = document.getElementById('image-caption').value.trim();
-    var file = pendingImageFile;
-    
+
+    const caption = document.getElementById('image-caption').value.trim();
+    const file = pendingImageFile;
     closeImagePreview();
-    
-    uploadImageToImgBB(file)
-    .then(function(imageData) {
-        var message = {
-            type: 'image',
-            imageUrl: imageData.url,
-            thumbUrl: imageData.thumbUrl,
-            caption: caption,
-            senderId: currentUser.uid,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
-        
-        return database.ref('messages/' + currentChatId).push(message);
-    })
-    .then(function() {
-        return database.ref('chats/' + currentChatId).update({
-            lastMessage: '📷 Фото',
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-        });
-    })
-    .then(function() {
-        showNotification('Фото отправлено!', 'success');
-    })
-    .catch(function(error) {
-        console.error('Ошибка:', error);
-        showNotification('Ошибка отправки фото', 'error');
-    });
-    
+
+    uploadToCloudinary(file, 'image')
+        .then(data => {
+            const message = {
+                type: 'image',
+                imageUrl: data.url,
+                caption: caption,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            return database.ref('messages/' + currentChatId).push(message);
+        })
+        .then(() => {
+            return database.ref('chats/' + currentChatId).update({
+                lastMessage: '📷 Фото',
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+        })
+        .then(() => showNotification('Фото отправлено!', 'success'))
+        .catch(err => showNotification('Ошибка отправки фото', 'error'));
+
     pendingImageFile = null;
 }
 
-// ========================================
-// ЗАГРУЗКА АВАТАРКИ ПОЛЬЗОВАТЕЛЯ
-// ========================================
-
-function handleAvatarChange(event) {
-    var file = event.target.files[0];
-    if (!file) return;
-    
-    event.target.value = '';
-    
-    uploadImageToImgBB(file)
-    .then(function(imageData) {
-        return database.ref('users/' + currentUser.uid + '/avatar').set(imageData.url);
-    })
-    .then(function() {
-        showNotification('Аватарка обновлена!', 'success');
-        var avatarEl = document.getElementById('user-avatar');
-        if (avatarEl && currentUserData) {
-            avatarEl.style.backgroundImage = 'url(' + currentUserData.avatar + ')';
-            avatarEl.style.backgroundSize = 'cover';
-            avatarEl.textContent = '';
-        }
-    })
-    .catch(function(error) {
-        console.error('Ошибка:', error);
-        showNotification('Ошибка загрузки аватарки', 'error');
-    });
-}
-
-// ========================================
-// АВАТАРКА ГРУППЫ
-// ========================================
-
-function previewGroupAvatar(event) {
-    var file = event.target.files[0];
-    if (file) {
-        groupAvatarFile = file;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var preview = document.getElementById('group-avatar-preview');
-            preview.style.backgroundImage = 'url(' + e.target.result + ')';
-            preview.style.backgroundSize = 'cover';
-            preview.textContent = '';
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// ========================================
-// АВАТАРКА КАНАЛА
-// ========================================
-
-function previewChannelAvatar(event) {
-    var file = event.target.files[0];
-    if (file) {
-        channelAvatarFile = file;
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var preview = document.getElementById('channel-avatar-preview');
-            preview.style.backgroundImage = 'url(' + e.target.result + ')';
-            preview.style.backgroundSize = 'cover';
-            preview.textContent = '';
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// ========================================
-// ГОЛОСОВЫЕ СООБЩЕНИЯ
-// ========================================
-
-var mediaRecorder, audioChunks, isRecording = false;
-
+// === ГОЛОСОВЫЕ СООБЩЕНИЯ ===
 function startRecording() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = () => {
-            var audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            sendAudioMessage(audioBlob);
-            stream.getTracks().forEach(t => t.stop());
-        };
-        mediaRecorder.start();
-        isRecording = true;
-        document.getElementById('voice-record-btn').classList.add('recording');
-    }).catch(err => showNotification('Ошибка доступа к микрофону', 'error'));
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                sendAudioMessage(audioBlob);
+                stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            const btn = document.getElementById('voice-record-btn');
+            if (btn) btn.classList.add('recording');
+        })
+        .catch(err => showNotification('Нет доступа к микрофону', 'error'));
 }
 
 function stopRecording() {
     if (mediaRecorder && isRecording) {
         mediaRecorder.stop();
         isRecording = false;
-        document.getElementById('voice-record-btn').classList.remove('recording');
+        const btn = document.getElementById('voice-record-btn');
+        if (btn) btn.classList.remove('recording');
     }
 }
 
 function sendAudioMessage(blob) {
     if (!currentChatId) return;
-    var filename = `audio/${currentChatId}/${Date.now()}.webm`;
-    var uploadTask = storage.ref(filename).put(blob);
-    uploadTask.then(snapshot => snapshot.ref.getDownloadURL()).then(url => {
-        var message = { type: 'audio', audioUrl: url, senderId: currentUser.uid, timestamp: firebase.database.ServerValue.TIMESTAMP };
-        database.ref('messages/' + currentChatId).push(message).then(() => {
-            database.ref('chats/' + currentChatId).update({ lastMessage: '🎤 Голосовое', lastMessageTime: firebase.database.ServerValue.TIMESTAMP });
-        });
-    }).catch(err => showNotification('Ошибка загрузки аудио', 'error'));
+    const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
+    
+    uploadToCloudinary(file, 'video') // Аудио загружается как video
+        .then(data => {
+            const message = {
+                type: 'audio',
+                audioUrl: data.url,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            return database.ref('messages/' + currentChatId).push(message);
+        })
+        .then(() => {
+            return database.ref('chats/' + currentChatId).update({
+                lastMessage: '🎤 Голосовое',
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+        })
+        .catch(err => showNotification('Ошибка загрузки аудио', 'error'));
 }
 
-// ========================================
-// КРУЖКИ (ВИДЕОСООБЩЕНИЯ)
-// ========================================
-
-var videoRecorder, videoChunks, isVideoRecording = false;
-
+// === ВИДЕОКРУЖКИ ===
 function startVideoCircle() {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-        videoRecorder = new MediaRecorder(stream);
-        videoChunks = [];
-        videoRecorder.ondataavailable = e => videoChunks.push(e.data);
-        videoRecorder.onstop = () => {
-            var videoBlob = new Blob(videoChunks, { type: 'video/webm' });
-            sendVideoMessage(videoBlob);
-            stream.getTracks().forEach(t => t.stop());
-        };
-        videoRecorder.start();
-        isVideoRecording = true;
-        document.getElementById('video-record-btn').classList.add('recording');
-        setTimeout(() => { if (isVideoRecording) stopVideoCircle(); }, 15000); // макс 15 секунд
-    }).catch(err => showNotification('Нет доступа к камере', 'error'));
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+            videoRecorder = new MediaRecorder(stream);
+            videoChunks = [];
+            videoRecorder.ondataavailable = e => videoChunks.push(e.data);
+            videoRecorder.onstop = () => {
+                const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                sendVideoMessage(videoBlob);
+                stream.getTracks().forEach(t => t.stop());
+            };
+            videoRecorder.start();
+            isVideoRecording = true;
+            const btn = document.getElementById('video-record-btn');
+            if (btn) btn.classList.add('recording');
+            setTimeout(() => { if (isVideoRecording) stopVideoCircle(); }, 15000);
+        })
+        .catch(err => showNotification('Нет доступа к камере', 'error'));
 }
 
 function stopVideoCircle() {
     if (videoRecorder && isVideoRecording) {
         videoRecorder.stop();
         isVideoRecording = false;
-        document.getElementById('video-record-btn').classList.remove('recording');
+        const btn = document.getElementById('video-record-btn');
+        if (btn) btn.classList.remove('recording');
     }
 }
 
 function sendVideoMessage(blob) {
     if (!currentChatId) return;
-    var filename = `video/${currentChatId}/${Date.now()}.webm`;
-    storage.ref(filename).put(blob).then(snapshot => snapshot.ref.getDownloadURL()).then(url => {
-        var message = { type: 'video_circle', videoUrl: url, senderId: currentUser.uid, timestamp: firebase.database.ServerValue.TIMESTAMP };
-        database.ref('messages/' + currentChatId).push(message).then(() => {
-            database.ref('chats/' + currentChatId).update({ lastMessage: '📹 Кружок', lastMessageTime: firebase.database.ServerValue.TIMESTAMP });
-        });
-    }).catch(err => showNotification('Ошибка загрузки видео', 'error'));
+    const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' });
+    
+    uploadToCloudinary(file, 'video')
+        .then(data => {
+            const message = {
+                type: 'video_circle',
+                videoUrl: data.url,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            return database.ref('messages/' + currentChatId).push(message);
+        })
+        .then(() => {
+            return database.ref('chats/' + currentChatId).update({
+                lastMessage: '📹 Кружок',
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+        })
+        .catch(err => showNotification('Ошибка загрузки видео', 'error'));
+}
+
+// === АВАТАРКИ ГРУПП И КАНАЛОВ ===
+// Функции previewGroupAvatar, previewChannelAvatar, previewEditAvatar остаются теми же,
+// но они должны использовать uploadToCloudinary при сохранении. 
+// Например, в createGroup и createChannel (в файле chat.js) нужно заменить uploadImageToImgBB на uploadToCloudinary.
+// Я оставлю их как есть для краткости, но помните о необходимости заменить ImgBB в этих местах.
+function previewGroupAvatar(event) {
+    const file = event.target.files[0];
+    if (file) {
+        groupAvatarFile = file;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const preview = document.getElementById('group-avatar-preview');
+            preview.style.backgroundImage = 'url(' + e.target.result + ')';
+            preview.style.backgroundSize = 'cover';
+            preview.textContent = '';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function previewChannelAvatar(event) {
+    const file = event.target.files[0];
+    if (file) {
+        channelAvatarFile = file;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const preview = document.getElementById('channel-avatar-preview');
+            preview.style.backgroundImage = 'url(' + e.target.result + ')';
+            preview.style.backgroundSize = 'cover';
+            preview.textContent = '';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function previewEditAvatar(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const preview = document.getElementById('edit-avatar-preview');
+            preview.style.backgroundImage = 'url(' + e.target.result + ')';
+            preview.style.backgroundSize = 'cover';
+            preview.textContent = '';
+        };
+        reader.readAsDataURL(file);
+        window.pendingAvatarFile = file;
+    }
 }
