@@ -1,59 +1,33 @@
 // Cloudinary Configuration
-// ⚠️ ВАЖНО: Замените значения ниже на свои!
-const CLOUDINARY_CLOUD_NAME = 'YOUR_CLOUD_NAME'; // <-- Вставьте ваш cloud name
-const CLOUDINARY_UPLOAD_PRESET = 'YOUR_UNSIGNED_PRESET'; // <-- Вставьте имя вашего upload preset
+// ⚠️ ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ
+const CLOUDINARY_CLOUD_NAME = 'YOUR_CLOUD_NAME'; // например 'dk8iyswpl'
+const CLOUDINARY_UPLOAD_PRESET = 'YOUR_UNSIGNED_PRESET'; // например 'my_preset'
 
-// API endpoint Cloudinary (универсальный для всех типов файлов)
 const CLOUDINARY_API_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
 
 var pendingImageFile = null;
 var mediaRecorder, audioChunks, isRecording = false;
 var videoRecorder, videoChunks, isVideoRecording = false;
 
-// === Универсальная функция загрузки в Cloudinary ===
 function uploadToCloudinary(file, resourceType = 'auto') {
     return new Promise((resolve, reject) => {
-        if (!file) {
-            reject(new Error('Нет файла для загрузки'));
-            return;
-        }
-
-        // Проверка размера файла (например, не более 20 МБ)
-        if (file.size > 20 * 1024 * 1024) {
-            showNotification('Файл слишком большой (макс. 20 МБ)', 'error');
-            reject(new Error('Файл слишком большой'));
-            return;
-        }
-
+        if (!file) { reject(new Error('Нет файла')); return; }
+        if (file.size > 20 * 1024 * 1024) { showNotification('Файл >20 МБ', 'error'); reject(new Error('Слишком большой')); return; }
         showUploadProgress(true);
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-        // Определяем resource_type в URL для разных типов файлов
         let uploadUrl = CLOUDINARY_API_URL;
         if (resourceType === 'image') uploadUrl = CLOUDINARY_API_URL.replace('/upload', '/image/upload');
         if (resourceType === 'video') uploadUrl = CLOUDINARY_API_URL.replace('/upload', '/video/upload');
-        if (resourceType === 'raw') uploadUrl = CLOUDINARY_API_URL.replace('/upload', '/raw/upload');
-
         fetch(uploadUrl, { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
                 showUploadProgress(false);
-                if (data.secure_url) {
-                    resolve({ url: data.secure_url });
-                } else {
-                    console.error('Ошибка Cloudinary:', data);
-                    showNotification('Ошибка загрузки файла', 'error');
-                    reject(new Error(data.error?.message || 'Ошибка загрузки'));
-                }
+                if (data.secure_url) resolve({ url: data.secure_url });
+                else { showNotification('Ошибка загрузки', 'error'); reject(new Error(data.error?.message)); }
             })
-            .catch(err => {
-                showUploadProgress(false);
-                console.error('Ошибка сети:', err);
-                showNotification('Ошибка соединения с сервером', 'error');
-                reject(err);
-            });
+            .catch(err => { showUploadProgress(false); showNotification('Ошибка сети', 'error'); reject(err); });
     });
 }
 
@@ -68,7 +42,6 @@ function showUploadProgress(show) {
     } else if (!show && div) div.remove();
 }
 
-// === ОТПРАВКА ФОТО В ЧАТ ===
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) showImagePreview(file);
@@ -92,15 +65,10 @@ function closeImagePreview() {
 }
 
 function confirmImageSend() {
-    if (!pendingImageFile || !currentChatId) {
-        showNotification('Ошибка отправки', 'error');
-        return;
-    }
-
+    if (!pendingImageFile || !currentChatId) { showNotification('Ошибка', 'error'); return; }
     const caption = document.getElementById('image-caption').value.trim();
     const file = pendingImageFile;
     closeImagePreview();
-
     uploadToCloudinary(file, 'image')
         .then(data => {
             const message = {
@@ -120,11 +88,9 @@ function confirmImageSend() {
         })
         .then(() => showNotification('Фото отправлено!', 'success'))
         .catch(err => showNotification('Ошибка отправки фото', 'error'));
-
     pendingImageFile = null;
 }
 
-// === ГОЛОСОВЫЕ СООБЩЕНИЯ ===
 function startRecording() {
     navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
@@ -156,8 +122,7 @@ function stopRecording() {
 function sendAudioMessage(blob) {
     if (!currentChatId) return;
     const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
-    
-    uploadToCloudinary(file, 'video') // Аудио загружается как video
+    uploadToCloudinary(file, 'video')
         .then(data => {
             const message = {
                 type: 'audio',
@@ -176,7 +141,6 @@ function sendAudioMessage(blob) {
         .catch(err => showNotification('Ошибка загрузки аудио', 'error'));
 }
 
-// === ВИДЕОКРУЖКИ ===
 function startVideoCircle() {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         .then(stream => {
@@ -209,7 +173,6 @@ function stopVideoCircle() {
 function sendVideoMessage(blob) {
     if (!currentChatId) return;
     const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' });
-    
     uploadToCloudinary(file, 'video')
         .then(data => {
             const message = {
@@ -229,11 +192,6 @@ function sendVideoMessage(blob) {
         .catch(err => showNotification('Ошибка загрузки видео', 'error'));
 }
 
-// === АВАТАРКИ ГРУПП И КАНАЛОВ ===
-// Функции previewGroupAvatar, previewChannelAvatar, previewEditAvatar остаются теми же,
-// но они должны использовать uploadToCloudinary при сохранении. 
-// Например, в createGroup и createChannel (в файле chat.js) нужно заменить uploadImageToImgBB на uploadToCloudinary.
-// Я оставлю их как есть для краткости, но помните о необходимости заменить ImgBB в этих местах.
 function previewGroupAvatar(event) {
     const file = event.target.files[0];
     if (file) {
