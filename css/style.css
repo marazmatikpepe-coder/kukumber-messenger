@@ -252,7 +252,7 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .notification.error { background: var(--error); }
 .notification.info { background: var(--olive); }
 
-/* === ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ НОВЫХ ФУНКЦИЙ === */
+/* === НОВЫЕ СТИЛИ === */
 .audio-message { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 6px 12px; border-radius: 20px; }
 .audio-message button { background: none; border: none; font-size: 20px; cursor: pointer; }
 .message.sent .audio-message { background: rgba(255,255,255,0.2); }
@@ -274,12 +274,10 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
     .reels-feed { grid-template-columns: repeat(2, 1fr); }
     .notifications-container { left: 15px; right: 15px; max-width: none; }
 }
-
 @media (max-width: 400px) {
     .btn-create span:last-child { display: none; }
     .btn-create span:first-child { font-size: 22px; }
     .reels-feed { grid-template-columns: 1fr; }
 }
-
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--sage); border-radius: 3px; }
