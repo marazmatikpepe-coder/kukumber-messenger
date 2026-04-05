@@ -1,19 +1,16 @@
-// KUKUMBER MESSENGER - CHAT (полная версия с контактами, удалением, индикаторами)
-
+// KUKUMBER MESSENGER - CHAT (полная версия)
 var currentTab = 'all';
 var selectedGroupMembers = [];
 var groupAvatarFile = null;
 var channelAvatarFile = null;
 var typingTimeout = null;
 
-// === ГЛОБАЛЬНЫЙ ПОИСК И КОНТАКТЫ ===
+// ========== ГЛОБАЛЬНЫЙ ПОИСК И КОНТАКТЫ ==========
 function showGlobalSearch() {
     document.getElementById('global-search-modal').classList.remove('hidden');
     loadGlobalUsers();
 }
-function closeGlobalSearch() {
-    document.getElementById('global-search-modal').classList.add('hidden');
-}
+function closeGlobalSearch() { document.getElementById('global-search-modal').classList.add('hidden'); }
 function loadGlobalUsers() {
     var container = document.getElementById('global-users-list');
     container.innerHTML = '<div>Загрузка...</div>';
@@ -49,7 +46,7 @@ function addToContacts(uid, name) {
     closeGlobalSearch();
 }
 
-// === НОВЫЙ ЧАТ ТОЛЬКО ИЗ КОНТАКТОВ ===
+// ========== НОВЫЙ ЧАТ (ТОЛЬКО КОНТАКТЫ) ==========
 function showNewChatDialog() {
     document.getElementById('new-chat-modal').classList.remove('hidden');
     document.getElementById('new-chat-search').value = '';
@@ -114,7 +111,7 @@ function startPrivateChat(otherUserId, otherUser) {
     }).catch(err => { console.error(err); showNotification('Ошибка', 'error'); });
 }
 
-// === ПОИСК ЧАТОВ (каналы и т.д.) ===
+// ========== ПОИСК ЧАТОВ И ПУБЛИЧНЫХ КАНАЛОВ ==========
 function searchChats() {
     var text = document.getElementById('search-chats').value.toLowerCase().trim();
     var chatItems = document.querySelectorAll('.chat-item');
@@ -165,7 +162,7 @@ function subscribeToPublicChannel(chatId, channel) {
     }).catch(err=>showNotification('Ошибка', 'error'));
 }
 
-// === ЗАГРУЗКА СПИСКА ЧАТОВ ===
+// ========== ЗАГРУЗКА СПИСКА ЧАТОВ ==========
 function loadChats() {
     if (!currentUser) return;
     database.ref('userChats/'+currentUser.uid).on('value', snapshot=>{
@@ -250,7 +247,7 @@ function switchTab(tab) {
     loadChats();
 }
 
-// === ОТКРЫТИЕ ЧАТА ===
+// ========== ОТКРЫТИЕ ЧАТА ==========
 function openChat(chatId, chatData){
     currentChatId=chatId;
     currentChatUser=chatData;
@@ -339,7 +336,7 @@ function showAdminEditUser(userId){
     input.onchange=function(e){
         var file=e.target.files[0];
         if(file){
-            uploadImageToImgBB(file).then(data=>{
+            uploadToCloudinary(file, 'image').then(data=>{
                 database.ref('users/'+userId+'/avatar').set(data.url);
                 showNotification('Аватар изменён','success');
             });
@@ -356,7 +353,7 @@ function closeChat(){
     if(messagesListener) messagesListener.off();
 }
 
-// === СООБЩЕНИЯ ===
+// ========== СООБЩЕНИЯ ==========
 function loadMessages(chatId){
     var container=document.getElementById('messages-container');
     container.innerHTML='';
@@ -451,22 +448,256 @@ function playAudio(url){
     var audio=new Audio(url);
     audio.play();
 }
+function openLightbox(url){
+    document.getElementById('lightbox-image').src=url;
+    document.getElementById('image-lightbox').classList.remove('hidden');
+}
+function closeLightbox(){
+    document.getElementById('image-lightbox').classList.add('hidden');
+}
 
-// === УДАЛЕНИЕ РЕЕЛСА (функция будет в reels.js, но добавим сюда для связки) ===
-window.deleteCurrentReel = function(){
-    if(!viewingReelId) return;
-    database.ref('reels/'+viewingReelId).once('value').then(snap=>{
-        var reel=snap.val();
-        if(reel.authorId===currentUser.uid || isSuperAdmin){
-            if(confirm('Удалить реелс?')){
-                database.ref('reels/'+viewingReelId).remove().then(()=>{
-                    showNotification('Реелс удалён','success');
-                    closeViewReelModal();
-                    loadReels();
-                });
-            }
-        } else showNotification('Нет прав','error');
+// ========== СОЗДАНИЕ ГРУППЫ ==========
+function showCreateGroupDialog() {
+    document.getElementById('create-group-modal').classList.remove('hidden');
+    document.getElementById('group-step-1').classList.remove('hidden');
+    document.getElementById('group-step-2').classList.add('hidden');
+    document.getElementById('group-name').value = '';
+    document.getElementById('group-description').value = '';
+    document.getElementById('group-avatar-preview').style.backgroundImage = '';
+    document.getElementById('group-avatar-preview').textContent = '👥';
+    selectedGroupMembers = [];
+    groupAvatarFile = null;
+}
+function closeCreateGroupDialog() { document.getElementById('create-group-modal').classList.add('hidden'); }
+function goToGroupStep2() {
+    var name = document.getElementById('group-name').value.trim();
+    if (!name) { showNotification('Введите название группы', 'error'); return; }
+    document.getElementById('group-step-1').classList.add('hidden');
+    document.getElementById('group-step-2').classList.remove('hidden');
+    loadGroupMembersList();
+}
+function goToGroupStep1() {
+    document.getElementById('group-step-2').classList.add('hidden');
+    document.getElementById('group-step-1').classList.remove('hidden');
+}
+function loadGroupMembersList() {
+    var list = document.getElementById('group-members-list');
+    list.innerHTML = '<div class="loading-users">Загрузка...</div>';
+    database.ref('contacts/' + currentUser.uid).once('value').then(snapshot => {
+        var contacts = snapshot.val();
+        if (!contacts) { list.innerHTML = '<div>Нет контактов. Добавьте их через поиск</div>'; return; }
+        var userIds = Object.keys(contacts);
+        if (userIds.length === 0) { list.innerHTML = '<div>Нет контактов</div>'; return; }
+        list.innerHTML = '';
+        userIds.forEach(uid => {
+            database.ref('users/' + uid).once('value').then(userSnap => {
+                var user = userSnap.val();
+                if (!user) return;
+                var isSelected = selectedGroupMembers.some(m => m.id === uid);
+                var div = document.createElement('div');
+                div.className = 'user-item' + (isSelected ? ' selected' : '');
+                div.setAttribute('data-username', (user.username || '').toLowerCase());
+                var avatarStyle = user.avatar ? 'background-image:url('+user.avatar+');background-size:cover;' : '';
+                var avatarContent = user.avatar ? '' : '👤';
+                div.innerHTML = `<div class="avatar" style="${avatarStyle}">${avatarContent}</div>
+                                <div class="user-item-info"><h4>${escapeHtml(user.username)}</h4></div>
+                                <span class="check-mark">${isSelected ? '✓' : ''}</span>`;
+                div.onclick = () => toggleGroupMember(uid, user);
+                list.appendChild(div);
+            });
+        });
     });
-};
+}
+function toggleGroupMember(userId, user) {
+    var index = selectedGroupMembers.findIndex(m => m.id === userId);
+    if (index > -1) selectedGroupMembers.splice(index, 1);
+    else selectedGroupMembers.push({ id: userId, username: user.username, avatar: user.avatar });
+    renderSelectedMembers();
+    loadGroupMembersList();
+}
+function renderSelectedMembers() {
+    var container = document.getElementById('selected-members');
+    if (selectedGroupMembers.length === 0) { container.innerHTML = ''; return; }
+    var html = '';
+    selectedGroupMembers.forEach(m => {
+        html += `<div class="selected-member-chip"><span>${escapeHtml(m.username)}</span><button onclick="removeSelectedMember('${m.id}')">&times;</button></div>`;
+    });
+    container.innerHTML = html;
+}
+function removeSelectedMember(userId) {
+    selectedGroupMembers = selectedGroupMembers.filter(m => m.id !== userId);
+    renderSelectedMembers();
+    loadGroupMembersList();
+}
+function searchGroupMembers() {
+    var text = document.getElementById('group-members-search').value.toLowerCase();
+    var items = document.querySelectorAll('#group-members-list .user-item');
+    items.forEach(item => {
+        var username = item.getAttribute('data-username') || '';
+        item.style.display = username.includes(text) ? 'flex' : 'none';
+    });
+}
+function createGroup() {
+    var name = document.getElementById('group-name').value.trim();
+    var description = document.getElementById('group-description').value.trim();
+    if (!name) { showNotification('Введите название', 'error'); return; }
+    var btn = document.querySelector('#group-step-2 .btn-primary');
+    btn.disabled = true;
+    btn.textContent = 'Создание...';
+    var avatarPromise = groupAvatarFile ? uploadToCloudinary(groupAvatarFile, 'image') : Promise.resolve(null);
+    avatarPromise.then(data => {
+        var avatarUrl = data ? data.url : '';
+        var chatId = 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        var members = { [currentUser.uid]: true };
+        selectedGroupMembers.forEach(m => { members[m.id] = true; });
+        return database.ref('chats/' + chatId).set({
+            type: 'group', name: name, description: description, avatar: avatarUrl,
+            members: members, admins: { [currentUser.uid]: true }, createdBy: currentUser.uid,
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastMessage: 'Группа создана', lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+            var promises = [database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true)];
+            selectedGroupMembers.forEach(m => promises.push(database.ref('userChats/' + m.id + '/' + chatId).set(true)));
+            return Promise.all(promises);
+        });
+    }).then(() => {
+        closeCreateGroupDialog();
+        showNotification('Группа "' + name + '" создана!', 'success');
+        loadChats();
+    }).catch(err => { showNotification('Ошибка создания группы', 'error'); console.error(err); })
+    .finally(() => { btn.disabled = false; btn.textContent = 'Создать группу'; });
+}
 
-// === ОСТАЛЬНЫЕ ФУНКЦИИ (группы, каналы, инфо) ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ, НО ДЛЯ ЭКОНОМИИ МЕСТА Я ИХ НЕ ДУБЛИРУЮ. ОНИ ЕСТЬ В ВАШЕМ ИСХОДНОМ КОДЕ. ВАМ НУЖНО ВЗЯТЬ ИХ ИЗ ПРЕДЫДУЩЕГО ФАЙЛА chat.js (createGroup, createChannel и т.д.) И ВСТАВИТЬ СЮДА. Я ДАЛ ОСНОВНЫЕ НОВОВВЕДЕНИЯ.
+// ========== СОЗДАНИЕ КАНАЛА ==========
+function showCreateChannelDialog() {
+    document.getElementById('create-channel-modal').classList.remove('hidden');
+    document.getElementById('channel-name').value = '';
+    document.getElementById('channel-description').value = '';
+    document.getElementById('channel-link').value = '';
+    document.getElementById('channel-avatar-preview').style.backgroundImage = '';
+    document.getElementById('channel-avatar-preview').textContent = '📢';
+    document.getElementById('channel-link-hint').textContent = '';
+    channelAvatarFile = null;
+}
+function closeCreateChannelDialog() { document.getElementById('create-channel-modal').classList.add('hidden'); }
+function validateChannelLink() {
+    var link = document.getElementById('channel-link').value.trim().toLowerCase();
+    var hint = document.getElementById('channel-link-hint');
+    if (!link) { hint.textContent = ''; return true; }
+    if (!/^[a-z0-9_]+$/.test(link)) { hint.textContent = 'Только латинские буквы, цифры и _'; hint.className = 'hint error'; return false; }
+    if (link.length < 3) { hint.textContent = 'Минимум 3 символа'; hint.className = 'hint error'; return false; }
+    hint.textContent = '✓ Ссылка: ' + link; hint.className = 'hint success';
+    return true;
+}
+function createChannel() {
+    var name = document.getElementById('channel-name').value.trim();
+    var description = document.getElementById('channel-description').value.trim();
+    var link = document.getElementById('channel-link').value.trim().toLowerCase();
+    var typeRadio = document.querySelector('input[name="channel-type"]:checked');
+    var isPublic = typeRadio ? typeRadio.value === 'public' : true;
+    if (!name) { showNotification('Введите название', 'error'); return; }
+    if (link && !validateChannelLink()) return;
+    var btn = document.querySelector('#create-channel-modal .btn-primary');
+    btn.disabled = true;
+    btn.textContent = 'Создание...';
+    var checkLinkPromise = link ? database.ref('channelLinks/' + link).once('value').then(snap => { if (snap.exists()) throw new Error('Ссылка занята'); }) : Promise.resolve();
+    checkLinkPromise.then(() => {
+        var avatarPromise = channelAvatarFile ? uploadToCloudinary(channelAvatarFile, 'image') : Promise.resolve(null);
+        return avatarPromise.then(data => {
+            var avatarUrl = data ? data.url : '';
+            var chatId = 'channel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            var updates = {
+                type: 'channel', name: name, description: description, avatar: avatarUrl,
+                link: link || null, isPublic: isPublic,
+                subscribers: { [currentUser.uid]: true }, admins: { [currentUser.uid]: true },
+                createdBy: currentUser.uid, createdAt: firebase.database.ServerValue.TIMESTAMP,
+                lastMessage: 'Канал создан', lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            };
+            return database.ref('chats/' + chatId).set(updates)
+                .then(() => database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true))
+                .then(() => { if (link) return database.ref('channelLinks/' + link).set(chatId); });
+        });
+    }).then(() => {
+        closeCreateChannelDialog();
+        showNotification('Канал "' + name + '" создан!', 'success');
+        loadChats();
+    }).catch(err => { showNotification(err.message || 'Ошибка', 'error'); console.error(err); })
+    .finally(() => { btn.disabled = false; btn.textContent = 'Создать канал'; });
+}
+
+// ========== ИНФОРМАЦИЯ О ЧАТЕ ==========
+function showChatInfo() {
+    if (!currentChatUser) return;
+    document.getElementById('chat-info-modal').classList.remove('hidden');
+    var chat = currentChatUser;
+    var name = '', avatar = '', status = '', description = '';
+    if (chat.type === 'group') {
+        document.getElementById('info-title').textContent = 'Информация о группе';
+        name = chat.name || 'Группа';
+        avatar = chat.avatar || '';
+        var membersCount = chat.members ? Object.keys(chat.members).length : 0;
+        status = membersCount + ' участник(ов)';
+        description = chat.description || '';
+        document.getElementById('channel-stats').classList.add('hidden');
+        document.getElementById('group-members-section').classList.remove('hidden');
+        document.getElementById('members-count').textContent = membersCount;
+        loadMembersList(chat.members, chat.admins);
+        var isAdmin = chat.admins && chat.admins[currentUser.uid];
+        document.getElementById('add-member-btn').style.display = isAdmin ? '' : 'none';
+        document.getElementById('leave-btn').classList.remove('hidden');
+        document.getElementById('subscribe-btn').classList.add('hidden');
+        document.getElementById('unsubscribe-btn').classList.add('hidden');
+        document.getElementById('delete-btn').style.display = isAdmin ? '' : 'none';
+    } else if (chat.type === 'channel') {
+        document.getElementById('info-title').textContent = 'Информация о канале';
+        name = chat.name || 'Канал';
+        avatar = chat.avatar || '';
+        var subsCount = chat.subscribers ? Object.keys(chat.subscribers).length : 0;
+        status = chat.isPublic ? 'Публичный канал' : 'Приватный канал';
+        description = chat.description || '';
+        document.getElementById('channel-stats').classList.remove('hidden');
+        document.getElementById('subscribers-count').textContent = subsCount;
+        document.getElementById('group-members-section').classList.add('hidden');
+        var isSubscribed = chat.subscribers && chat.subscribers[currentUser.uid];
+        var isChannelAdmin = chat.admins && chat.admins[currentUser.uid];
+        document.getElementById('leave-btn').classList.add('hidden');
+        document.getElementById('subscribe-btn').style.display = isSubscribed ? 'none' : '';
+        document.getElementById('unsubscribe-btn').style.display = (isSubscribed && !isChannelAdmin) ? '' : 'none';
+        document.getElementById('delete-btn').style.display = isChannelAdmin ? '' : 'none';
+    } else {
+        document.getElementById('info-title').textContent = 'Информация';
+        name = chat.otherUser ? chat.otherUser.username : 'Пользователь';
+        avatar = chat.otherUser ? chat.otherUser.avatar : '';
+        status = (chat.otherUser && chat.otherUser.status && chat.otherUser.status.online) ? 'в сети' : 'был(а) недавно';
+        document.getElementById('channel-stats').classList.add('hidden');
+        document.getElementById('group-members-section').classList.add('hidden');
+        document.getElementById('leave-btn').classList.add('hidden');
+        document.getElementById('subscribe-btn').classList.add('hidden');
+        document.getElementById('unsubscribe-btn').classList.add('hidden');
+        document.getElementById('delete-btn').classList.remove('hidden');
+    }
+    document.getElementById('info-name').textContent = name;
+    document.getElementById('info-status').textContent = status;
+    document.getElementById('info-description').textContent = description;
+    var infoAvatar = document.getElementById('info-avatar');
+    if (avatar && avatar.indexOf('http') === 0) {
+        infoAvatar.style.backgroundImage = 'url(' + avatar + ')';
+        infoAvatar.style.backgroundSize = 'cover';
+        infoAvatar.textContent = '';
+    } else {
+        infoAvatar.style.backgroundImage = '';
+        infoAvatar.textContent = chat.type === 'group' ? '👥' : (chat.type === 'channel' ? '📢' : '👤');
+    }
+}
+function closeChatInfo() { document.getElementById('chat-info-modal').classList.add('hidden'); }
+function loadMembersList(members, admins) {
+    var list = document.getElementById('info-members-list');
+    list.innerHTML = '';
+    if (!members) return;
+    Object.keys(members).forEach(memberId => {
+        database.ref('users/' + memberId).once('value').then(snap => {
+            var user = snap.val();
+            if (!user) return;
+            var isAdmin = admins && admins[memberId];
+            var avatar = user.avatar || '';
+           
