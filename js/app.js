@@ -12,6 +12,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var database = firebase.database();
+var storage = firebase.storage();
 
 var currentUser = null;
 var currentUserData = null;
@@ -19,6 +20,7 @@ var currentChatId = null;
 var currentChatUser = null;
 var messagesListener = null;
 var currentTab = 'chats';
+var isSuperAdmin = false;
 
 // === INIT ===
 window.addEventListener('load', function() {
@@ -26,7 +28,6 @@ window.addEventListener('load', function() {
         document.getElementById('loading-screen').classList.add('hidden');
         checkAuthState();
     }, 2000);
-    
     initEmojiPicker();
 });
 
@@ -45,40 +46,29 @@ function checkAuthState() {
     });
 }
 
-function showAuthScreen() {
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('main-screen').classList.add('hidden');
-}
-
-function showMainScreen() {
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('main-screen').classList.remove('hidden');
-    loadChats();
-    loadReels();
-}
-
 function loadUserData() {
     if (!currentUser) return;
-    
     database.ref('users/' + currentUser.uid).on('value', function(snapshot) {
         currentUserData = snapshot.val();
         if (currentUserData) {
             updateUserDisplay();
+            checkSuperAdmin();
         }
+    });
+}
+
+function checkSuperAdmin() {
+    database.ref('users/' + currentUser.uid + '/isSuperAdmin').once('value').then(snap => {
+        isSuperAdmin = snap.val() === true;
     });
 }
 
 function updateUserDisplay() {
     if (!currentUserData) return;
-    
     var username = currentUserData.username || 'Пользователь';
     var avatar = currentUserData.avatar || '';
-    
     document.getElementById('current-username').textContent = username;
     document.getElementById('settings-username').textContent = username;
-    document.getElementById('settings-email').textContent = currentUserData.email || '';
-    document.getElementById('settings-phone').textContent = currentUserData.phone || '';
-    
     var avatarEls = ['user-avatar', 'settings-avatar'];
     avatarEls.forEach(function(id) {
         var el = document.getElementById(id);
@@ -95,45 +85,36 @@ function updateUserDisplay() {
     });
 }
 
-// === TABS ===
+function showAuthScreen() {
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('main-screen').classList.add('hidden');
+}
+
+function showMainScreen() {
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('main-screen').classList.remove('hidden');
+    loadChats();
+    loadReels();
+}
+
 function switchToTab(tabName) {
     currentTab = tabName;
-    
-    // Hide all tabs
     document.getElementById('chats-tab').classList.add('hidden');
     document.getElementById('reels-tab').classList.add('hidden');
     document.getElementById('settings-tab').classList.add('hidden');
-    
-    // Deactivate all nav items
     document.getElementById('nav-chats').classList.remove('active');
     document.getElementById('nav-reels').classList.remove('active');
     document.getElementById('nav-settings').classList.remove('active');
-    
-    // Show selected tab
     document.getElementById(tabName + '-tab').classList.remove('hidden');
     document.getElementById('nav-' + tabName).classList.add('active');
-    
-    // Load content
-    if (tabName === 'reels') {
-        loadReels();
-    } else if (tabName === 'settings') {
-        updateUserDisplay();
-    }
-    
-    // Close sidebar on mobile
+    if (tabName === 'reels') loadReels();
+    if (tabName === 'settings') updateUserDisplay();
     closeSidebar();
 }
 
-// === SIDEBAR ===
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); }
 
-function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-}
-
-// === UTILITIES ===
 function escapeHtml(text) {
     if (!text) return '';
     var div = document.createElement('div');
@@ -146,15 +127,23 @@ function formatTime(timestamp) {
     var date = new Date(timestamp);
     var now = new Date();
     var diff = now - date;
-    
     if (diff < 60000) return 'сейчас';
     if (diff < 3600000) return Math.floor(diff / 60000) + ' мин';
-    
     if (date.toDateString() === now.toDateString()) {
         return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
-    
     return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+}
+
+function formatLastSeen(timestamp) {
+    if (!timestamp) return 'неизвестно';
+    var date = new Date(timestamp);
+    var now = new Date();
+    var diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'только что';
+    if (diff < 3600) return Math.floor(diff/60) + ' минут назад';
+    if (diff < 86400) return 'сегодня в ' + date.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+    return date.toLocaleDateString('ru-RU') + ' в ' + date.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
 }
 
 function generateChatId(userId1, userId2) {
@@ -171,7 +160,6 @@ function showNotification(message, type) {
     setTimeout(function() { notif.remove(); }, 3000);
 }
 
-// === EMOJI ===
 function initEmojiPicker() {
     var emojis = ['😀','😂','🥰','😎','🤔','😢','😡','👍','👎','❤️','🔥','✨','🎉','🥒','💚','🌿','🍀','🌱','👋','🙏','😊','😍','🤣','😘','😜','🙄','😴','🤮','💪','🎂','🎁','🎄','☀️','🌙','⭐','🌈'];
     var grid = document.querySelector('.emoji-grid');
@@ -186,17 +174,13 @@ function initEmojiPicker() {
     }
 }
 
-function toggleEmojiPicker() {
-    document.getElementById('emoji-picker').classList.toggle('hidden');
-}
-
+function toggleEmojiPicker() { document.getElementById('emoji-picker').classList.toggle('hidden'); }
 function insertEmoji(emoji) {
     var input = document.getElementById('message-input');
     input.value += emoji;
     input.focus();
 }
 
-// Close emoji on outside click
 document.addEventListener('click', function(e) {
     var picker = document.getElementById('emoji-picker');
     if (picker && !picker.classList.contains('hidden')) {
@@ -206,11 +190,8 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ESC to close modals
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeAllModals();
-    }
+    if (e.key === 'Escape') closeAllModals();
 });
 
 function closeAllModals() {
