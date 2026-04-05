@@ -9,9 +9,8 @@ let callTimerInterval = null;
 let callSecondsCount = 0;
 
 function initializePeer() {
-    if (peer && peer.disconnected === false) return;
+    if (peer && !peer.disconnected) return;
     if (!currentUser) return;
-    // Закрываем старого пира, если есть
     if (peer) {
         try { peer.destroy(); } catch(e) {}
         peer = null;
@@ -30,10 +29,6 @@ function initializePeer() {
     peer.on('error', err => {
         console.error('Peer ошибка:', err);
         if (err.type === 'peer-unavailable') showNotification('Пользователь недоступен','error');
-        if (err.type === 'disconnected') {
-            console.log('Peer отключён, переподключаемся...');
-            setTimeout(() => initializePeer(), 2000);
-        }
         endCall();
     });
     peer.on('disconnected', () => {
@@ -58,7 +53,6 @@ function startCall(withVideo){
     if(currentChatUser.type !== 'private'){ showNotification('Звонки только в личных чатах','info'); return; }
     initializePeer();
     if(!peer){ showNotification('Ошибка Peer','error'); return; }
-    database.ref(`callingStatus/${currentChatId}/${currentUser.uid}`).set(true);
     navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true }).then(stream=>{
         localStream=stream;
         isVideoEnabled=withVideo;
@@ -119,7 +113,6 @@ function setupCallListeners(call){
         if(remoteVideo) remoteVideo.srcObject=remoteStream;
         document.getElementById('call-status').textContent='Подключено';
         startCallTimer();
-        if(currentChatId) database.ref(`callingStatus/${currentChatId}`).remove();
     });
     call.on('close',()=>endCall());
     call.on('error',()=>endCall());
@@ -154,7 +147,6 @@ function endCall(){
     if(remoteVideo) remoteVideo.srcObject=null;
     document.getElementById('call-modal').classList.add('hidden');
     isVideoEnabled=true; isAudioEnabled=true;
-    if(currentChatId) database.ref(`callingStatus/${currentChatId}`).remove();
     var muteBtn=document.getElementById('mute-btn'), videoBtn=document.getElementById('video-btn');
     if(muteBtn){ muteBtn.textContent='🎤'; muteBtn.classList.remove('muted'); }
     if(videoBtn){ videoBtn.textContent='📹'; videoBtn.classList.remove('muted'); }
