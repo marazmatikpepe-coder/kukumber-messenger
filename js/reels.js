@@ -4,293 +4,133 @@ var currentReelType = null;
 var currentReelsTab = 'feed';
 var viewingReelId = null;
 
-// === LOAD REELS ===
 function loadReels() {
     var feed = document.getElementById('reels-feed');
     feed.innerHTML = '<div class="empty-reels"><span>🎬</span><p>Загрузка...</p></div>';
-    
     var query;
-    if (currentReelsTab === 'my') {
-        query = database.ref('reels').orderByChild('authorId').equalTo(currentUser.uid);
-    } else if (currentReelsTab === 'liked') {
-        loadLikedReels();
-        return;
-    } else {
-        query = database.ref('reels').orderByChild('createdAt').limitToLast(50);
-    }
-    
-    query.once('value')
-    .then(function(snapshot) {
+    if (currentReelsTab === 'my') query = database.ref('reels').orderByChild('authorId').equalTo(currentUser.uid);
+    else if (currentReelsTab === 'liked') { loadLikedReels(); return; }
+    else query = database.ref('reels').orderByChild('createdAt').limitToLast(50);
+    query.once('value').then(snapshot=>{
         var reels = snapshot.val();
         feed.innerHTML = '';
-        
-        if (!reels) {
-            feed.innerHTML = '<div class="empty-reels"><span>🎬</span><p>Пока нет реелсов</p><p>Будьте первым!</p></div>';
-            return;
-        }
-        
-        var reelsArray = [];
-        Object.keys(reels).forEach(function(id) {
-            reelsArray.push({ id: id, data: reels[id] });
-        });
-        
-        reelsArray.sort(function(a, b) {
-            return (b.data.createdAt || 0) - (a.data.createdAt || 0);
-        });
-        
-        reelsArray.forEach(function(reel) {
-            var card = createReelCard(reel.id, reel.data);
-            feed.appendChild(card);
-        });
-    })
-    .catch(function(error) {
-        console.error('Ошибка загрузки реелсов:', error);
-        feed.innerHTML = '<div class="empty-reels"><span>❌</span><p>Ошибка загрузки</p></div>';
-    });
+        if(!reels){ feed.innerHTML='<div class="empty-reels"><span>🎬</span><p>Пока нет реелсов</p></div>'; return; }
+        var arr = Object.keys(reels).map(id=>({id, data:reels[id]}));
+        arr.sort((a,b)=>(b.data.createdAt||0)-(a.data.createdAt||0));
+        arr.forEach(reel=>feed.appendChild(createReelCard(reel.id, reel.data)));
+    }).catch(err=>{ feed.innerHTML='<div class="empty-reels"><span>❌</span><p>Ошибка</p></div>'; });
 }
 
-function loadLikedReels() {
-    var feed = document.getElementById('reels-feed');
-    feed.innerHTML = '<div class="empty-reels"><span>❤️</span><p>Функция в разработке</p></div>';
-}
-
-function createReelCard(reelId, reelData) {
-    var div = document.createElement('div');
-    div.className = 'reel-card';
-    div.onclick = function() { viewReel(reelId, reelData); };
-    
-    var mediaHtml = '';
-    if (reelData.mediaType === 'video') {
-        mediaHtml = '<video src="' + reelData.mediaUrl + '" muted></video>';
-    } else {
-        mediaHtml = '<img src="' + reelData.mediaUrl + '">';
-    }
-    
-    var likes = reelData.likesCount || 0;
-    var comments = reelData.commentsCount || 0;
-    
-    div.innerHTML = mediaHtml +
-        '<div class="reel-card-overlay">' +
-            '<div class="reel-card-stats">' +
-                '<span>❤️ ' + likes + '</span>' +
-                '<span>💬 ' + comments + '</span>' +
-            '</div>' +
-        '</div>';
-    
+function loadLikedReels(){ document.getElementById('reels-feed').innerHTML='<div class="empty-reels"><span>❤️</span><p>В разработке</p></div>'; }
+function createReelCard(reelId, reelData){
+    var div=document.createElement('div');
+    div.className='reel-card';
+    div.onclick=()=>viewReel(reelId, reelData);
+    var mediaHtml = reelData.mediaType==='video' ? `<video src="${reelData.mediaUrl}" muted></video>` : `<img src="${reelData.mediaUrl}">`;
+    div.innerHTML = mediaHtml + `<div class="reel-card-overlay"><div class="reel-card-stats"><span>❤️ ${reelData.likesCount||0}</span><span>💬 ${reelData.commentsCount||0}</span></div></div>`;
     return div;
 }
-
-function switchReelsTab(tab) {
-    currentReelsTab = tab;
-    
-    var btns = document.querySelectorAll('.reel-tab-btn');
-    btns.forEach(function(btn) { btn.classList.remove('active'); });
+function switchReelsTab(tab){
+    currentReelsTab=tab;
+    document.querySelectorAll('.reel-tab-btn').forEach(btn=>btn.classList.remove('active'));
     event.target.classList.add('active');
-    
     loadReels();
 }
-
-// === CREATE REEL ===
-function showCreateReelModal() {
+function showCreateReelModal(){
     document.getElementById('create-reel-modal').classList.remove('hidden');
-    currentReelFile = null;
-    currentReelType = null;
+    currentReelFile=null;
+    currentReelType=null;
     document.getElementById('reel-preview').classList.add('hidden');
-    document.getElementById('reel-preview').innerHTML = '';
-    document.getElementById('reel-caption').value = '';
-    document.getElementById('reel-upload-area').style.display = '';
+    document.getElementById('reel-preview').innerHTML='';
+    document.getElementById('reel-caption').value='';
+    document.getElementById('reel-upload-area').style.display='';
 }
-
-function closeCreateReelModal() {
-    document.getElementById('create-reel-modal').classList.add('hidden');
-}
-
-function previewReelMedia(event) {
-    var file = event.target.files[0];
-    if (!file) return;
-    
-    currentReelFile = file;
-    currentReelType = file.type.startsWith('video/') ? 'video' : 'image';
-    
-    var preview = document.getElementById('reel-preview');
-    preview.innerHTML = '';
+function closeCreateReelModal(){ document.getElementById('create-reel-modal').classList.add('hidden'); }
+function previewReelMedia(event){
+    var file=event.target.files[0];
+    if(!file) return;
+    currentReelFile=file;
+    currentReelType=file.type.startsWith('video/')?'video':'image';
+    var preview=document.getElementById('reel-preview');
+    preview.innerHTML='';
     preview.classList.remove('hidden');
-    document.getElementById('reel-upload-area').style.display = 'none';
-    
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        if (currentReelType === 'video') {
-            preview.innerHTML = '<video src="' + e.target.result + '" controls></video>';
-        } else {
-            preview.innerHTML = '<img src="' + e.target.result + '">';
-        }
-    };
+    document.getElementById('reel-upload-area').style.display='none';
+    var reader=new FileReader();
+    reader.onload=e=>{ preview.innerHTML = currentReelType==='video' ? `<video src="${e.target.result}" controls></video>` : `<img src="${e.target.result}">`; };
     reader.readAsDataURL(file);
 }
-
-function publishReel() {
-    if (!currentReelFile) {
-        showNotification('Выберите видео или фото', 'error');
-        return;
-    }
-    
-    var caption = document.getElementById('reel-caption').value.trim();
-    var commentsEnabled = document.getElementById('reel-comments-enabled').checked;
-    
-    showNotification('Загрузка реелса...', 'info');
-    
-    uploadImageToImgBB(currentReelFile)
-    .then(function(imageData) {
-        if (!imageData) throw new Error('Ошибка загрузки');
-        
-        var reelId = 'reel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        
-        return database.ref('reels/' + reelId).set({
-            authorId: currentUser.uid,
-            authorName: currentUserData.username || 'Пользователь',
-            authorAvatar: currentUserData.avatar || '',
-            mediaUrl: imageData.url,
-            mediaType: currentReelType,
-            caption: caption,
-            commentsEnabled: commentsEnabled,
-            likesCount: 0,
-            commentsCount: 0,
-            viewsCount: 0,
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-        });
-    })
-    .then(function() {
-        closeCreateReelModal();
-        showNotification('Реелс опубликован! 🎬', 'success');
-        loadReels();
-    })
-    .catch(function(error) {
-        console.error('Ошибка:', error);
-        showNotification('Ошибка публикации', 'error');
-    });
+function publishReel(){
+    if(!currentReelFile){ showNotification('Выберите файл','error'); return; }
+    var caption=document.getElementById('reel-caption').value.trim();
+    var commentsEnabled=document.getElementById('reel-comments-enabled').checked;
+    showNotification('Загрузка...','info');
+    uploadToCloudinary(currentReelFile, currentReelType)
+        .then(data=>{
+            var reelId='reel_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);
+            return database.ref('reels/'+reelId).set({
+                authorId:currentUser.uid, authorName:currentUserData.username||'Пользователь', authorAvatar:currentUserData.avatar||'',
+                mediaUrl:data.url, mediaType:currentReelType, caption:caption, commentsEnabled:commentsEnabled,
+                likesCount:0, commentsCount:0, viewsCount:0, createdAt:firebase.database.ServerValue.TIMESTAMP
+            });
+        }).then(()=>{ closeCreateReelModal(); showNotification('Реелс опубликован!','success'); loadReels(); })
+        .catch(err=>showNotification('Ошибка','error'));
 }
-
-// === VIEW REEL ===
-function viewReel(reelId, reelData) {
-    viewingReelId = reelId;
-    
+function viewReel(reelId, reelData){
+    viewingReelId=reelId;
     document.getElementById('view-reel-modal').classList.remove('hidden');
-    
-    var mediaContainer = document.getElementById('reel-media-container');
-    if (reelData.mediaType === 'video') {
-        mediaContainer.innerHTML = '<video src="' + reelData.mediaUrl + '" controls autoplay></video>';
-    } else {
-        mediaContainer.innerHTML = '<img src="' + reelData.mediaUrl + '">';
-    }
-    
-    var avatar = document.getElementById('reel-author-avatar');
-    if (reelData.authorAvatar) {
-        avatar.style.backgroundImage = 'url(' + reelData.authorAvatar + ')';
-        avatar.style.backgroundSize = 'cover';
-        avatar.textContent = '';
-    } else {
-        avatar.style.backgroundImage = '';
-        avatar.textContent = '👤';
-    }
-    
-    document.getElementById('reel-author-name').textContent = reelData.authorName || 'Пользователь';
-    document.getElementById('reel-caption-view').textContent = reelData.caption || '';
-    document.getElementById('reel-likes-count').textContent = reelData.likesCount || 0;
-    document.getElementById('reel-comments-count').textContent = reelData.commentsCount || 0;
-    
-    // Показать кнопку удаления для автора или супер-админа
-    var deleteBtn = document.getElementById('delete-reel-btn');
-    if (reelData.authorId === currentUser.uid || isSuperAdmin) {
-        deleteBtn.style.display = 'flex';
-    } else {
-        deleteBtn.style.display = 'none';
-    }
-    
-    // Increment views
-    database.ref('reels/' + reelId + '/viewsCount').transaction(function(views) {
-        return (views || 0) + 1;
-    });
-    
-    // Check if liked
+    var container=document.getElementById('reel-media-container');
+    container.innerHTML = reelData.mediaType==='video' ? `<video src="${reelData.mediaUrl}" controls autoplay></video>` : `<img src="${reelData.mediaUrl}">`;
+    var avatarDiv=document.getElementById('reel-author-avatar');
+    if(reelData.authorAvatar){ avatarDiv.style.backgroundImage=`url(${reelData.authorAvatar})`; avatarDiv.style.backgroundSize='cover'; avatarDiv.textContent=''; }
+    else{ avatarDiv.style.backgroundImage=''; avatarDiv.textContent='👤'; }
+    document.getElementById('reel-author-name').textContent=reelData.authorName||'Пользователь';
+    document.getElementById('reel-caption-view').textContent=reelData.caption||'';
+    document.getElementById('reel-likes-count').textContent=reelData.likesCount||0;
+    document.getElementById('reel-comments-count').textContent=reelData.commentsCount||0;
+    var delBtn=document.getElementById('delete-reel-btn');
+    if(reelData.authorId===currentUser.uid || isSuperAdmin) delBtn.style.display='flex';
+    else delBtn.style.display='none';
+    database.ref('reels/'+reelId+'/viewsCount').transaction(v=>(v||0)+1);
     checkIfLiked(reelId);
 }
-
-function closeViewReelModal() {
-    document.getElementById('view-reel-modal').classList.add('hidden');
-    viewingReelId = null;
-}
-
-function checkIfLiked(reelId) {
-    database.ref('reelLikes/' + reelId + '/' + currentUser.uid).once('value')
-    .then(function(snapshot) {
-        var btn = document.getElementById('like-reel-btn');
-        if (snapshot.exists()) {
-            btn.classList.add('liked');
-            btn.innerHTML = '❤️ <span id="reel-likes-count">' + (document.getElementById('reel-likes-count').textContent) + '</span>';
-        } else {
-            btn.classList.remove('liked');
-        }
+function closeViewReelModal(){ document.getElementById('view-reel-modal').classList.add('hidden'); viewingReelId=null; }
+function checkIfLiked(reelId){
+    database.ref('reelLikes/'+reelId+'/'+currentUser.uid).once('value').then(snap=>{
+        var btn=document.getElementById('like-reel-btn');
+        if(snap.exists()) btn.classList.add('liked');
+        else btn.classList.remove('liked');
     });
 }
-
-function likeReel() {
-    if (!viewingReelId) return;
-    
-    var likeRef = database.ref('reelLikes/' + viewingReelId + '/' + currentUser.uid);
-    var countRef = database.ref('reels/' + viewingReelId + '/likesCount');
-    
-    likeRef.once('value')
-    .then(function(snapshot) {
-        if (snapshot.exists()) {
-            // Unlike
+function likeReel(){
+    if(!viewingReelId) return;
+    var likeRef=database.ref('reelLikes/'+viewingReelId+'/'+currentUser.uid);
+    var countRef=database.ref('reels/'+viewingReelId+'/likesCount');
+    likeRef.once('value').then(snap=>{
+        if(snap.exists()){
             likeRef.remove();
-            countRef.transaction(function(count) { return Math.max((count || 1) - 1, 0); });
+            countRef.transaction(c=>Math.max((c||1)-1,0));
             document.getElementById('like-reel-btn').classList.remove('liked');
         } else {
-            // Like
             likeRef.set(true);
-            countRef.transaction(function(count) { return (count || 0) + 1; });
+            countRef.transaction(c=>(c||0)+1);
             document.getElementById('like-reel-btn').classList.add('liked');
         }
-        
-        // Update display
-        countRef.once('value').then(function(snap) {
-            document.getElementById('reel-likes-count').textContent = snap.val() || 0;
-        });
+        countRef.once('value').then(s=>document.getElementById('reel-likes-count').textContent=s.val()||0);
     });
 }
-
-function showReelComments() {
-    showNotification('Комментарии в разработке', 'info');
+function showReelComments(){ showNotification('Комментарии в разработке','info'); }
+function shareReel(){
+    if(navigator.share) navigator.share({title:'Реелс Kukumber', text:'Посмотри!', url:window.location.href});
+    else showNotification('Скопируйте ссылку','info');
 }
-
-function shareReel() {
-    if (navigator.share) {
-        navigator.share({
-            title: 'Реелс в Kukumber',
-            text: 'Посмотри этот реелс!',
-            url: window.location.href
-        });
-    } else {
-        showNotification('Скопируйте ссылку вручную', 'info');
-    }
-}
-
-// === УДАЛЕНИЕ РЕЕЛСА ===
-function deleteCurrentReel() {
-    if (!viewingReelId) return;
-    database.ref('reels/' + viewingReelId).once('value').then(snap => {
-        var reel = snap.val();
-        if (reel.authorId === currentUser.uid || isSuperAdmin) {
-            if (confirm('Удалить реелс?')) {
-                database.ref('reels/' + viewingReelId).remove().then(() => {
-                    showNotification('Реелс удалён', 'success');
-                    closeViewReelModal();
-                    loadReels();
-                });
+function deleteCurrentReel(){
+    if(!viewingReelId) return;
+    database.ref('reels/'+viewingReelId).once('value').then(snap=>{
+        var reel=snap.val();
+        if(reel.authorId===currentUser.uid || isSuperAdmin){
+            if(confirm('Удалить реелс?')){
+                database.ref('reels/'+viewingReelId).remove().then(()=>{ showNotification('Удалён','success'); closeViewReelModal(); loadReels(); });
             }
-        } else {
-            showNotification('Нет прав', 'error');
-        }
+        } else showNotification('Нет прав','error');
     });
 }
