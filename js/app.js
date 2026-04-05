@@ -12,7 +12,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var database = firebase.database();
-var storage = firebase.storage();
+var storage = firebase.storage(); // оставляем, но не используем
 
 var currentUser = null;
 var currentUserData = null;
@@ -22,7 +22,6 @@ var messagesListener = null;
 var currentTab = 'chats';
 var isSuperAdmin = false;
 
-// === INIT ===
 window.addEventListener('load', function() {
     setTimeout(function() {
         document.getElementById('loading-screen').classList.add('hidden');
