@@ -1,4 +1,4 @@
-// KUKUMBER MESSENGER - CALLS (исправлено)
+// KUKUMBER MESSENGER - CALLS
 let peer = null;
 let localStream = null;
 let currentCall = null;
@@ -9,8 +9,13 @@ let callTimerInterval = null;
 let callSecondsCount = 0;
 
 function initializePeer() {
-    if (peer) return;
+    if (peer && peer.disconnected === false) return;
     if (!currentUser) return;
+    // Закрываем старого пира, если есть
+    if (peer) {
+        try { peer.destroy(); } catch(e) {}
+        peer = null;
+    }
     peer = new Peer(currentUser.uid, {
         config: {
             iceServers: [
@@ -20,10 +25,21 @@ function initializePeer() {
             ]
         }
     });
-    peer.on('open', id => console.log('PeerJS:', id));
+    peer.on('open', id => console.log('PeerJS подключён:', id));
     peer.on('call', call => handleIncomingCall(call));
-    peer.on('error', err => { console.error(err); if(err.type==='peer-unavailable') showNotification('Пользователь недоступен','error'); endCall(); });
-    peer.on('disconnected', () => console.log('Peer отключён'));
+    peer.on('error', err => {
+        console.error('Peer ошибка:', err);
+        if (err.type === 'peer-unavailable') showNotification('Пользователь недоступен','error');
+        if (err.type === 'disconnected') {
+            console.log('Peer отключён, переподключаемся...');
+            setTimeout(() => initializePeer(), 2000);
+        }
+        endCall();
+    });
+    peer.on('disconnected', () => {
+        console.log('Peer отключён, переподключаемся...');
+        setTimeout(() => initializePeer(), 2000);
+    });
 }
 
 function startCallTimer(){
@@ -32,8 +48,8 @@ function startCallTimer(){
     if(callTimerInterval) clearInterval(callTimerInterval);
     callTimerInterval=setInterval(()=>{ callSecondsCount++; updateCallTimerDisplay(); },1000);
 }
-function stopCallTimer(){ if(callTimerInterval) clearInterval(callTimerInterval); callSecondsCount=0; document.getElementById('call-timer').textContent='00:00'; }
-function updateCallTimerDisplay(){ let mins=Math.floor(callSecondsCount/60).toString().padStart(2,'0'); let secs=(callSecondsCount%60).toString().padStart(2,'0'); document.getElementById('call-timer').textContent=mins+':'+secs; }
+function stopCallTimer(){ if(callTimerInterval) clearInterval(callTimerInterval); callSecondsCount=0; var t=document.getElementById('call-timer'); if(t) t.textContent='00:00'; }
+function updateCallTimerDisplay(){ let mins=Math.floor(callSecondsCount/60).toString().padStart(2,'0'); let secs=(callSecondsCount%60).toString().padStart(2,'0'); var t=document.getElementById('call-timer'); if(t) t.textContent=mins+':'+secs; }
 
 function startVoiceCall(){ startCall(false); }
 function startVideoCall(){ startCall(true); }
@@ -42,7 +58,6 @@ function startCall(withVideo){
     if(currentChatUser.type !== 'private'){ showNotification('Звонки только в личных чатах','info'); return; }
     initializePeer();
     if(!peer){ showNotification('Ошибка Peer','error'); return; }
-    // Устанавливаем статус "звонит..."
     database.ref(`callingStatus/${currentChatId}/${currentUser.uid}`).set(true);
     navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true }).then(stream=>{
         localStream=stream;
@@ -69,8 +84,6 @@ function handleIncomingCall(call){
     document.getElementById('incoming-call-type').textContent=isVideo?'Видеозвонок':'Аудиозвонок';
     document.getElementById('incoming-call-modal').classList.remove('hidden');
     playRingtone();
-    // Сохраняем статус звонящего
-    if(currentChatId) database.ref(`callingStatus/${currentChatId}/${call.peer}`).set(true);
 }
 function acceptCall(){
     if(!incomingCall) return;
@@ -106,7 +119,6 @@ function setupCallListeners(call){
         if(remoteVideo) remoteVideo.srcObject=remoteStream;
         document.getElementById('call-status').textContent='Подключено';
         startCallTimer();
-        // Убираем статус звонка
         if(currentChatId) database.ref(`callingStatus/${currentChatId}`).remove();
     });
     call.on('close',()=>endCall());
