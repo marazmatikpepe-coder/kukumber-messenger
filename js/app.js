@@ -12,7 +12,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var database = firebase.database();
-var storage = firebase.storage(); // оставляем, но не используем
+// storage не используется
 
 var currentUser = null;
 var currentUserData = null;
