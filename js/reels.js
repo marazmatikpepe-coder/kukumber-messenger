@@ -198,6 +198,14 @@ function viewReel(reelId, reelData) {
     document.getElementById('reel-likes-count').textContent = reelData.likesCount || 0;
     document.getElementById('reel-comments-count').textContent = reelData.commentsCount || 0;
     
+    // Показать кнопку удаления для автора или супер-админа
+    var deleteBtn = document.getElementById('delete-reel-btn');
+    if (reelData.authorId === currentUser.uid || isSuperAdmin) {
+        deleteBtn.style.display = 'flex';
+    } else {
+        deleteBtn.style.display = 'none';
+    }
+    
     // Increment views
     database.ref('reels/' + reelId + '/viewsCount').transaction(function(views) {
         return (views || 0) + 1;
@@ -266,4 +274,23 @@ function shareReel() {
     } else {
         showNotification('Скопируйте ссылку вручную', 'info');
     }
+}
+
+// === УДАЛЕНИЕ РЕЕЛСА ===
+function deleteCurrentReel() {
+    if (!viewingReelId) return;
+    database.ref('reels/' + viewingReelId).once('value').then(snap => {
+        var reel = snap.val();
+        if (reel.authorId === currentUser.uid || isSuperAdmin) {
+            if (confirm('Удалить реелс?')) {
+                database.ref('reels/' + viewingReelId).remove().then(() => {
+                    showNotification('Реелс удалён', 'success');
+                    closeViewReelModal();
+                    loadReels();
+                });
+            }
+        } else {
+            showNotification('Нет прав', 'error');
+        }
+    });
 }
