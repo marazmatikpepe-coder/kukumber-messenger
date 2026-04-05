@@ -1,5 +1,5 @@
 // ========================================
-// KUKUMBER MESSENGER - UPLOAD (ImgBB)
+// KUKUMBER MESSENGER - UPLOAD (ImgBB + Firebase Storage)
 // ========================================
 
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
@@ -218,4 +218,88 @@ function previewChannelAvatar(event) {
         };
         reader.readAsDataURL(file);
     }
+}
+
+// ========================================
+// ГОЛОСОВЫЕ СООБЩЕНИЯ
+// ========================================
+
+var mediaRecorder, audioChunks, isRecording = false;
+
+function startRecording() {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+            var audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            sendAudioMessage(audioBlob);
+            stream.getTracks().forEach(t => t.stop());
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('voice-record-btn').classList.add('recording');
+    }).catch(err => showNotification('Ошибка доступа к микрофону', 'error'));
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        document.getElementById('voice-record-btn').classList.remove('recording');
+    }
+}
+
+function sendAudioMessage(blob) {
+    if (!currentChatId) return;
+    var filename = `audio/${currentChatId}/${Date.now()}.webm`;
+    var uploadTask = storage.ref(filename).put(blob);
+    uploadTask.then(snapshot => snapshot.ref.getDownloadURL()).then(url => {
+        var message = { type: 'audio', audioUrl: url, senderId: currentUser.uid, timestamp: firebase.database.ServerValue.TIMESTAMP };
+        database.ref('messages/' + currentChatId).push(message).then(() => {
+            database.ref('chats/' + currentChatId).update({ lastMessage: '🎤 Голосовое', lastMessageTime: firebase.database.ServerValue.TIMESTAMP });
+        });
+    }).catch(err => showNotification('Ошибка загрузки аудио', 'error'));
+}
+
+// ========================================
+// КРУЖКИ (ВИДЕОСООБЩЕНИЯ)
+// ========================================
+
+var videoRecorder, videoChunks, isVideoRecording = false;
+
+function startVideoCircle() {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+        videoRecorder = new MediaRecorder(stream);
+        videoChunks = [];
+        videoRecorder.ondataavailable = e => videoChunks.push(e.data);
+        videoRecorder.onstop = () => {
+            var videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+            sendVideoMessage(videoBlob);
+            stream.getTracks().forEach(t => t.stop());
+        };
+        videoRecorder.start();
+        isVideoRecording = true;
+        document.getElementById('video-record-btn').classList.add('recording');
+        setTimeout(() => { if (isVideoRecording) stopVideoCircle(); }, 15000); // макс 15 секунд
+    }).catch(err => showNotification('Нет доступа к камере', 'error'));
+}
+
+function stopVideoCircle() {
+    if (videoRecorder && isVideoRecording) {
+        videoRecorder.stop();
+        isVideoRecording = false;
+        document.getElementById('video-record-btn').classList.remove('recording');
+    }
+}
+
+function sendVideoMessage(blob) {
+    if (!currentChatId) return;
+    var filename = `video/${currentChatId}/${Date.now()}.webm`;
+    storage.ref(filename).put(blob).then(snapshot => snapshot.ref.getDownloadURL()).then(url => {
+        var message = { type: 'video_circle', videoUrl: url, senderId: currentUser.uid, timestamp: firebase.database.ServerValue.TIMESTAMP };
+        database.ref('messages/' + currentChatId).push(message).then(() => {
+            database.ref('chats/' + currentChatId).update({ lastMessage: '📹 Кружок', lastMessageTime: firebase.database.ServerValue.TIMESTAMP });
+        });
+    }).catch(err => showNotification('Ошибка загрузки видео', 'error'));
 }
