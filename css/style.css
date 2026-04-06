@@ -1809,3 +1809,8 @@ html, body {
 }
 
 /* Если хотите изменить размер — поменяйте 60px на нужное значение (например, 50px) */
+
+.message-input-area {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
