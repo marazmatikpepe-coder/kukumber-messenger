@@ -15,7 +15,7 @@ function saveProfile(){
     var updates={ username:newUsername, bio:newBio };
     var saveData=(avatarUrl)=>{ if(avatarUrl) updates.avatar=avatarUrl; database.ref('users/'+currentUser.uid).update(updates).then(()=>{ closeEditProfileModal(); showNotification('Профиль обновлён','success'); }).catch(err=>showNotification('Ошибка','error')); };
     if(window.pendingAvatarFile){
-        uploadToCloudinary(window.pendingAvatarFile, 'image').then(data=>{ window.pendingAvatarFile=null; saveData(data.url); }).catch(()=>saveData(null));
+        uploadImageToImgBB(window.pendingAvatarFile).then(data=>{ window.pendingAvatarFile=null; saveData(data.url); }).catch(()=>saveData(null));
     } else saveData(null);
 }
 function showNotificationSettings(){ showNotification('Уведомления: в разработке','info'); }
