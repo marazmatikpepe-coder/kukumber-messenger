@@ -1,12 +1,5 @@
-// KUKUMBER MESSENGER - AUTHENTICATION
-function showRegister() {
-    document.getElementById('login-form').classList.add('hidden');
-    document.getElementById('register-form').classList.remove('hidden');
-}
-function showLogin() {
-    document.getElementById('register-form').classList.add('hidden');
-    document.getElementById('login-form').classList.remove('hidden');
-}
+function showRegister() { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); }
+function showLogin() { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); }
 
 async function register() {
     const username = document.getElementById('reg-username').value.trim();
@@ -21,8 +14,7 @@ async function register() {
     if (password.length < 6) { showNotification('Пароль минимум 6 символов!', 'error'); return; }
     if (password !== confirmPassword) { showNotification('Пароли не совпадают!', 'error'); return; }
     const btn = document.querySelector('#register-form .btn-primary');
-    btn.disabled = true;
-    btn.textContent = 'Создание...';
+    btn.disabled = true; btn.textContent = 'Создание...';
     try {
         const usernameSnapshot = await database.ref('usernames/' + username.toLowerCase()).once('value');
         if (usernameSnapshot.exists()) { showNotification('Имя пользователя уже занято!', 'error'); btn.disabled=false; btn.textContent='Создать аккаунт'; return; }
@@ -51,8 +43,7 @@ async function register() {
         }
         showNotification(errorMessage, 'error');
     }
-    btn.disabled = false;
-    btn.textContent = 'Создать аккаунт';
+    btn.disabled = false; btn.textContent = 'Создать аккаунт';
 }
 
 async function login() {
@@ -61,8 +52,7 @@ async function login() {
     if (!email) { showNotification('Введите email!', 'error'); return; }
     if (!password) { showNotification('Введите пароль!', 'error'); return; }
     const btn = document.querySelector('#login-form .btn-primary');
-    btn.disabled = true;
-    btn.textContent = 'Вход...';
+    btn.disabled = true; btn.textContent = 'Вход...';
     try {
         await auth.signInWithEmailAndPassword(email, password);
         showNotification('Добро пожаловать в Kukumber!', 'success');
@@ -80,19 +70,14 @@ async function login() {
         }
         showNotification(errorMessage, 'error');
     }
-    btn.disabled = false;
-    btn.textContent = 'Войти';
+    btn.disabled = false; btn.textContent = 'Войти';
 }
 
 function logout() {
     if (!confirm('Вы уверены, что хотите выйти?')) return;
     if (messagesListener) messagesListener.off();
-    if (typeof currentCall !== 'undefined' && currentCall) endCall();
     auth.signOut().then(() => {
-        currentUser = null;
-        currentUserData = null;
-        currentChatId = null;
-        currentChatUser = null;
+        currentUser = null; currentUserData = null; currentChatId = null; currentChatUser = null;
         showNotification('Вы вышли', 'info');
     }).catch(error => showNotification('Ошибка выхода', 'error'));
 }
