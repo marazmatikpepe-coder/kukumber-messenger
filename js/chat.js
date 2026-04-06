@@ -1,4 +1,4 @@
-// KUKUMBER MESSENGER - CHAT (полная версия с ImgBB)
+// KUKUMBER MESSENGER - CHAT (полная версия)
 var currentTab = 'all';
 var selectedGroupMembers = [];
 var groupAvatarFile = null;
@@ -260,14 +260,12 @@ function openChat(chatId, chatData){
         name=chatData.name||'Группа';
         avatar=chatData.avatar||'';
         status=(chatData.members?Object.keys(chatData.members).length:0)+' участников';
-        hideCallButtons();
         document.getElementById('message-input-area').classList.remove('hidden');
         document.getElementById('channel-footer').classList.add('hidden');
     } else if(chatData.type==='channel'){
         name=chatData.name||'Канал';
         avatar=chatData.avatar||'';
         status=(chatData.subscribers?Object.keys(chatData.subscribers).length:0)+' подписчиков';
-        hideCallButtons();
         var isAdmin=chatData.admins && chatData.admins[currentUser.uid];
         if(isAdmin){
             document.getElementById('message-input-area').classList.remove('hidden');
@@ -283,7 +281,6 @@ function openChat(chatId, chatData){
         var online=chatData.otherUser?.status?.online;
         if(online) status='в сети';
         else status=formatLastSeen(lastSeen);
-        showCallButtons();
         document.getElementById('message-input-area').classList.remove('hidden');
         document.getElementById('channel-footer').classList.add('hidden');
     }
@@ -317,7 +314,6 @@ function openChat(chatId, chatData){
         }, 500);
     });
     avatarEl.addEventListener('mouseup',()=>clearTimeout(longPressTimer));
-    // Убираем выделение
     document.querySelectorAll('.chat-item').forEach(i=>i.classList.remove('active'));
     loadMessages(chatId);
     setupTypingListener(chatId);
@@ -344,8 +340,6 @@ function showAdminEditUser(userId){
     };
     input.click();
 }
-function hideCallButtons(){ document.querySelectorAll('.call-btn').forEach(btn=>btn.style.display='none'); }
-function showCallButtons(){ document.querySelectorAll('.call-btn').forEach(btn=>btn.style.display=''); }
 function closeChat(){
     document.getElementById('active-chat').classList.add('hidden');
     document.getElementById('no-chat-selected').classList.remove('hidden');
@@ -474,7 +468,7 @@ function goToGroupStep1() {
 }
 function loadGroupMembersList() {
     var list = document.getElementById('group-members-list');
-    list.innerHTML = '<div class="loading-users">Загрузка...</div>';
+    list.innerHTML = '<div>Загрузка...</div>';
     database.ref('contacts/' + currentUser.uid).once('value').then(snapshot => {
         var contacts = snapshot.val();
         if (!contacts) { list.innerHTML = '<div>Нет контактов. Добавьте их через поиск</div>'; return; }
@@ -534,8 +528,7 @@ function createGroup() {
     var description = document.getElementById('group-description').value.trim();
     if (!name) { showNotification('Введите название', 'error'); return; }
     var btn = document.querySelector('#group-step-2 .btn-primary');
-    btn.disabled = true;
-    btn.textContent = 'Создание...';
+    btn.disabled = true; btn.textContent = 'Создание...';
     var avatarPromise = groupAvatarFile ? uploadImageToImgBB(groupAvatarFile) : Promise.resolve(null);
     avatarPromise.then(data => {
         var avatarUrl = data ? data.url : '';
@@ -590,8 +583,7 @@ function createChannel() {
     if (!name) { showNotification('Введите название', 'error'); return; }
     if (link && !validateChannelLink()) return;
     var btn = document.querySelector('#create-channel-modal .btn-primary');
-    btn.disabled = true;
-    btn.textContent = 'Создание...';
+    btn.disabled = true; btn.textContent = 'Создание...';
     var checkLinkPromise = link ? database.ref('channelLinks/' + link).once('value').then(snap => { if (snap.exists()) throw new Error('Ссылка занята'); }) : Promise.resolve();
     checkLinkPromise.then(() => {
         var avatarPromise = channelAvatarFile ? uploadImageToImgBB(channelAvatarFile) : Promise.resolve(null);
