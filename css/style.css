@@ -1726,3 +1726,38 @@ html, body {
     font-size: 22px;
     line-height: 1;
 }
+/* Стили для кнопки прикрепления файла с иконкой (размер как у остальных) */
+.file-attach-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.file-attach-label img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    display: block;
+}
+
+.file-attach-label:hover {
+    background: var(--background);
+    transform: scale(1.05);
+}
+
+/* Дополнительно выравниваем все кнопки в строке ввода */
+.message-input-area .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 1;
+}
