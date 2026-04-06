@@ -26,7 +26,7 @@ window.addEventListener('load', function() {
 
 function checkAuthState() {
     auth.onAuthStateChanged(function(user) {
-        if (user) { currentUser = user; loadUserData(); showMainScreen(); initializePeer(); }
+        if (user) { currentUser = user; loadUserData(); showMainScreen(); }
         else { currentUser = null; currentUserData = null; showAuthScreen(); }
     });
 }
