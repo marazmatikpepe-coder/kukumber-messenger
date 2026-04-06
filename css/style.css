@@ -1705,11 +1705,23 @@ html, body {
     padding: 0;
 }
 
+/* Кнопка прикрепления файла — ровно ваша картинка 60x60 */
+.file-attach-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+}
+
 .file-attach-label img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
+    object-fit: contain;
     display: block;
 }
 
