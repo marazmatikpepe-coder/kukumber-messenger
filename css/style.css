@@ -1690,3 +1690,30 @@ html, body {
     background: var(--sage);
     border-radius: 3px;
 }
+
+/* Стили для кнопки прикрепления файла с иконкой */
+.file-attach-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.file-attach-label img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    display: block;
+}
+
+.file-attach-label:hover {
+    background: var(--background);
+    transform: scale(1.05);
+}
