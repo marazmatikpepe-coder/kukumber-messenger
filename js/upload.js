@@ -1,4 +1,4 @@
-// UPLOAD - ImgBB (только фото, аудио/видео не поддерживаются)
+// UPLOAD - ImgBB
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
@@ -64,7 +64,7 @@ function confirmImageSend(){
     pendingImageFile=null;
 }
 
-// Аватарки групп, каналов, профиля
+// Аватарки
 function previewGroupAvatar(event){
     var file=event.target.files[0];
     if(file){
