@@ -1691,8 +1691,9 @@ html, body {
     border-radius: 3px;
 }
 
-/* Кнопка прикрепления файла - строго 60x60 пикселей */
+/* Кнопка прикрепления файла 60x60 с вашим изображением поверх */
 .file-attach-label {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1704,14 +1705,21 @@ html, body {
     transition: all 0.2s;
     border: none;
     padding: 0;
+    overflow: hidden;
 }
 
 .file-attach-label img {
-    width: 32px;
-    height: 32px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%; /* можно подогнать: 70% или 90% */
+    height: auto;
+    max-width: 48px;
+    max-height: 48px;
     object-fit: contain;
     display: block;
-    filter: brightness(0) invert(1); /* иконка белая */
+    pointer-events: none; /* чтобы клик проходил сквозь картинку */
 }
 
 .file-attach-label:hover {
