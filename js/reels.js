@@ -1,4 +1,4 @@
-// KUKUMBER MESSENGER - REELS
+// KUKUMBER MESSENGER - REELS (только фото)
 var currentReelFile = null;
 var currentReelType = null;
 var currentReelsTab = 'feed';
@@ -20,7 +20,6 @@ function loadReels() {
         arr.forEach(reel=>feed.appendChild(createReelCard(reel.id, reel.data)));
     }).catch(err=>{ feed.innerHTML='<div class="empty-reels"><span>❌</span><p>Ошибка</p></div>'; });
 }
-
 function loadLikedReels(){ document.getElementById('reels-feed').innerHTML='<div class="empty-reels"><span>❤️</span><p>В разработке</p></div>'; }
 function createReelCard(reelId, reelData){
     var div=document.createElement('div');
@@ -61,15 +60,16 @@ function previewReelMedia(event){
 }
 function publishReel(){
     if(!currentReelFile){ showNotification('Выберите файл','error'); return; }
+    if(currentReelType !== 'image'){ showNotification('ImgBB поддерживает только фото. Видео не загрузятся.','error'); return; }
     var caption=document.getElementById('reel-caption').value.trim();
     var commentsEnabled=document.getElementById('reel-comments-enabled').checked;
     showNotification('Загрузка...','info');
-    uploadToCloudinary(currentReelFile, currentReelType)
+    uploadImageToImgBB(currentReelFile)
         .then(data=>{
             var reelId='reel_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);
             return database.ref('reels/'+reelId).set({
                 authorId:currentUser.uid, authorName:currentUserData.username||'Пользователь', authorAvatar:currentUserData.avatar||'',
-                mediaUrl:data.url, mediaType:currentReelType, caption:caption, commentsEnabled:commentsEnabled,
+                mediaUrl:data.url, mediaType:'image', caption:caption, commentsEnabled:commentsEnabled,
                 likesCount:0, commentsCount:0, viewsCount:0, createdAt:firebase.database.ServerValue.TIMESTAMP
             });
         }).then(()=>{ closeCreateReelModal(); showNotification('Реелс опубликован!','success'); loadReels(); })
@@ -79,7 +79,7 @@ function viewReel(reelId, reelData){
     viewingReelId=reelId;
     document.getElementById('view-reel-modal').classList.remove('hidden');
     var container=document.getElementById('reel-media-container');
-    container.innerHTML = reelData.mediaType==='video' ? `<video src="${reelData.mediaUrl}" controls autoplay></video>` : `<img src="${reelData.mediaUrl}">`;
+    container.innerHTML = `<img src="${reelData.mediaUrl}">`;
     var avatarDiv=document.getElementById('reel-author-avatar');
     if(reelData.authorAvatar){ avatarDiv.style.backgroundImage=`url(${reelData.authorAvatar})`; avatarDiv.style.backgroundSize='cover'; avatarDiv.textContent=''; }
     else{ avatarDiv.style.backgroundImage=''; avatarDiv.textContent='👤'; }
