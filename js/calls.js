@@ -23,7 +23,7 @@ function initializePeer() {
         peer = null;
     }
     console.log('Создаём новый Peer с ID:', currentUser.uid);
-    // Используем альтернативный сервер
+    // Используем альтернативный сервер (peerjs-server.herokuapp.com)
     peer = new Peer(currentUser.uid, {
         host: 'peerjs-server.herokuapp.com',
         port: 443,
@@ -31,7 +31,8 @@ function initializePeer() {
         config: {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
             ]
         }
     });
