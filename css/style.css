@@ -1729,3 +1729,44 @@ html, body {
     transform: scale(1.05);
     opacity: 0.9;
 }
+
+/* Общие стили для кнопок с картинками (прикрепление, голосовое, видео, звонок) */
+.file-attach-label,
+.voice-record-label,
+.video-record-label,
+.voice-call-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+.file-attach-label img,
+.voice-record-label img,
+.video-record-label img,
+.voice-call-label img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.file-attach-label:hover,
+.voice-record-label:hover,
+.video-record-label:hover,
+.voice-call-label:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+/* Стиль для кнопки видеозвонка (если не меняли) */
+.call-btn {
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
+}
