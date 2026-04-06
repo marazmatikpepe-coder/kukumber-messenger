@@ -1,4 +1,4 @@
-// KUKUMBER MESSENGER - CHAT (полная версия)
+// KUKUMBER MESSENGER - CHAT (полная версия с ImgBB)
 var currentTab = 'all';
 var selectedGroupMembers = [];
 var groupAvatarFile = null;
@@ -336,7 +336,7 @@ function showAdminEditUser(userId){
     input.onchange=function(e){
         var file=e.target.files[0];
         if(file){
-            uploadToCloudinary(file, 'image').then(data=>{
+            uploadImageToImgBB(file).then(data=>{
                 database.ref('users/'+userId+'/avatar').set(data.url);
                 showNotification('Аватар изменён','success');
             });
@@ -374,10 +374,6 @@ function createMessageElement(message){
     if(message.type==='image'){
         content=`<div class="message-image" onclick="openLightbox('${message.imageUrl}')"><img src="${message.imageUrl}" alt="Image"></div>`;
         if(message.caption) content+=`<div class="message-text">${escapeHtml(message.caption)}</div>`;
-    } else if(message.type==='audio'){
-        content=`<div class="audio-message"><button onclick="playAudio('${message.audioUrl}')">▶️</button><audio src="${message.audioUrl}" style="display:none"></audio><span>Голосовое сообщение</span></div>`;
-    } else if(message.type==='video_circle'){
-        content=`<div class="video-message"><video src="${message.videoUrl}" controls style="max-width:200px; border-radius:50%;"></video></div>`;
     } else {
         content=`<div class="message-text">${escapeHtml(message.text||'')}</div>`;
     }
@@ -443,10 +439,6 @@ function setupTypingListener(chatId){
             }
         }
     });
-}
-function playAudio(url){
-    var audio=new Audio(url);
-    audio.play();
 }
 function openLightbox(url){
     document.getElementById('lightbox-image').src=url;
@@ -544,7 +536,7 @@ function createGroup() {
     var btn = document.querySelector('#group-step-2 .btn-primary');
     btn.disabled = true;
     btn.textContent = 'Создание...';
-    var avatarPromise = groupAvatarFile ? uploadToCloudinary(groupAvatarFile, 'image') : Promise.resolve(null);
+    var avatarPromise = groupAvatarFile ? uploadImageToImgBB(groupAvatarFile) : Promise.resolve(null);
     avatarPromise.then(data => {
         var avatarUrl = data ? data.url : '';
         var chatId = 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -602,7 +594,7 @@ function createChannel() {
     btn.textContent = 'Создание...';
     var checkLinkPromise = link ? database.ref('channelLinks/' + link).once('value').then(snap => { if (snap.exists()) throw new Error('Ссылка занята'); }) : Promise.resolve();
     checkLinkPromise.then(() => {
-        var avatarPromise = channelAvatarFile ? uploadToCloudinary(channelAvatarFile, 'image') : Promise.resolve(null);
+        var avatarPromise = channelAvatarFile ? uploadImageToImgBB(channelAvatarFile) : Promise.resolve(null);
         return avatarPromise.then(data => {
             var avatarUrl = data ? data.url : '';
             var chatId = 'channel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
