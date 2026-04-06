@@ -1691,40 +1691,13 @@ html, body {
     border-radius: 3px;
 }
 
-/* Стили для кнопки прикрепления файла с иконкой (размер как у остальных) */
+/* Кнопка прикрепления файла - строго 60x60 пикселей */
 .file-attach-label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: none;
-    border: none;
-    padding: 0;
-}
-
-.file-attach-label img {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    display: block;
-}
-
-.file-attach-label:hover {
-    background: var(--background);
-    transform: scale(1.05);
-}
-
-/* Кнопка прикрепления файла - строго 40x40 пикселей */
-.file-attach-label {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
     background: linear-gradient(135deg, var(--forest), var(--lime));
     border-radius: 50%;
     cursor: pointer;
@@ -1734,11 +1707,11 @@ html, body {
 }
 
 .file-attach-label img {
-    width: 22px;
-    height: 22px;
+    width: 32px;
+    height: 32px;
     object-fit: contain;
     display: block;
-    filter: brightness(0) invert(1); /* делает иконку белой */
+    filter: brightness(0) invert(1); /* иконка белая */
 }
 
 .file-attach-label:hover {
