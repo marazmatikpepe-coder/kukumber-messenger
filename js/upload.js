@@ -1,4 +1,4 @@
-// UPLOAD - ImgBB (только фото, аудио/видео не поддерживаются ImgBB, поэтому голосовые и кружки отключены)
+// UPLOAD - ImgBB (только фото, аудио/видео не поддерживаются)
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
@@ -64,7 +64,7 @@ function confirmImageSend(){
     pendingImageFile=null;
 }
 
-// Функции для аватарок (групп, каналов, профиля) тоже используют ImgBB
+// Аватарки групп, каналов, профиля
 function previewGroupAvatar(event){
     var file=event.target.files[0];
     if(file){
