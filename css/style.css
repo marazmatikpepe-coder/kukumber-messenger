@@ -1603,4 +1603,126 @@ body {
 .file-attach-label img,
 .voice-record-label img,
 .video-record-label img,
-.voice-call
+.voice-call-label img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.file-attach-label:hover,
+.voice-record-label:hover,
+.video-record-label:hover,
+.voice-call-label:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+
+/* === МОБИЛЬНАЯ АДАПТАЦИЯ === */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 85%;
+        max-width: 320px;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
+        height: 100%;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .back-btn {
+        display: block;
+    }
+
+    .chat-area {
+        height: 100%;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    .call-btn {
+        display: flex !important;
+    }
+
+    .reels-feed {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .notifications-container {
+        left: 15px;
+        right: 15px;
+        max-width: none;
+    }
+
+    .btn-icon,
+    .btn-create,
+    .nav-item,
+    .chat-item {
+        touch-action: manipulation;
+    }
+
+    .app-container {
+        overflow-x: hidden;
+    }
+
+    .chat-header h3 {
+        font-size: 14px;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .message-input-area input[type="text"] {
+        font-size: 16px;
+    }
+
+    .modal-content {
+        max-width: 95%;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-create span:last-child {
+        display: none;
+    }
+
+    .btn-create span:first-child {
+        font-size: 22px;
+    }
+
+    .reels-feed {
+        grid-template-columns: 1fr;
+    }
+
+    .chat-header .chat-user-info h3 {
+        font-size: 13px;
+        max-width: 120px;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--sage);
+    border-radius: 3px;
+    }
