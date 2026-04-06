@@ -409,6 +409,7 @@ html, body {
     background: var(--background);
     position: relative;
     height: 100%;
+    overflow: hidden;
 }
 
 .mobile-menu-btn {
@@ -445,6 +446,8 @@ html, body {
     display: flex;
     flex-direction: column;
     height: 100%;
+    flex: 1;
+    overflow: hidden;
 }
 
 .chat-header {
@@ -454,6 +457,7 @@ html, body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .back-btn {
@@ -592,6 +596,7 @@ html, body {
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .message-input-area input[type="text"] {
@@ -623,6 +628,7 @@ html, body {
     text-align: center;
     background: var(--background);
     color: var(--text-light);
+    flex-shrink: 0;
 }
 
 .emoji-picker {
@@ -660,11 +666,8 @@ html, body {
     background: white;
     border-top: 1px solid var(--border);
     display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 900;
+    position: relative;
+    flex-shrink: 0;
 }
 
 .nav-item {
@@ -1576,19 +1579,18 @@ html, body {
 
 /* === МОБИЛЬНАЯ АДАПТАЦИЯ === */
 @media (max-width: 768px) {
-    /* Скрываем боковую панель по умолчанию, выезжает */
     .sidebar {
         position: fixed;
         left: 0;
         top: 0;
-        bottom: 60px;
+        bottom: 0;
         width: 85%;
         max-width: 320px;
         z-index: 1000;
         transform: translateX(-100%);
         transition: transform 0.3s ease;
         box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
-        height: calc(100% - 60px);
+        height: 100%;
     }
     .sidebar.open {
         transform: translateX(0);
@@ -1602,7 +1604,7 @@ html, body {
         display: block;
     }
     .chat-area {
-        height: calc(100% - 60px);
+        height: 100%;
     }
     .message {
         max-width: 85%;
@@ -1618,11 +1620,9 @@ html, body {
         right: 15px;
         max-width: none;
     }
-    /* Увеличиваем отступы для touch */
     .btn-icon, .btn-create, .nav-item, .chat-item {
         touch-action: manipulation;
     }
-    /* Исправляем возможные переполнения */
     .app-container {
         overflow-x: hidden;
     }
@@ -1634,21 +1634,28 @@ html, body {
         white-space: nowrap;
     }
     .message-input-area input[type="text"] {
-        font-size: 16px; /* предотвращает зум на iOS */
+        font-size: 16px;
     }
-    /* Модальные окна на всю ширину */
     .modal-content {
         max-width: 95%;
         margin: 0 auto;
     }
-    /* Боковая панель - заголовок */
-    .sidebar-header .user-info {
-        padding: 5px 0;
-    }
-    /* Скрываем текст под иконками создания, если мало места */
     .btn-create span:last-child {
         display: inline-block;
         font-size: 10px;
+    }
+    /* Фикс для нижней навигации */
+    .main-screen {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .tab-content {
+        flex: 1;
+        overflow: hidden;
+    }
+    .bottom-nav {
+        flex-shrink: 0;
     }
 }
 
@@ -1674,7 +1681,7 @@ html, body {
     }
 }
 
-/* Стили для скроллбара (необязательно) */
+/* Стили для скроллбара */
 ::-webkit-scrollbar {
     width: 5px;
 }
