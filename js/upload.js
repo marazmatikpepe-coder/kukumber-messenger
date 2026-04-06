@@ -66,14 +66,37 @@ function handleFileSelect(event) {
         return;
     }
     showImagePreview(file);
-    event.target.value = ''; // очищаем, чтобы можно было выбрать тот же файл снова
+    event.target.value = '';
 }
 
 function showImagePreview(file) {
     pendingImageFile = file;
     var reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('preview-image').src = e.target.result;
+        var previewImg = document.getElementById('preview-image');
+        if (!previewImg) {
+            console.error('Элемент preview-image не найден, создаём...');
+            // Создаём элемент, если его нет
+            var modal = document.getElementById('image-preview-modal');
+            if (modal) {
+                var img = document.createElement('img');
+                img.id = 'preview-image';
+                img.style.width = '100%';
+                var container = modal.querySelector('.image-preview-container');
+                if (container) {
+                    // Вставляем первым дочерним элементом
+                    container.insertBefore(img, container.firstChild);
+                } else {
+                    modal.appendChild(img);
+                }
+                previewImg = document.getElementById('preview-image');
+            }
+        }
+        if (previewImg) {
+            previewImg.src = e.target.result;
+        } else {
+            console.error('Не удалось создать или найти preview-image');
+        }
         document.getElementById('image-caption').value = '';
         document.getElementById('image-preview-modal').classList.remove('hidden');
     };
@@ -120,7 +143,52 @@ function confirmImageSend() {
     pendingImageFile = null;
 }
 
-// Остальные функции (аватарки групп, каналов, профиля) – они не влияют на отправку фото
-function previewGroupAvatar(event) { /* ... */ }
-function previewChannelAvatar(event) { /* ... */ }
-function previewEditAvatar(event) { /* ... */ }
+// Аватарки групп, каналов, профиля (оставьте как есть, они не влияют)
+function previewGroupAvatar(event) {
+    var file = event.target.files[0];
+    if (file) {
+        groupAvatarFile = file;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var preview = document.getElementById('group-avatar-preview');
+            if (preview) {
+                preview.style.backgroundImage = 'url(' + e.target.result + ')';
+                preview.style.backgroundSize = 'cover';
+                preview.textContent = '';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+function previewChannelAvatar(event) {
+    var file = event.target.files[0];
+    if (file) {
+        channelAvatarFile = file;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var preview = document.getElementById('channel-avatar-preview');
+            if (preview) {
+                preview.style.backgroundImage = 'url(' + e.target.result + ')';
+                preview.style.backgroundSize = 'cover';
+                preview.textContent = '';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+function previewEditAvatar(event) {
+    var file = event.target.files[0];
+    if (file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var preview = document.getElementById('edit-avatar-preview');
+            if (preview) {
+                preview.style.backgroundImage = 'url(' + e.target.result + ')';
+                preview.style.backgroundSize = 'cover';
+                preview.textContent = '';
+            }
+        };
+        reader.readAsDataURL(file);
+        window.pendingAvatarFile = file;
+    }
+            }
