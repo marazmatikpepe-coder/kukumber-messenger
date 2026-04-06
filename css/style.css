@@ -1730,7 +1730,7 @@ html, body {
     opacity: 0.9;
 }
 
-/* Общие стили для кнопок с картинками (прикрепление, голосовое, видео, звонок) */
+/* Все кнопки с картинками: прикрепление, голосовое, видео, звонок — ровно 60x60 */
 .file-attach-label,
 .voice-record-label,
 .video-record-label,
@@ -1744,6 +1744,7 @@ html, body {
     border: none;
     background: none;
     padding: 0;
+    flex-shrink: 0;
 }
 
 .file-attach-label img,
@@ -1756,17 +1757,22 @@ html, body {
     display: block;
 }
 
+/* Эффект при наведении */
 .file-attach-label:hover,
 .voice-record-label:hover,
 .video-record-label:hover,
 .voice-call-label:hover {
-    transform: scale(1.05);
+    transform: scale(1.02);
     opacity: 0.9;
 }
 
-/* Стиль для кнопки видеозвонка (если не меняли) */
-.call-btn {
-    font-size: 24px;
-    width: 44px;
-    height: 44px;
+/* Чтобы кнопки не разъезжались, убираем лишние отступы у родителя */
+.message-input-area {
+    gap: 4px; /* чуть меньше отступ между кнопками */
 }
+
+/* Если кнопка отправки тоже нужна 60x60 — раскомментировать */
+/* .btn-send {
+    width: 60px;
+    height: 60px;
+} */
