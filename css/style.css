@@ -1928,7 +1928,33 @@ body {
     font-weight: 600;
     cursor: pointer;
 }
+/* Кнопки звонков в шапке чата */
+.voice-call-label,
+.video-call-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
 
+.voice-call-label img,
+.video-call-label img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.voice-call-label:hover,
+.video-call-label:hover {
+    background: var(--background);
+    transform: scale(1.05);
+}
 .upload-cancel-button:hover {
     opacity: 0.9;
 }
