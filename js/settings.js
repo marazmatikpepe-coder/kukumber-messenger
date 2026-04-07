@@ -22,7 +22,8 @@ var translations = {
         select_language: 'Выберите язык',
         settings_saved: 'Настройки сохранены',
         profile_updated: 'Профиль обновлён',
-        enter_username: 'Введите имя пользователя'
+        enter_username: 'Введите имя пользователя',
+        in_development: 'в разработке'
     },
     en: {
         app_name: 'Kukumber Messenger',
@@ -44,7 +45,8 @@ var translations = {
         select_language: 'Select language',
         settings_saved: 'Settings saved',
         profile_updated: 'Profile updated',
-        enter_username: 'Enter username'
+        enter_username: 'Enter username',
+        in_development: 'in development'
     },
     es: {
         app_name: 'Kukumber Messenger',
@@ -66,7 +68,8 @@ var translations = {
         select_language: 'Seleccionar idioma',
         settings_saved: 'Configuración guardada',
         profile_updated: 'Perfil actualizado',
-        enter_username: 'Ingrese nombre de usuario'
+        enter_username: 'Ingrese nombre de usuario',
+        in_development: 'en desarrollo'
     },
     de: {
         app_name: 'Kukumber Messenger',
@@ -88,7 +91,8 @@ var translations = {
         select_language: 'Sprache auswählen',
         settings_saved: 'Einstellungen gespeichert',
         profile_updated: 'Profil aktualisiert',
-        enter_username: 'Benutzername eingeben'
+        enter_username: 'Benutzername eingeben',
+        in_development: 'in Entwicklung'
     },
     it: {
         app_name: 'Kukumber Messenger',
@@ -110,7 +114,8 @@ var translations = {
         select_language: 'Seleziona lingua',
         settings_saved: 'Impostazioni salvate',
         profile_updated: 'Profilo aggiornato',
-        enter_username: 'Inserisci nome utente'
+        enter_username: 'Inserisci nome utente',
+        in_development: 'in sviluppo'
     },
     fr: {
         app_name: 'Kukumber Messenger',
@@ -132,7 +137,8 @@ var translations = {
         select_language: 'Choisir la langue',
         settings_saved: 'Paramètres enregistrés',
         profile_updated: 'Profil mis à jour',
-        enter_username: "Entrez le nom d'utilisateur"
+        enter_username: "Entrez le nom d'utilisateur",
+        in_development: 'en développement'
     },
     be: {
         app_name: 'Kukumber Messenger',
@@ -154,7 +160,8 @@ var translations = {
         select_language: 'Абярыце мову',
         settings_saved: 'Налады захаваны',
         profile_updated: 'Профіль абноўлены',
-        enter_username: 'Увядзіце імя карыстальніка'
+        enter_username: 'Увядзіце імя карыстальніка',
+        in_development: 'у распрацоўцы'
     },
     uk: {
         app_name: 'Kukumber Messenger',
@@ -176,7 +183,8 @@ var translations = {
         select_language: 'Виберіть мову',
         settings_saved: 'Налаштування збережено',
         profile_updated: 'Профіль оновлено',
-        enter_username: 'Введіть ім\'я користувача'
+        enter_username: 'Введіть ім\'я користувача',
+        in_development: 'в розробці'
     },
     pl: {
         app_name: 'Kukumber Messenger',
@@ -198,7 +206,8 @@ var translations = {
         select_language: 'Wybierz język',
         settings_saved: 'Ustawienia zapisane',
         profile_updated: 'Profil zaktualizowany',
-        enter_username: 'Wprowadź nazwę użytkownika'
+        enter_username: 'Wprowadź nazwę użytkownika',
+        in_development: 'w rozwoju'
     },
     ko: {
         app_name: 'Kukumber Messenger',
@@ -220,7 +229,8 @@ var translations = {
         select_language: '언어 선택',
         settings_saved: '설정이 저장되었습니다',
         profile_updated: '프로필이 업데이트되었습니다',
-        enter_username: '사용자 이름을 입력하세요'
+        enter_username: '사용자 이름을 입력하세요',
+        in_development: '개발 중'
     },
     nl: {
         app_name: 'Kukumber Messenger',
@@ -242,7 +252,8 @@ var translations = {
         select_language: 'Selecteer taal',
         settings_saved: 'Instellingen opgeslagen',
         profile_updated: 'Profiel bijgewerkt',
-        enter_username: 'Voer gebruikersnaam in'
+        enter_username: 'Voer gebruikersnaam in',
+        in_development: 'in ontwikkeling'
     },
     pt_br: {
         app_name: 'Kukumber Messenger',
@@ -264,7 +275,8 @@ var translations = {
         select_language: 'Selecione o idioma',
         settings_saved: 'Configurações salvas',
         profile_updated: 'Perfil atualizado',
-        enter_username: 'Digite o nome de usuário'
+        enter_username: 'Digite o nome de usuário',
+        in_development: 'em desenvolvimento'
     },
     ca: {
         app_name: 'Kukumber Messenger',
@@ -286,7 +298,8 @@ var translations = {
         select_language: 'Selecciona l\'idioma',
         settings_saved: 'Configuració desada',
         profile_updated: 'Perfil actualitzat',
-        enter_username: "Introdueix el nom d'usuari"
+        enter_username: "Introdueix el nom d'usuari",
+        in_development: 'en desenvolupament'
     },
     ms: {
         app_name: 'Kukumber Messenger',
@@ -308,7 +321,8 @@ var translations = {
         select_language: 'Pilih bahasa',
         settings_saved: 'Tetapan disimpan',
         profile_updated: 'Profil dikemas kini',
-        enter_username: 'Masukkan nama pengguna'
+        enter_username: 'Masukkan nama pengguna',
+        in_development: 'dalam pembangunan'
     },
     tr: {
         app_name: 'Kukumber Messenger',
@@ -330,7 +344,8 @@ var translations = {
         select_language: 'Dil seçin',
         settings_saved: 'Ayarlar kaydedildi',
         profile_updated: 'Profil güncellendi',
-        enter_username: 'Kullanıcı adını girin'
+        enter_username: 'Kullanıcı adını girin',
+        in_development: 'geliştirilme aşamasında'
     },
     fa: {
         app_name: 'Kukumber Messenger',
@@ -352,7 +367,8 @@ var translations = {
         select_language: 'انتخاب زبان',
         settings_saved: 'تنظیمات ذخیره شد',
         profile_updated: 'پروفایل به‌روزرسانی شد',
-        enter_username: 'نام کاربری را وارد کنید'
+        enter_username: 'نام کاربری را وارد کنید',
+        in_development: 'در حال توسعه'
     },
     uz: {
         app_name: 'Kukumber Messenger',
@@ -374,7 +390,8 @@ var translations = {
         select_language: 'Tilni tanlang',
         settings_saved: 'Sozlamalar saqlandi',
         profile_updated: 'Profil yangilandi',
-        enter_username: 'Foydalanuvchi nomini kiriting'
+        enter_username: 'Foydalanuvchi nomini kiriting',
+        in_development: 'ishlab chiqilmoqda'
     },
     ar: {
         app_name: 'Kukumber Messenger',
@@ -396,7 +413,8 @@ var translations = {
         select_language: 'اختر اللغة',
         settings_saved: 'تم حفظ الإعدادات',
         profile_updated: 'تم تحديث الملف الشخصي',
-        enter_username: 'أدخل اسم المستخدم'
+        enter_username: 'أدخل اسم المستخدم',
+        in_development: 'قيد التطوير'
     },
     id: {
         app_name: 'Kukumber Messenger',
@@ -418,7 +436,8 @@ var translations = {
         select_language: 'Pilih bahasa',
         settings_saved: 'Pengaturan disimpan',
         profile_updated: 'Profil diperbarui',
-        enter_username: 'Masukkan nama pengguna'
+        enter_username: 'Masukkan nama pengguna',
+        in_development: 'dalam pengembangan'
     },
     hu: {
         app_name: 'Kukumber Messenger',
@@ -440,7 +459,8 @@ var translations = {
         select_language: 'Válasszon nyelvet',
         settings_saved: 'Beállítások mentve',
         profile_updated: 'Profil frissítve',
-        enter_username: 'Adja meg a felhasználónevet'
+        enter_username: 'Adja meg a felhasználónevet',
+        in_development: 'fejlesztés alatt'
     },
     iw: {
         app_name: 'Kukumber Messenger',
@@ -462,7 +482,8 @@ var translations = {
         select_language: 'בחר שפה',
         settings_saved: 'ההגדרות נשמרו',
         profile_updated: 'הפרופיל עודכן',
-        enter_username: 'הזן שם משתמש'
+        enter_username: 'הזן שם משתמש',
+        in_development: 'בפיתוח'
     },
     hi: {
         app_name: 'Kukumber Messenger',
@@ -484,7 +505,8 @@ var translations = {
         select_language: 'भाषा चुनें',
         settings_saved: 'सेटिंग्स सहेजी गईं',
         profile_updated: 'प्रोफ़ाइल अपडेट की गई',
-        enter_username: 'उपयोगकर्ता नाम दर्ज करें'
+        enter_username: 'उपयोगकर्ता नाम दर्ज करें',
+        in_development: 'विकास में'
     },
     kk: {
         app_name: 'Kukumber Messenger',
@@ -506,7 +528,8 @@ var translations = {
         select_language: 'Тілді таңдаңыз',
         settings_saved: 'Параметрлер сақталды',
         profile_updated: 'Профиль жаңартылды',
-        enter_username: 'Пайдаланушы атын енгізіңіз'
+        enter_username: 'Пайдаланушы атын енгізіңіз',
+        in_development: 'әзірленуде'
     },
     zh: {
         app_name: 'Kukumber Messenger',
@@ -528,7 +551,8 @@ var translations = {
         select_language: '选择语言',
         settings_saved: '设置已保存',
         profile_updated: '个人资料已更新',
-        enter_username: '请输入用户名'
+        enter_username: '请输入用户名',
+        in_development: '开发中'
     }
 };
 
@@ -540,34 +564,27 @@ function applyTranslations() {
     var t = translations[currentLanguage];
     if (!t) return;
     
-    // Переводим статические элементы
-    var elements = {
-        'settings-header h2': t.settings,
-        'settings-username': currentUserData?.username || t.username,
-        'settings-profile .settings-profile-info h3': currentUserData?.username || t.username,
-        '.settings-item:nth-child(1) span:nth-child(2)': t.notifications,
-        '.settings-item:nth-child(2) span:nth-child(2)': t.privacy,
-        '.settings-item:nth-child(3) span:nth-child(2)': t.theme,
-        '.settings-item:nth-child(4) span:nth-child(2)': t.language,
-        '.settings-item:nth-child(5) span:nth-child(2)': t.storage,
-        '.settings-section:nth-child(3) .settings-item:nth-child(1) span:nth-child(2)': t.about,
-        '.settings-section:nth-child(3) .settings-item:nth-child(2) span:nth-child(2)': t.help,
-        '.settings-section:nth-child(4) .settings-item span:nth-child(2)': t.logout,
-        '.settings-footer p:first-child': t.app_name,
-        '.settings-footer p:last-child': t.tagline
-    };
+    // Заголовок настроек
+    var settingsHeader = document.querySelector('#settings-tab .settings-header h2');
+    if (settingsHeader) settingsHeader.textContent = t.settings;
     
-    for (var selector in elements) {
-        var el = document.querySelector(selector);
-        if (el && elements[selector] !== currentUserData?.username) {
-            el.textContent = elements[selector];
-        }
+    // Имя пользователя в профиле (не переводим, оставляем как есть)
+    
+    // Пункты меню настроек
+    var menuItems = document.querySelectorAll('#settings-tab .settings-section .settings-item');
+    var menuLabels = [t.notifications, t.privacy, t.theme, t.language, t.storage, t.about, t.help, t.logout];
+    for (var i = 0; i < menuItems.length && i < menuLabels.length; i++) {
+        var span = menuItems[i].querySelector('span:nth-child(2)');
+        if (span && i !== 0) span.textContent = menuLabels[i];
     }
     
-    // Кнопка редактирования профиля
-    var profileDiv = document.querySelector('.settings-profile');
-    if (profileDiv && profileDiv.querySelector('.settings-profile-info h3')) {
-        // оставляем имя пользователя
+    // Подвал
+    var footer = document.querySelector('#settings-tab .settings-footer');
+    if (footer) {
+        var firstP = footer.querySelector('p:first-child');
+        var lastP = footer.querySelector('p:last-child');
+        if (firstP) firstP.textContent = t.app_name;
+        if (lastP) lastP.textContent = t.tagline;
     }
 }
 
@@ -602,12 +619,16 @@ function showLanguageSettings() {
     
     var langList = '';
     for (var code in langCodes) {
-        var isSelected = (code === currentLanguage) ? '✓ ' : '';
-        langList += '<div class="user-item" onclick="setLanguage(\'' + code + '\')" style="justify-content:space-between;">' +
-            '<span>' + isSelected + langCodes[code] + '</span>' +
-            '<span style="color:var(--forest);">' + (code === currentLanguage ? '✓' : '→') + '</span>' +
+        var isSelected = (code === currentLanguage);
+        langList += '<div class="user-item" onclick="setLanguage(\'' + code + '\')" style="justify-content:space-between; cursor:pointer;">' +
+            '<span>' + (isSelected ? '✓ ' : '') + langCodes[code] + '</span>' +
+            '<span style="color:var(--forest);">' + (isSelected ? '✓' : '→') + '</span>' +
         '</div>';
     }
+    
+    // Закрываем старую модалку если есть
+    var oldModal = document.getElementById('temp-language-modal');
+    if (oldModal) oldModal.remove();
     
     var modal = document.createElement('div');
     modal.className = 'modal';
@@ -632,7 +653,6 @@ function setLanguage(langCode) {
         showNotification(translations[langCode]?.settings_saved || 'Language changed', 'success');
         closeLanguageModal();
         applyTranslations();
-        // Обновляем текст в модалках, если они открыты
         updateModalTexts();
     }
 }
@@ -644,17 +664,14 @@ function updateModalTexts() {
     var editProfileTitle = document.querySelector('#edit-profile-modal .modal-header h3');
     if (editProfileTitle) editProfileTitle.textContent = t.edit_profile;
     
-    var editUsernameLabel = document.querySelector('#edit-username');
-    if (editUsernameLabel) editUsernameLabel.placeholder = t.username;
+    var editUsername = document.getElementById('edit-username');
+    if (editUsername) editUsername.placeholder = t.username;
     
-    var editBioLabel = document.querySelector('#edit-bio');
-    if (editBioLabel) editBioLabel.placeholder = t.about_me;
+    var editBio = document.getElementById('edit-bio');
+    if (editBio) editBio.placeholder = t.about_me;
     
     var saveBtn = document.querySelector('#edit-profile-modal .btn-primary');
     if (saveBtn) saveBtn.textContent = t.save;
-    
-    var deleteConfirm = document.querySelector('.settings-item.danger span:nth-child(2)');
-    if (deleteConfirm) deleteConfirm.textContent = t.logout;
 }
 
 // Редактирование профиля
@@ -677,8 +694,10 @@ function showEditProfileModal() {
     // Обновляем текст на текущем языке
     var header = document.querySelector('#edit-profile-modal .modal-header h3');
     if (header) header.textContent = t.edit_profile;
-    document.getElementById('edit-username').placeholder = t.username;
-    document.getElementById('edit-bio').placeholder = t.about_me;
+    var usernameInput = document.getElementById('edit-username');
+    if (usernameInput) usernameInput.placeholder = t.username;
+    var bioInput = document.getElementById('edit-bio');
+    if (bioInput) bioInput.placeholder = t.about_me;
     var saveBtn = document.querySelector('#edit-profile-modal .btn-primary');
     if (saveBtn) saveBtn.textContent = t.save;
 }
@@ -737,22 +756,28 @@ function saveProfile() {
 
 // Прочие функции настроек
 function showNotificationSettings() {
-    showNotification(translations[currentLanguage]?.notifications + ': в разработке', 'info');
+    var t = translations[currentLanguage];
+    showNotification(t.notifications + ': ' + t.in_development, 'info');
 }
 function showPrivacySettings() {
-    showNotification(translations[currentLanguage]?.privacy + ': в разработке', 'info');
+    var t = translations[currentLanguage];
+    showNotification(t.privacy + ': ' + t.in_development, 'info');
 }
 function showThemeSettings() {
-    showNotification(translations[currentLanguage]?.theme + ': в разработке', 'info');
+    var t = translations[currentLanguage];
+    showNotification(t.theme + ': ' + t.in_development, 'info');
 }
 function showStorageSettings() {
-    showNotification(translations[currentLanguage]?.storage + ': в разработке', 'info');
+    var t = translations[currentLanguage];
+    showNotification(t.storage + ': ' + t.in_development, 'info');
 }
 function showAbout() {
-    alert(translations[currentLanguage]?.app_name + ' ' + (translations[currentLanguage]?.version || 'v1.0') + '\n\n' + (translations[currentLanguage]?.tagline || 'Свежее общение каждый день 🥒'));
+    var t = translations[currentLanguage];
+    alert(t.app_name + ' ' + (t.version || 'v1.0') + '\n\n' + (t.tagline || 'Свежее общение каждый день 🥒'));
 }
 function showHelp() {
-    showNotification(translations[currentLanguage]?.help + ': в разработке', 'info');
+    var t = translations[currentLanguage];
+    showNotification(t.help + ': ' + t.in_development, 'info');
 }
 
 // Загружаем перевод при старте
@@ -762,4 +787,4 @@ if (document.readyState === 'loading') {
     });
 } else {
     applyTranslations();
-}
+        }
