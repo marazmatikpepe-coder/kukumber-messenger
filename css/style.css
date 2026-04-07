@@ -2078,3 +2078,109 @@ body {
         font-size: 15px;
     }
 }
+/* === МОБИЛЬНЫЕ: картинка прикрепления файла размером с зелёный круг отправки === */
+@media (max-width: 768px) {
+    /* Кнопка прикрепления файла — просто контейнер размером 52x52 */
+    .file-attach-label {
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px !important;
+        min-height: 52px !important;
+        background: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Сама картинка — занимает всю кнопку 52x52 */
+    .file-attach-label img {
+        width: 52px !important;
+        height: 52px !important;
+        object-fit: contain !important;
+        filter: none !important;
+        background: none !important;
+    }
+    
+    /* Кнопка отправки сообщения (зелёный круг) — остаётся 52x52 */
+    .btn-send {
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px !important;
+        min-height: 52px !important;
+    }
+    
+    /* Остальные кнопки (голосовое, видео, эмодзи) — тоже 52x52, но оставляем их зелёными кругами */
+    .voice-record-label,
+    .video-record-label,
+    .btn-icon {
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px !important;
+        min-height: 52px !important;
+        background: linear-gradient(135deg, var(--forest), var(--lime)) !important;
+        border-radius: 50% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    .voice-record-label img,
+    .video-record-label img {
+        width: 28px !important;
+        height: 28px !important;
+        filter: brightness(0) invert(1) !important;
+    }
+    
+    .btn-icon {
+        color: white !important;
+        font-size: 24px !important;
+    }
+    
+    /* Строка ввода — отступы */
+    .message-input-area {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+}
+
+/* Для очень маленьких телефонов (ширина до 480px) — 48x48 */
+@media (max-width: 480px) {
+    .file-attach-label {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+    }
+    
+    .file-attach-label img {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    
+    .btn-send,
+    .voice-record-label,
+    .video-record-label,
+    .btn-icon {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+    }
+    
+    .voice-record-label img,
+    .video-record-label img {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    
+    .btn-icon {
+        font-size: 22px !important;
+    }
+    
+    .message-input-area {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+}
