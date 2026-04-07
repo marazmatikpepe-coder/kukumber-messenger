@@ -1,4 +1,4 @@
-// KUKUMBER MESSENGER - CHAT (полная версия)
+// KUKUMBER MESSENGER - CHAT (полная версия с удалением сообщений)
 var currentTab = 'all';
 var selectedGroupMembers = [];
 var groupAvatarFile = null;
@@ -353,43 +353,88 @@ function loadMessages(chatId){
     container.innerHTML='';
     if(messagesListener) messagesListener.off();
     messagesListener=database.ref('messages/'+chatId).orderByChild('timestamp').limitToLast(100);
-    messagesListener.on('child_added', snapshot=>{
-        var message=snapshot.val();
-        message.id=snapshot.key;
+    messagesListener.on('child_added', function(snapshot) {
+        var message = snapshot.val();
+        message.id = snapshot.key;
         createMessageElement(message);
     });
 }
-function createMessageElement(message){
-    var container=document.getElementById('messages-container');
-    var div=document.createElement('div');
-    var isSent=message.senderId===currentUser.uid;
-    div.className='message '+(isSent?'sent':'received');
-    var content='';
-    if(message.type==='image'){
-        content=`<div class="message-image" onclick="openLightbox('${message.imageUrl}')"><img src="${message.imageUrl}" alt="Image"></div>`;
-        if(message.caption) content+=`<div class="message-text">${escapeHtml(message.caption)}</div>`;
+
+function createMessageElement(message) {
+    var container = document.getElementById('messages-container');
+    var div = document.createElement('div');
+    var isSent = message.senderId === currentUser.uid;
+    div.className = 'message ' + (isSent ? 'sent' : 'received');
+    div.setAttribute('data-message-id', message.id);
+    
+    var content = '';
+    if (message.type === 'image') {
+        content = `<div class="message-image" onclick="openLightbox('${message.imageUrl}')"><img src="${message.imageUrl}" alt="Image"></div>`;
+        if (message.caption) content += `<div class="message-text">${escapeHtml(message.caption)}</div>`;
     } else {
-        content=`<div class="message-text">${escapeHtml(message.text||'')}</div>`;
+        content = `<div class="message-text">${escapeHtml(message.text || '')}</div>`;
     }
-    var senderHtml='';
-    if(!isSent && (currentChatUser.type==='group'||currentChatUser.type==='channel')){
-        database.ref('users/'+message.senderId+'/username').once('value').then(snap=>{
-            var senderEl=div.querySelector('.message-sender');
-            if(senderEl) senderEl.textContent=snap.val()||'Пользователь';
+    
+    var senderHtml = '';
+    if (!isSent && (currentChatUser.type === 'group' || currentChatUser.type === 'channel')) {
+        database.ref('users/' + message.senderId + '/username').once('value').then(function(snap) {
+            var senderEl = div.querySelector('.message-sender');
+            if (senderEl) senderEl.textContent = snap.val() || 'Пользователь';
         });
-        senderHtml='<div class="message-sender">Загрузка...</div>';
+        senderHtml = '<div class="message-sender">Загрузка...</div>';
     }
-    div.innerHTML=`<div class="message-content">${senderHtml}${content}<div class="message-time">${formatTime(message.timestamp)}</div></div>`;
-    div.addEventListener('contextmenu',(e)=>{ e.preventDefault(); if(confirm('Удалить сообщение?')) deleteMessage(message.id); });
+    
+    div.innerHTML = `<div class="message-content">${senderHtml}${content}<div class="message-time">${formatTime(message.timestamp)}</div></div>`;
+    
+    // Удаление по долгому нажатию (телефон)
     var touchTimer;
-    div.addEventListener('touchstart',()=>{ touchTimer=setTimeout(()=>{ if(confirm('Удалить сообщение?')) deleteMessage(message.id); },500); });
-    div.addEventListener('touchend',()=>clearTimeout(touchTimer));
+    div.addEventListener('touchstart', function(e) {
+        touchTimer = setTimeout(function() {
+            if (confirm('Удалить сообщение?')) {
+                deleteMessage(message.id);
+            }
+        }, 500);
+    });
+    div.addEventListener('touchend', function() {
+        clearTimeout(touchTimer);
+    });
+    div.addEventListener('touchcancel', function() {
+        clearTimeout(touchTimer);
+    });
+    
+    // Удаление по правому клику (ПК)
+    div.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        if (confirm('Удалить сообщение?')) {
+            deleteMessage(message.id);
+        }
+    });
+    
     container.appendChild(div);
-    container.scrollTop=container.scrollHeight;
+    container.scrollTop = container.scrollHeight;
 }
-function deleteMessage(msgId){
-    database.ref('messages/'+currentChatId+'/'+msgId).remove().then(()=>showNotification('Сообщение удалено','info'));
+
+function deleteMessage(msgId) {
+    if (!msgId) {
+        console.error('Нет ID сообщения для удаления');
+        showNotification('Ошибка: ID сообщения не найден', 'error');
+        return;
+    }
+    if (!currentChatId) {
+        console.error('Нет currentChatId');
+        showNotification('Ошибка: чат не выбран', 'error');
+        return;
+    }
+    database.ref('messages/' + currentChatId + '/' + msgId).remove()
+        .then(function() {
+            showNotification('Сообщение удалено', 'info');
+        })
+        .catch(function(error) {
+            console.error('Ошибка удаления:', error);
+            showNotification('Ошибка удаления: ' + error.message, 'error');
+        });
 }
+
 function sendMessage(){
     var input=document.getElementById('message-input');
     var text=input.value.trim();
@@ -642,137 +687,3 @@ function showChatInfo() {
         document.getElementById('channel-stats').classList.remove('hidden');
         document.getElementById('subscribers-count').textContent = subsCount;
         document.getElementById('group-members-section').classList.add('hidden');
-        var isSubscribed = chat.subscribers && chat.subscribers[currentUser.uid];
-        var isChannelAdmin = chat.admins && chat.admins[currentUser.uid];
-        document.getElementById('leave-btn').classList.add('hidden');
-        document.getElementById('subscribe-btn').style.display = isSubscribed ? 'none' : '';
-        document.getElementById('unsubscribe-btn').style.display = (isSubscribed && !isChannelAdmin) ? '' : 'none';
-        document.getElementById('delete-btn').style.display = isChannelAdmin ? '' : 'none';
-    } else {
-        document.getElementById('info-title').textContent = 'Информация';
-        name = chat.otherUser ? chat.otherUser.username : 'Пользователь';
-        avatar = chat.otherUser ? chat.otherUser.avatar : '';
-        status = (chat.otherUser && chat.otherUser.status && chat.otherUser.status.online) ? 'в сети' : 'был(а) недавно';
-        document.getElementById('channel-stats').classList.add('hidden');
-        document.getElementById('group-members-section').classList.add('hidden');
-        document.getElementById('leave-btn').classList.add('hidden');
-        document.getElementById('subscribe-btn').classList.add('hidden');
-        document.getElementById('unsubscribe-btn').classList.add('hidden');
-        document.getElementById('delete-btn').classList.remove('hidden');
-    }
-    document.getElementById('info-name').textContent = name;
-    document.getElementById('info-status').textContent = status;
-    document.getElementById('info-description').textContent = description;
-    var infoAvatar = document.getElementById('info-avatar');
-    if (avatar && avatar.indexOf('http') === 0) {
-        infoAvatar.style.backgroundImage = 'url(' + avatar + ')';
-        infoAvatar.style.backgroundSize = 'cover';
-        infoAvatar.textContent = '';
-    } else {
-        infoAvatar.style.backgroundImage = '';
-        infoAvatar.textContent = chat.type === 'group' ? '👥' : (chat.type === 'channel' ? '📢' : '👤');
-    }
-}
-function closeChatInfo() { document.getElementById('chat-info-modal').classList.add('hidden'); }
-function loadMembersList(members, admins) {
-    var list = document.getElementById('info-members-list');
-    list.innerHTML = '';
-    if (!members) return;
-    Object.keys(members).forEach(memberId => {
-        database.ref('users/' + memberId).once('value').then(snap => {
-            var user = snap.val();
-            if (!user) return;
-            var isAdmin = admins && admins[memberId];
-            var avatar = user.avatar || '';
-            var avatarStyle = avatar ? 'background-image:url('+avatar+');background-size:cover;' : '';
-            var avatarContent = avatar ? '' : '👤';
-            var div = document.createElement('div');
-            div.className = 'member-item';
-            div.innerHTML = `<div class="avatar" style="${avatarStyle}">${avatarContent}</div>
-                            <span class="member-name">${escapeHtml(user.username)}</span>
-                            ${isAdmin ? '<span class="member-role">админ</span>' : ''}`;
-            list.appendChild(div);
-        });
-    });
-}
-function subscribeToChannel() {
-    if (!currentChatId) return;
-    database.ref('chats/' + currentChatId + '/subscribers/' + currentUser.uid).set(true)
-        .then(() => database.ref('userChats/' + currentUser.uid + '/' + currentChatId).set(true))
-        .then(() => { showNotification('Подписались', 'success'); closeChatInfo(); loadChats(); })
-        .catch(err => showNotification('Ошибка', 'error'));
-}
-function unsubscribeFromChannel() {
-    if (!currentChatId) return;
-    if (!confirm('Отписаться от канала?')) return;
-    database.ref('chats/' + currentChatId + '/subscribers/' + currentUser.uid).remove()
-        .then(() => database.ref('userChats/' + currentUser.uid + '/' + currentChatId).remove())
-        .then(() => { showNotification('Отписались', 'info'); closeChatInfo(); closeChat(); loadChats(); })
-        .catch(err => showNotification('Ошибка', 'error'));
-}
-function leaveChat() {
-    if (!currentChatId) return;
-    if (!confirm('Покинуть чат?')) return;
-    var promise = (currentChatUser.type === 'group') ? database.ref('chats/' + currentChatId + '/members/' + currentUser.uid).remove() : Promise.resolve();
-    promise.then(() => database.ref('userChats/' + currentUser.uid + '/' + currentChatId).remove())
-        .then(() => { showNotification('Вы покинули чат', 'info'); closeChatInfo(); closeChat(); loadChats(); })
-        .catch(err => showNotification('Ошибка', 'error'));
-}
-function deleteChat() {
-    if (!currentChatId) return;
-    if (!confirm('Удалить чат? Это действие нельзя отменить.')) return;
-    database.ref('chats/' + currentChatId).remove()
-        .then(() => database.ref('messages/' + currentChatId).remove())
-        .then(() => database.ref('userChats/' + currentUser.uid + '/' + currentChatId).remove())
-        .then(() => { showNotification('Чат удалён', 'info'); closeChatInfo(); closeChat(); loadChats(); })
-        .catch(err => showNotification('Ошибка', 'error'));
-}
-function showAddMembersDialog() {
-    document.getElementById('add-members-modal').classList.remove('hidden');
-    document.getElementById('add-members-search').value = '';
-    loadAddMembersList();
-}
-function closeAddMembersDialog() { document.getElementById('add-members-modal').classList.add('hidden'); }
-function loadAddMembersList() {
-    var list = document.getElementById('add-members-list');
-    list.innerHTML = '<div>Загрузка...</div>';
-    var currentMembers = currentChatUser.members || {};
-    database.ref('contacts/' + currentUser.uid).once('value').then(snapshot => {
-        var contacts = snapshot.val();
-        if (!contacts) { list.innerHTML = '<div>Нет контактов для добавления</div>'; return; }
-        var userIds = Object.keys(contacts);
-        list.innerHTML = '';
-        userIds.forEach(uid => {
-            if (currentMembers[uid]) return;
-            database.ref('users/' + uid).once('value').then(userSnap => {
-                var user = userSnap.val();
-                if (!user) return;
-                var div = document.createElement('div');
-                div.className = 'user-item';
-                div.setAttribute('data-username', (user.username || '').toLowerCase());
-                var avatarStyle = user.avatar ? 'background-image:url('+user.avatar+');background-size:cover;' : '';
-                var avatarContent = user.avatar ? '' : '👤';
-                div.innerHTML = `<div class="avatar" style="${avatarStyle}">${avatarContent}</div>
-                                <div class="user-item-info"><h4>${escapeHtml(user.username)}</h4></div>`;
-                div.onclick = () => addMemberToGroup(uid);
-                list.appendChild(div);
-            });
-        });
-    });
-}
-function addMemberToGroup(userId) {
-    if (!currentChatId) return;
-    database.ref('chats/' + currentChatId + '/members/' + userId).set(true)
-        .then(() => database.ref('userChats/' + userId + '/' + currentChatId).set(true))
-        .then(() => { showNotification('Участник добавлен', 'success'); closeAddMembersDialog(); return database.ref('chats/' + currentChatId).once('value'); })
-        .then(snap => { currentChatUser = snap.val(); currentChatUser.chatId = currentChatId; showChatInfo(); })
-        .catch(err => showNotification('Ошибка', 'error'));
-}
-function searchAddMembers() {
-    var text = document.getElementById('add-members-search').value.toLowerCase();
-    var items = document.querySelectorAll('#add-members-list .user-item');
-    items.forEach(item => {
-        var username = item.getAttribute('data-username') || '';
-        item.style.display = username.includes(text) ? 'flex' : 'none';
-    });
-}
