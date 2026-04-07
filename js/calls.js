@@ -1,4 +1,4 @@
-// KUKUMBER MESSENGER - CALLS (исправленная версия с диагностикой)
+// KUKUMBER MESSENGER - CALLS (исправленная версия)
 let peer = null;
 let localStream = null;
 let currentCall = null;
@@ -8,7 +8,7 @@ let isAudioEnabled = true;
 let callTimerInterval = null;
 let callSecondsCount = 0;
 
-// Список серверов для перебора (если один не работает, пробуем другой)
+// Список серверов для перебора
 const PEER_SERVERS = [
     { host: '0.peerjs.com', port: 443, secure: true, path: '/' },
     { host: 'peerjs-server.herokuapp.com', port: 443, secure: true, path: '/' }
@@ -17,7 +17,8 @@ const PEER_SERVERS = [
 let currentServerIndex = 0;
 let reconnectAttempts = 0;
 
-function initializePeer() {
+// Глобальная инициализация Peer
+window.initializePeer = function() {
     if (!currentUser) {
         console.warn('Нет currentUser');
         return;
@@ -47,7 +48,6 @@ function initializePeer() {
                 { urls: 'stun:stun2.l.google.com:19302' },
                 { urls: 'stun:stun3.l.google.com:19302' },
                 { urls: 'stun:stun4.l.google.com:19302' },
-                // TURN сервер для обхода NAT
                 {
                     urls: 'turn:openrelay.metered.ca:80',
                     username: 'openrelayproject',
@@ -64,7 +64,6 @@ function initializePeer() {
     
     peer.on('open', (id) => {
         console.log('✅ PeerJS подключён! ID:', id);
-        console.log('Сервер:', PEER_SERVERS[currentServerIndex].host);
         showNotification('Готов к звонкам', 'success');
         currentServerIndex = 0;
         reconnectAttempts = 0;
@@ -104,7 +103,18 @@ function initializePeer() {
         console.log('⚠️ Peer отключён, переподключаемся...');
         setTimeout(() => initializePeer(), 2000);
     });
-}
+};
+
+// Функции звонков (делаем их глобальными)
+window.startVoiceCall = function() { 
+    console.log('startVoiceCall вызвана');
+    startCall(false); 
+};
+
+window.startVideoCall = function() { 
+    console.log('startVideoCall вызвана');
+    startCall(true); 
+};
 
 function startCallTimer(){
     callSecondsCount=0;
@@ -112,12 +122,14 @@ function startCallTimer(){
     if(callTimerInterval) clearInterval(callTimerInterval);
     callTimerInterval=setInterval(()=>{ callSecondsCount++; updateCallTimerDisplay(); },1000);
 }
+
 function stopCallTimer(){ 
     if(callTimerInterval) clearInterval(callTimerInterval); 
     callSecondsCount=0; 
     var t=document.getElementById('call-timer'); 
     if(t) t.textContent='00:00'; 
 }
+
 function updateCallTimerDisplay(){ 
     let mins=Math.floor(callSecondsCount/60).toString().padStart(2,'0'); 
     let secs=(callSecondsCount%60).toString().padStart(2,'0'); 
@@ -125,11 +137,8 @@ function updateCallTimerDisplay(){
     if(t) t.textContent=mins+':'+secs; 
 }
 
-function startVoiceCall(){ startCall(false); }
-function startVideoCall(){ startCall(true); }
-
 function startCall(withVideo){
-    console.log('Начинаем звонок, видео:', withVideo);
+    console.log('startCall вызвана, withVideo:', withVideo);
     
     if(!currentChatId || !currentChatUser){ 
         showNotification('Выберите чат','error'); 
@@ -151,13 +160,11 @@ function startCall(withVideo){
     }
     
     console.log('Звоним пользователю:', otherUserId);
-    currentChatUser.otherUserId = otherUserId;
     
-    // Инициализируем Peer перед звонком
+    // Инициализируем Peer если нужно
     if (!peer || peer.disconnected) {
         initializePeer();
-        // Ждём подключения
-        setTimeout(() => startCall(withVideo), 1000);
+        setTimeout(() => startCall(withVideo), 1500);
         return;
     }
     
@@ -165,19 +172,13 @@ function startCall(withVideo){
         .then(stream=>{
             console.log('Медиапоток получен');
             localStream=stream;
-            isVideoEnabled=withVideo;
-            isAudioEnabled=true;
             showCallModal(withVideo);
             var localVideo=document.getElementById('local-video');
             if(localVideo) localVideo.srcObject=localStream;
-            if(withVideo) document.getElementById('call-avatar').classList.add('hidden');
-            else document.getElementById('call-avatar').classList.remove('hidden');
             
-            var otherUserName = currentChatUser.otherUser?.username || 'Пользователь';
-            document.getElementById('call-username').textContent = otherUserName;
+            document.getElementById('call-username').textContent = currentChatUser.otherUser?.username || 'Пользователь';
             document.getElementById('call-status').textContent='Вызов...';
             
-            console.log('Создаём звонок для:', otherUserId);
             currentCall = peer.call(otherUserId, localStream, { 
                 metadata: { 
                     callerName: currentUserData?.username || 'Пользователь', 
@@ -205,109 +206,84 @@ function handleIncomingCall(call){
     var callerName=call.metadata?.callerName||'Неизвестный';
     var isVideo=call.metadata?.isVideo||false;
     
-    // Показываем уведомление о входящем звонке
     document.getElementById('incoming-call-username').textContent=callerName;
     document.getElementById('incoming-call-type').textContent=isVideo?'Видеозвонок':'Аудиозвонок';
     document.getElementById('incoming-call-modal').classList.remove('hidden');
     
-    // Пытаемся разбудить экран
-    if (typeof window !== 'undefined') {
-        // Встряхиваем экран, чтобы он не засыпал
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen error:', e));
-        }
-        // Вибрация (если поддерживается)
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    }
-    
     playRingtone();
 }
 
-function acceptCall(){
+window.acceptCall = function() {
     console.log('Принимаем звонок');
     if(!incomingCall) return;
     var isVideo=incomingCall.metadata?.isVideo||false;
     
     navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true })
         .then(stream=>{
-            console.log('Медиапоток получен для ответа');
             localStream=stream;
-            isVideoEnabled=isVideo;
-            isAudioEnabled=true;
             document.getElementById('incoming-call-modal').classList.add('hidden');
             stopRingtone();
             showCallModal(isVideo);
             var localVideo=document.getElementById('local-video');
             if(localVideo) localVideo.srcObject=localStream;
-            if(isVideo) document.getElementById('call-avatar').classList.add('hidden');
-            else document.getElementById('call-avatar').classList.remove('hidden');
             document.getElementById('call-username').textContent=incomingCall.metadata?.callerName||'Пользователь';
             document.getElementById('call-status').textContent='Соединение...';
             incomingCall.answer(localStream);
             currentCall=incomingCall;
             incomingCall=null;
             setupCallListeners(currentCall);
-            
-            // Запрашиваем Wake Lock чтобы экран не гас
-            if ('wakeLock' in navigator) {
-                navigator.wakeLock.request('screen').catch(e => console.log('WakeLock error:', e));
-            }
         })
-        .catch(err=>{ 
-            console.error('Ошибка при ответе:', err); 
-            rejectCall(); 
-        });
-}
+        .catch(err=>{ console.error(err); rejectCall(); });
+};
 
-function rejectCall(){
+window.rejectCall = function() {
     console.log('Отклоняем звонок');
     if(incomingCall) try{ incomingCall.close(); }catch(e){}
     incomingCall=null;
     document.getElementById('incoming-call-modal').classList.add('hidden');
     stopRingtone();
-}
+};
 
 function setupCallListeners(call){
     call.on('stream', remoteStream=>{
-        console.log('Получен удалённый поток');
         var remoteVideo=document.getElementById('remote-video');
         if(remoteVideo) remoteVideo.srcObject=remoteStream;
         document.getElementById('call-status').textContent='Подключено';
         startCallTimer();
     });
-    call.on('close',()=>{
-        console.log('Звонок закрыт');
-        endCall();
-    });
-    call.on('error',(err)=>{
-        console.error('Ошибка звонка:', err);
-        endCall();
-    });
+    call.on('close',()=> endCall());
+    call.on('error',()=> endCall());
 }
 
-function toggleMute(){
+window.toggleMute = function() {
     if(!localStream) return;
     var audioTracks=localStream.getAudioTracks();
     if(audioTracks.length){
         isAudioEnabled=!isAudioEnabled;
         audioTracks.forEach(t=>t.enabled=isAudioEnabled);
         var btn=document.getElementById('mute-btn');
-        if(btn){ btn.textContent=isAudioEnabled?'🎤':'🔇'; if(isAudioEnabled) btn.classList.remove('muted'); else btn.classList.add('muted'); }
+        if(btn){ 
+            btn.textContent=isAudioEnabled?'🎤':'🔇'; 
+            btn.classList.toggle('muted', !isAudioEnabled); 
+        }
     }
-}
+};
 
-function toggleVideo(){
+window.toggleVideo = function() {
     if(!localStream) return;
     var videoTracks=localStream.getVideoTracks();
     if(videoTracks.length){
         isVideoEnabled=!isVideoEnabled;
         videoTracks.forEach(t=>t.enabled=isVideoEnabled);
         var btn=document.getElementById('video-btn');
-        if(btn){ btn.textContent=isVideoEnabled?'📹':'📷'; if(isVideoEnabled) btn.classList.remove('muted'); else btn.classList.add('muted'); }
+        if(btn){ 
+            btn.textContent=isVideoEnabled?'📹':'📷'; 
+            btn.classList.toggle('muted', !isVideoEnabled); 
+        }
     }
-}
+};
 
-function endCall(){
+window.endCall = function() {
     console.log('Завершаем звонок');
     stopCallTimer();
     if(currentCall) try{ currentCall.close(); }catch(e){}
@@ -321,12 +297,7 @@ function endCall(){
     var muteBtn=document.getElementById('mute-btn'), videoBtn=document.getElementById('video-btn');
     if(muteBtn){ muteBtn.textContent='🎤'; muteBtn.classList.remove('muted'); }
     if(videoBtn){ videoBtn.textContent='📹'; videoBtn.classList.remove('muted'); }
-    
-    // Отпускаем Wake Lock
-    if ('wakeLock' in navigator && navigator.wakeLock.release) {
-        navigator.wakeLock.release().catch(e => console.log('WakeLock release error:', e));
-    }
-}
+};
 
 function showCallModal(isVideo){
     document.getElementById('call-modal').classList.remove('hidden');
@@ -360,4 +331,9 @@ function stopRingtone(){
     if(ringtoneInterval) clearInterval(ringtoneInterval);
     if(ringtoneCtx) try{ ringtoneCtx.close(); }catch(e){}
     ringtoneCtx=null;
+}
+
+// Автоматическая инициализация после загрузки
+if (currentUser) {
+    initializePeer();
 }
