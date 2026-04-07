@@ -1,10 +1,9 @@
-// KUKUMBER MESSENGER - CHAT (с синхронизацией удаления у всех пользователей)
+// KUKUMBER MESSENGER - CHAT (исправленный)
 var currentTab = 'all';
 var selectedGroupMembers = [];
 var groupAvatarFile = null;
 var channelAvatarFile = null;
 var typingTimeout = null;
-var messagesListeners = {}; // для отслеживания слушателей
 
 // ========== ГЛОБАЛЬНЫЙ ПОИСК И КОНТАКТЫ ==========
 function showGlobalSearch() {
@@ -248,7 +247,7 @@ function switchTab(tab) {
     loadChats();
 }
 
-// ========== ОТКРЫТИЕ ЧАТА ==========
+// ========== ОТКРЫТИЕ ЧАТА (С ИСПРАВЛЕННЫМИ КНОПКАМИ ЗВОНКОВ) ==========
 function openChat(chatId, chatData){
     currentChatId=chatId;
     currentChatUser=chatData;
@@ -261,12 +260,14 @@ function openChat(chatId, chatData){
         name=chatData.name||'Группа';
         avatar=chatData.avatar||'';
         status=(chatData.members?Object.keys(chatData.members).length:0)+' участников';
+        hideCallButtons();
         document.getElementById('message-input-area').classList.remove('hidden');
         document.getElementById('channel-footer').classList.add('hidden');
     } else if(chatData.type==='channel'){
         name=chatData.name||'Канал';
         avatar=chatData.avatar||'';
         status=(chatData.subscribers?Object.keys(chatData.subscribers).length:0)+' подписчиков';
+        hideCallButtons();
         var isAdmin=chatData.admins && chatData.admins[currentUser.uid];
         if(isAdmin){
             document.getElementById('message-input-area').classList.remove('hidden');
@@ -282,6 +283,8 @@ function openChat(chatId, chatData){
         var online=chatData.otherUser?.status?.online;
         if(online) status='в сети';
         else status=formatLastSeen(lastSeen);
+        // ВСЕГДА показываем кнопки звонков для личных чатов
+        showCallButtons();
         document.getElementById('message-input-area').classList.remove('hidden');
         document.getElementById('channel-footer').classList.add('hidden');
     }
@@ -315,10 +318,12 @@ function openChat(chatId, chatData){
         }, 500);
     });
     avatarEl.addEventListener('mouseup',()=>clearTimeout(longPressTimer));
+    // Убираем выделение
     document.querySelectorAll('.chat-item').forEach(i=>i.classList.remove('active'));
     loadMessages(chatId);
     setupTypingListener(chatId);
 }
+
 function showAdminEditUser(userId){
     var pwd=prompt('Введите пароль администратора:');
     if(pwd!=='777777+-'){ showNotification('Неверный пароль','error'); return; }
@@ -341,113 +346,75 @@ function showAdminEditUser(userId){
     };
     input.click();
 }
+
+function hideCallButtons(){ 
+    var btns = document.querySelectorAll('.call-btn, .voice-call-label');
+    btns.forEach(btn => {
+        if(btn) btn.style.display = 'none';
+    });
+}
+
+function showCallButtons(){ 
+    var btns = document.querySelectorAll('.call-btn, .voice-call-label');
+    btns.forEach(btn => {
+        if(btn) btn.style.display = 'inline-flex';
+    });
+}
+
 function closeChat(){
     document.getElementById('active-chat').classList.add('hidden');
     document.getElementById('no-chat-selected').classList.remove('hidden');
     currentChatId=null; currentChatUser=null;
     if(messagesListener) messagesListener.off();
-    messagesListener = null;
 }
 
-// ========== СООБЩЕНИЯ С РЕАЛЬНЫМ УДАЛЕНИЕМ ==========
+// ========== СООБЩЕНИЯ ==========
 function loadMessages(chatId){
-    var container = document.getElementById('messages-container');
-    container.innerHTML = '';
+    var container=document.getElementById('messages-container');
+    container.innerHTML='';
     if(messagesListener) messagesListener.off();
-    
-    // Слушаем добавление новых сообщений
-    messagesListener = database.ref('messages/' + chatId).orderByChild('timestamp').limitToLast(100);
-    messagesListener.on('child_added', function(snapshot) {
-        var message = snapshot.val();
-        message.id = snapshot.key;
-        // Проверяем, есть ли уже такое сообщение в DOM
-        if (!document.querySelector(`.message[data-message-id="${message.id}"]`)) {
-            createMessageElement(message);
-        }
-    });
-    
-    // Слушаем удаление сообщений (это ключевая часть для синхронизации у всех)
-    database.ref('messages/' + chatId).on('child_removed', function(snapshot) {
-        var removedId = snapshot.key;
-        var messageElement = document.querySelector(`.message[data-message-id="${removedId}"]`);
-        if (messageElement) {
-            messageElement.remove();
-            showNotification('Сообщение удалено', 'info');
-        }
+    messagesListener=database.ref('messages/'+chatId).orderByChild('timestamp').limitToLast(100);
+    messagesListener.on('child_added', snapshot=>{
+        var message=snapshot.val();
+        message.id=snapshot.key;
+        createMessageElement(message);
     });
 }
-
-function createMessageElement(message) {
-    var container = document.getElementById('messages-container');
-    var div = document.createElement('div');
-    var isSent = message.senderId === currentUser.uid;
-    div.className = 'message ' + (isSent ? 'sent' : 'received');
-    div.setAttribute('data-message-id', message.id);
-    
-    var content = '';
-    if (message.type === 'image') {
-        content = `<div class="message-image" onclick="openLightbox('${message.imageUrl}')"><img src="${message.imageUrl}" alt="Image"></div>`;
-        if (message.caption) content += `<div class="message-text">${escapeHtml(message.caption)}</div>`;
+function createMessageElement(message){
+    var container=document.getElementById('messages-container');
+    var div=document.createElement('div');
+    var isSent=message.senderId===currentUser.uid;
+    div.className='message '+(isSent?'sent':'received');
+    var content='';
+    if(message.type==='image'){
+        content=`<div class="message-image" onclick="openLightbox('${message.imageUrl}')"><img src="${message.imageUrl}" alt="Image"></div>`;
+        if(message.caption) content+=`<div class="message-text">${escapeHtml(message.caption)}</div>`;
+    } else if(message.type==='audio'){
+        content=`<div class="audio-message"><button onclick="playAudio('${message.audioUrl}')">▶️</button><audio src="${message.audioUrl}" style="display:none"></audio><span>Голосовое сообщение</span></div>`;
+    } else if(message.type==='video_circle'){
+        content=`<div class="video-message"><video src="${message.videoUrl}" controls style="max-width:200px; border-radius:50%;"></video></div>`;
     } else {
-        content = `<div class="message-text">${escapeHtml(message.text || '')}</div>`;
+        content=`<div class="message-text">${escapeHtml(message.text||'')}</div>`;
     }
-    
-    var senderHtml = '';
-    if (!isSent && (currentChatUser.type === 'group' || currentChatUser.type === 'channel')) {
-        database.ref('users/' + message.senderId + '/username').once('value').then(function(snap) {
-            var senderEl = div.querySelector('.message-sender');
-            if (senderEl) senderEl.textContent = snap.val() || 'Пользователь';
+    var senderHtml='';
+    if(!isSent && (currentChatUser.type==='group'||currentChatUser.type==='channel')){
+        database.ref('users/'+message.senderId+'/username').once('value').then(snap=>{
+            var senderEl=div.querySelector('.message-sender');
+            if(senderEl) senderEl.textContent=snap.val()||'Пользователь';
         });
-        senderHtml = '<div class="message-sender">Загрузка...</div>';
+        senderHtml='<div class="message-sender">Загрузка...</div>';
     }
-    
-    div.innerHTML = `<div class="message-content">${senderHtml}${content}<div class="message-time">${formatTime(message.timestamp)}</div></div>`;
-    
-    // Удаление по долгому нажатию (телефон)
+    div.innerHTML=`<div class="message-content">${senderHtml}${content}<div class="message-time">${formatTime(message.timestamp)}</div></div>`;
+    div.addEventListener('contextmenu',(e)=>{ e.preventDefault(); if(confirm('Удалить сообщение?')) deleteMessage(message.id); });
     var touchTimer;
-    div.addEventListener('touchstart', function(e) {
-        touchTimer = setTimeout(function() {
-            if (confirm('Удалить сообщение?')) {
-                deleteMessage(message.id);
-            }
-        }, 500);
-    });
-    div.addEventListener('touchend', function() {
-        clearTimeout(touchTimer);
-    });
-    div.addEventListener('touchcancel', function() {
-        clearTimeout(touchTimer);
-    });
-    
-    // Удаление по правому клику (ПК)
-    div.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        if (confirm('Удалить сообщение?')) {
-            deleteMessage(message.id);
-        }
-    });
-    
+    div.addEventListener('touchstart',()=>{ touchTimer=setTimeout(()=>{ if(confirm('Удалить сообщение?')) deleteMessage(message.id); },500); });
+    div.addEventListener('touchend',()=>clearTimeout(touchTimer));
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    container.scrollTop=container.scrollHeight;
 }
-
-function deleteMessage(msgId) {
-    if (!msgId) {
-        showNotification('Ошибка: ID сообщения не найден', 'error');
-        return;
-    }
-    if (!currentChatId) {
-        showNotification('Ошибка: чат не выбран', 'error');
-        return;
-    }
-    // Удаляем из Firebase - это автоматически вызовет child_removed у всех клиентов
-    database.ref('messages/' + currentChatId + '/' + msgId).remove()
-        .catch(function(error) {
-            console.error('Ошибка удаления:', error);
-            showNotification('Ошибка удаления: ' + error.message, 'error');
-        });
+function deleteMessage(msgId){
+    database.ref('messages/'+currentChatId+'/'+msgId).remove().then(()=>showNotification('Сообщение удалено','info'));
 }
-
 function sendMessage(){
     var input=document.getElementById('message-input');
     var text=input.value.trim();
@@ -492,6 +459,10 @@ function setupTypingListener(chatId){
         }
     });
 }
+function playAudio(url){
+    var audio=new Audio(url);
+    audio.play();
+}
 function openLightbox(url){
     document.getElementById('lightbox-image').src=url;
     document.getElementById('image-lightbox').classList.remove('hidden');
@@ -526,7 +497,7 @@ function goToGroupStep1() {
 }
 function loadGroupMembersList() {
     var list = document.getElementById('group-members-list');
-    list.innerHTML = '<div>Загрузка...</div>';
+    list.innerHTML = '<div class="loading-users">Загрузка...</div>';
     database.ref('contacts/' + currentUser.uid).once('value').then(snapshot => {
         var contacts = snapshot.val();
         if (!contacts) { list.innerHTML = '<div>Нет контактов. Добавьте их через поиск</div>'; return; }
@@ -586,7 +557,8 @@ function createGroup() {
     var description = document.getElementById('group-description').value.trim();
     if (!name) { showNotification('Введите название', 'error'); return; }
     var btn = document.querySelector('#group-step-2 .btn-primary');
-    btn.disabled = true; btn.textContent = 'Создание...';
+    btn.disabled = true;
+    btn.textContent = 'Создание...';
     var avatarPromise = groupAvatarFile ? uploadImageToImgBB(groupAvatarFile) : Promise.resolve(null);
     avatarPromise.then(data => {
         var avatarUrl = data ? data.url : '';
@@ -641,7 +613,8 @@ function createChannel() {
     if (!name) { showNotification('Введите название', 'error'); return; }
     if (link && !validateChannelLink()) return;
     var btn = document.querySelector('#create-channel-modal .btn-primary');
-    btn.disabled = true; btn.textContent = 'Создание...';
+    btn.disabled = true;
+    btn.textContent = 'Создание...';
     var checkLinkPromise = link ? database.ref('channelLinks/' + link).once('value').then(snap => { if (snap.exists()) throw new Error('Ссылка занята'); }) : Promise.resolve();
     checkLinkPromise.then(() => {
         var avatarPromise = channelAvatarFile ? uploadImageToImgBB(channelAvatarFile) : Promise.resolve(null);
