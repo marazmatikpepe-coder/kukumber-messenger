@@ -1,9 +1,10 @@
-// KUKUMBER MESSENGER - CHAT (полная версия с удалением сообщений)
+// KUKUMBER MESSENGER - CHAT (с синхронизацией удаления у всех пользователей)
 var currentTab = 'all';
 var selectedGroupMembers = [];
 var groupAvatarFile = null;
 var channelAvatarFile = null;
 var typingTimeout = null;
+var messagesListeners = {}; // для отслеживания слушателей
 
 // ========== ГЛОБАЛЬНЫЙ ПОИСК И КОНТАКТЫ ==========
 function showGlobalSearch() {
@@ -345,18 +346,34 @@ function closeChat(){
     document.getElementById('no-chat-selected').classList.remove('hidden');
     currentChatId=null; currentChatUser=null;
     if(messagesListener) messagesListener.off();
+    messagesListener = null;
 }
 
-// ========== СООБЩЕНИЯ ==========
+// ========== СООБЩЕНИЯ С РЕАЛЬНЫМ УДАЛЕНИЕМ ==========
 function loadMessages(chatId){
-    var container=document.getElementById('messages-container');
-    container.innerHTML='';
+    var container = document.getElementById('messages-container');
+    container.innerHTML = '';
     if(messagesListener) messagesListener.off();
-    messagesListener=database.ref('messages/'+chatId).orderByChild('timestamp').limitToLast(100);
+    
+    // Слушаем добавление новых сообщений
+    messagesListener = database.ref('messages/' + chatId).orderByChild('timestamp').limitToLast(100);
     messagesListener.on('child_added', function(snapshot) {
         var message = snapshot.val();
         message.id = snapshot.key;
-        createMessageElement(message);
+        // Проверяем, есть ли уже такое сообщение в DOM
+        if (!document.querySelector(`.message[data-message-id="${message.id}"]`)) {
+            createMessageElement(message);
+        }
+    });
+    
+    // Слушаем удаление сообщений (это ключевая часть для синхронизации у всех)
+    database.ref('messages/' + chatId).on('child_removed', function(snapshot) {
+        var removedId = snapshot.key;
+        var messageElement = document.querySelector(`.message[data-message-id="${removedId}"]`);
+        if (messageElement) {
+            messageElement.remove();
+            showNotification('Сообщение удалено', 'info');
+        }
     });
 }
 
@@ -416,19 +433,15 @@ function createMessageElement(message) {
 
 function deleteMessage(msgId) {
     if (!msgId) {
-        console.error('Нет ID сообщения для удаления');
         showNotification('Ошибка: ID сообщения не найден', 'error');
         return;
     }
     if (!currentChatId) {
-        console.error('Нет currentChatId');
         showNotification('Ошибка: чат не выбран', 'error');
         return;
     }
+    // Удаляем из Firebase - это автоматически вызовет child_removed у всех клиентов
     database.ref('messages/' + currentChatId + '/' + msgId).remove()
-        .then(function() {
-            showNotification('Сообщение удалено', 'info');
-        })
         .catch(function(error) {
             console.error('Ошибка удаления:', error);
             showNotification('Ошибка удаления: ' + error.message, 'error');
@@ -669,21 +682,4 @@ function showChatInfo() {
         description = chat.description || '';
         document.getElementById('channel-stats').classList.add('hidden');
         document.getElementById('group-members-section').classList.remove('hidden');
-        document.getElementById('members-count').textContent = membersCount;
-        loadMembersList(chat.members, chat.admins);
-        var isAdmin = chat.admins && chat.admins[currentUser.uid];
-        document.getElementById('add-member-btn').style.display = isAdmin ? '' : 'none';
-        document.getElementById('leave-btn').classList.remove('hidden');
-        document.getElementById('subscribe-btn').classList.add('hidden');
-        document.getElementById('unsubscribe-btn').classList.add('hidden');
-        document.getElementById('delete-btn').style.display = isAdmin ? '' : 'none';
-    } else if (chat.type === 'channel') {
-        document.getElementById('info-title').textContent = 'Информация о канале';
-        name = chat.name || 'Канал';
-        avatar = chat.avatar || '';
-        var subsCount = chat.subscribers ? Object.keys(chat.subscribers).length : 0;
-        status = chat.isPublic ? 'Публичный канал' : 'Приватный канал';
-        description = chat.description || '';
-        document.getElementById('channel-stats').classList.remove('hidden');
-        document.getElementById('subscribers-count').textContent = subsCount;
-        document.getElementById('group-members-section').classList.add('hidden');
+        document.getElementById('members-count').text
