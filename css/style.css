@@ -1892,3 +1892,89 @@ body {
         bottom: 65px;
     }
 }
+/* === ФИКС: кнопка прикрепления файла на мобильных === */
+@media (max-width: 768px) {
+    /* Кнопка прикрепления файла — такой же размер, как кнопка отправки */
+    .file-attach-label {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+    
+    .file-attach-label img {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    
+    /* Кнопка отправки сообщения */
+    .btn-send {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        font-size: 18px !important;
+    }
+    
+    /* Остальные кнопки (голосовое, видео, эмодзи) — тоже одинакового размера */
+    .voice-record-label,
+    .video-record-label,
+    .btn-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+    
+    .voice-record-label img,
+    .video-record-label img {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    
+    /* Строка ввода — отступы */
+    .message-input-area {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+    
+    .message-input-area input[type="text"] {
+        padding: 10px 14px;
+        font-size: 16px;
+    }
+}
+
+/* Для очень маленьких телефонов (ширина до 480px) — чуть меньше */
+@media (max-width: 480px) {
+    .file-attach-label,
+    .btn-send,
+    .voice-record-label,
+    .video-record-label,
+    .btn-icon {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+    }
+    
+    .file-attach-label img,
+    .voice-record-label img,
+    .video-record-label img {
+        width: 22px !important;
+        height: 22px !important;
+    }
+    
+    .btn-send {
+        font-size: 16px !important;
+    }
+    
+    .message-input-area {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+    
+    .message-input-area input[type="text"] {
+        padding: 8px 12px;
+        font-size: 15px;
+    }
+}
