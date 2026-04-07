@@ -1,4 +1,4 @@
-// KUKUMBER MESSENGER - CALLS (диагностическая версия)
+// KUKUMBER MESSENGER - CALLS (исправленная версия с диагностикой)
 let peer = null;
 let localStream = null;
 let currentCall = null;
@@ -8,14 +8,14 @@ let isAudioEnabled = true;
 let callTimerInterval = null;
 let callSecondsCount = 0;
 
-// Список серверов для перебора (попробуем разные)
+// Список серверов для перебора (если один не работает, пробуем другой)
 const PEER_SERVERS = [
     { host: '0.peerjs.com', port: 443, secure: true, path: '/' },
-    { host: 'peerjs-server.herokuapp.com', port: 443, secure: true, path: '/' },
-    { host: 'my-peer-server.herokuapp.com', port: 443, secure: true, path: '/' }
+    { host: 'peerjs-server.herokuapp.com', port: 443, secure: true, path: '/' }
 ];
 
 let currentServerIndex = 0;
+let reconnectAttempts = 0;
 
 function initializePeer() {
     if (!currentUser) {
@@ -39,7 +39,7 @@ function initializePeer() {
         port: config.port,
         path: config.path,
         secure: config.secure,
-        debug: 3, // Включаем подробное логирование
+        debug: 3,
         config: {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -47,7 +47,7 @@ function initializePeer() {
                 { urls: 'stun:stun2.l.google.com:19302' },
                 { urls: 'stun:stun3.l.google.com:19302' },
                 { urls: 'stun:stun4.l.google.com:19302' },
-                // Публичные TURN серверы (для обхода NAT)
+                // TURN сервер для обхода NAT
                 {
                     urls: 'turn:openrelay.metered.ca:80',
                     username: 'openrelayproject',
@@ -66,7 +66,8 @@ function initializePeer() {
         console.log('✅ PeerJS подключён! ID:', id);
         console.log('Сервер:', PEER_SERVERS[currentServerIndex].host);
         showNotification('Готов к звонкам', 'success');
-        currentServerIndex = 0; // Сброс при успешном подключении
+        currentServerIndex = 0;
+        reconnectAttempts = 0;
     });
     
     peer.on('call', (call) => {
@@ -78,19 +79,21 @@ function initializePeer() {
         console.error('❌ Peer ошибка:', err.type, err.message);
         
         if (err.type === 'peer-unavailable') {
-            showNotification('Пользователь не в сети или не доступен', 'error');
+            showNotification('Пользователь не в сети', 'error');
         }
         
         if (err.type === 'disconnected' || err.type === 'network' || err.type === 'server-error') {
-            // Пробуем следующий сервер
+            reconnectAttempts++;
             if (currentServerIndex < PEER_SERVERS.length - 1) {
                 currentServerIndex++;
                 console.log(`Переключаемся на сервер ${currentServerIndex + 1}...`);
                 setTimeout(() => initializePeer(), 1000);
-            } else {
-                console.log('Все серверы перепробованы, ждём...');
+            } else if (reconnectAttempts < 5) {
                 currentServerIndex = 0;
-                setTimeout(() => initializePeer(), 5000);
+                console.log(`Повторная попытка ${reconnectAttempts}...`);
+                setTimeout(() => initializePeer(), 3000);
+            } else {
+                showNotification('Не удалось подключиться к серверу звонков', 'error');
             }
         }
         
@@ -150,10 +153,12 @@ function startCall(withVideo){
     console.log('Звоним пользователю:', otherUserId);
     currentChatUser.otherUserId = otherUserId;
     
-    initializePeer();
-    if(!peer){ 
-        showNotification('Ошибка подключения к звонку','error'); 
-        return; 
+    // Инициализируем Peer перед звонком
+    if (!peer || peer.disconnected) {
+        initializePeer();
+        // Ждём подключения
+        setTimeout(() => startCall(withVideo), 1000);
+        return;
     }
     
     navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true })
@@ -200,9 +205,21 @@ function handleIncomingCall(call){
     var callerName=call.metadata?.callerName||'Неизвестный';
     var isVideo=call.metadata?.isVideo||false;
     
+    // Показываем уведомление о входящем звонке
     document.getElementById('incoming-call-username').textContent=callerName;
     document.getElementById('incoming-call-type').textContent=isVideo?'Видеозвонок':'Аудиозвонок';
     document.getElementById('incoming-call-modal').classList.remove('hidden');
+    
+    // Пытаемся разбудить экран
+    if (typeof window !== 'undefined') {
+        // Встряхиваем экран, чтобы он не засыпал
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(e => console.log('Fullscreen error:', e));
+        }
+        // Вибрация (если поддерживается)
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+    
     playRingtone();
 }
 
@@ -230,6 +247,11 @@ function acceptCall(){
             currentCall=incomingCall;
             incomingCall=null;
             setupCallListeners(currentCall);
+            
+            // Запрашиваем Wake Lock чтобы экран не гас
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').catch(e => console.log('WakeLock error:', e));
+            }
         })
         .catch(err=>{ 
             console.error('Ошибка при ответе:', err); 
@@ -299,6 +321,11 @@ function endCall(){
     var muteBtn=document.getElementById('mute-btn'), videoBtn=document.getElementById('video-btn');
     if(muteBtn){ muteBtn.textContent='🎤'; muteBtn.classList.remove('muted'); }
     if(videoBtn){ videoBtn.textContent='📹'; videoBtn.classList.remove('muted'); }
+    
+    // Отпускаем Wake Lock
+    if ('wakeLock' in navigator && navigator.wakeLock.release) {
+        navigator.wakeLock.release().catch(e => console.log('WakeLock release error:', e));
+    }
 }
 
 function showCallModal(isVideo){
