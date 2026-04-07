@@ -1,4 +1,3 @@
-/* KUKUMBER MESSENGER - COMPLETE STYLES */
 * {
     margin: 0;
     padding: 0;
@@ -230,11 +229,18 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .tab-content {
     flex: 1;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .app-container {
@@ -431,7 +437,6 @@ body {
     flex-direction: column;
     background: var(--background);
     position: relative;
-    height: 100%;
     overflow: hidden;
 }
 
@@ -469,7 +474,6 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    flex: 1;
     overflow: hidden;
 }
 
@@ -610,17 +614,18 @@ body {
 }
 
 .message-input-area {
+    flex-shrink: 0;
     padding: 10px 12px;
     background: white;
     border-top: 1px solid var(--border);
     display: flex;
     gap: 8px;
     align-items: center;
-    flex-shrink: 0;
 }
 
 .message-input-area input[type="text"] {
     flex: 1;
+    min-width: 0;
     padding: 12px 16px;
     border: 2px solid var(--border);
     border-radius: 24px;
@@ -641,6 +646,7 @@ body {
     border-radius: 50%;
     font-size: 18px;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .channel-footer {
@@ -686,7 +692,6 @@ body {
     background: white;
     border-top: 1px solid var(--border);
     display: flex;
-    position: relative;
     flex-shrink: 0;
 }
 
@@ -1583,7 +1588,7 @@ body {
     border-radius: 20px;
 }
 
-/* === КНОПКИ С КАРТИНКАМИ (60x60) === */
+/* === КНОПКИ === */
 .file-attach-label,
 .voice-record-label,
 .video-record-label,
@@ -1591,8 +1596,8 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 60px;
+    width: 44px;
+    height: 44px;
     cursor: pointer;
     border: none;
     background: none;
@@ -1629,7 +1634,7 @@ body {
         max-width: 320px;
         z-index: 1000;
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        transition: transform 0.3s;
         box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
         height: 100%;
     }
@@ -1697,390 +1702,8 @@ body {
         max-width: 95%;
         margin: 0 auto;
     }
-}
 
-@media (max-width: 480px) {
-    .btn-create span:last-child {
-        display: none;
-    }
-
-    .btn-create span:first-child {
-        font-size: 22px;
-    }
-
-    .reels-feed {
-        grid-template-columns: 1fr;
-    }
-
-    .chat-header .chat-user-info h3 {
-        font-size: 13px;
-        max-width: 120px;
-    }
-}
-
-::-webkit-scrollbar {
-    width: 5px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--sage);
-    border-radius: 3px;
-    }
-
-/* === ИСПРАВЛЕНИЯ ДЛЯ МОБИЛЬНЫХ (НИЖНЯЯ СТРОКА) === */
-@media (max-width: 768px) {
-    /* Фикс для всей страницы */
-    .main-screen {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-    }
-    
-    /* Контент вкладок */
-    .tab-content {
-        flex: 1;
-        overflow: hidden;
-        position: relative;
-    }
-    
-    /* Область чата */
-    .chat-area {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-    
-    /* Активный чат */
-    .active-chat {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        overflow: hidden;
-    }
-    
-    /* Контейнер сообщений - прокручивается */
-    .messages-container {
-        flex: 1;
-        overflow-y: auto;
-        padding: 15px;
-    }
-    
-    /* Строка ввода - фиксируется внизу */
-    .message-input-area {
-        flex-shrink: 0;
-        padding: 8px 12px;
-        background: white;
-        border-top: 1px solid var(--border);
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    /* Поле ввода текста */
-    .message-input-area input[type="text"] {
-        flex: 1;
-        min-width: 0;
-        padding: 10px 14px;
-        font-size: 16px;
-    }
-    
-    /* Все кнопки в строке ввода */
-    .message-input-area .btn-icon,
-    .message-input-area .file-attach-label,
-    .message-input-area .voice-record-label,
-    .message-input-area .video-record-label,
-    .message-input-area .btn-send {
-        flex-shrink: 0;
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-    }
-    
-    .message-input-area .btn-send {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-    }
-    
-    .message-input-area .file-attach-label img,
-    .message-input-area .voice-record-label img,
-    .message-input-area .video-record-label img {
-        width: 24px;
-        height: 24px;
-    }
-    
-    /* Шапка чата */
-    .chat-header {
-        flex-shrink: 0;
-        padding: 10px 12px;
-    }
-    
-    /* Эмодзи-пикер не перекрывает строку ввода */
-    .emoji-picker {
-        bottom: 70px;
-        right: 10px;
-        max-width: 280px;
-    }
-    
-    .emoji-grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
-    
-    /* Боковая панель */
-    .sidebar {
-        bottom: 0;
-        height: 100%;
-    }
-}
-
-/* Для очень маленьких телефонов (iPhone SE, 375px) */
-@media (max-width: 480px) {
-    .message-input-area {
-        padding: 6px 10px;
-        gap: 4px;
-    }
-    
-    .message-input-area .btn-icon,
-    .message-input-area .file-attach-label,
-    .message-input-area .voice-record-label,
-    .message-input-area .video-record-label,
-    .message-input-area .btn-send {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        min-height: 36px;
-    }
-    
-    .message-input-area input[type="text"] {
-        padding: 8px 12px;
-        font-size: 14px;
-    }
-    
-    .message-input-area .file-attach-label img,
-    .message-input-area .voice-record-label img,
-    .message-input-area .video-record-label img {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .messages-container {
-        padding: 10px;
-    }
-    
-    .message {
-        max-width: 85%;
-        padding: 8px 12px;
-    }
-}
-
-/* Для Android с клавиатурой - корректировка при открытии клавиатуры */
-@media (max-width: 768px) and (max-height: 500px) {
-    .messages-container {
-        max-height: calc(100vh - 120px);
-    }
-    
-    .emoji-picker {
-        bottom: 65px;
-    }
-}
-/* === ФИКС: кнопка прикрепления файла на мобильных === */
-@media (max-width: 768px) {
-    /* Кнопка прикрепления файла — такой же размер, как кнопка отправки */
-    .file-attach-label {
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        min-height: 44px !important;
-    }
-    
-    .file-attach-label img {
-        width: 24px !important;
-        height: 24px !important;
-    }
-    
-    /* Кнопка отправки сообщения */
-    .btn-send {
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        min-height: 44px !important;
-        font-size: 18px !important;
-    }
-    
-    /* Остальные кнопки (голосовое, видео, эмодзи) — тоже одинакового размера */
-    .voice-record-label,
-    .video-record-label,
-    .btn-icon {
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        min-height: 44px !important;
-    }
-    
-    .voice-record-label img,
-    .video-record-label img {
-        width: 24px !important;
-        height: 24px !important;
-    }
-    
-    /* Строка ввода — отступы */
-    .message-input-area {
-        padding: 8px 10px;
-        gap: 6px;
-    }
-    
-    .message-input-area input[type="text"] {
-        padding: 10px 14px;
-        font-size: 16px;
-    }
-}
-
-/* Для очень маленьких телефонов (ширина до 480px) — чуть меньше */
-@media (max-width: 480px) {
-    .file-attach-label,
-    .btn-send,
-    .voice-record-label,
-    .video-record-label,
-    .btn-icon {
-        width: 40px !important;
-        height: 40px !important;
-        min-width: 40px !important;
-        min-height: 40px !important;
-    }
-    
-    .file-attach-label img,
-    .voice-record-label img,
-    .video-record-label img {
-        width: 22px !important;
-        height: 22px !important;
-    }
-    
-    .btn-send {
-        font-size: 16px !important;
-    }
-    
-    .message-input-area {
-        padding: 6px 8px;
-        gap: 4px;
-    }
-    
-    .message-input-area input[type="text"] {
-        padding: 8px 12px;
-        font-size: 15px;
-    }
-}
-/* === МОБИЛЬНЫЕ: кнопка прикрепления файла как зелёный круг кнопки отправки === */
-@media (max-width: 768px) {
-    /* Кнопка прикрепления файла — такой же зелёный круг, как у кнопки отправки */
-    .file-attach-label {
-        width: 52px !important;
-        height: 52px !important;
-        min-width: 52px !important;
-        min-height: 52px !important;
-        background: linear-gradient(135deg, var(--forest), var(--lime)) !important;
-        border-radius: 50% !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    /* Убираем фон у картинки внутри, чтобы был виден зелёный круг */
-    .file-attach-label img {
-        width: 28px !important;
-        height: 28px !important;
-        filter: brightness(0) invert(1) !important; /* Делаем иконку белой */
-    }
-    
-    /* Кнопка отправки сообщения (оставляем как есть) */
-    .btn-send {
-        width: 52px !important;
-        height: 52px !important;
-        min-width: 52px !important;
-        min-height: 52px !important;
-    }
-    
-    /* Остальные кнопки (голосовое, видео, эмодзи) — делаем такими же круглыми */
-    .voice-record-label,
-    .video-record-label,
-    .btn-icon {
-        width: 52px !important;
-        height: 52px !important;
-        min-width: 52px !important;
-        min-height: 52px !important;
-        background: linear-gradient(135deg, var(--forest), var(--lime)) !important;
-        border-radius: 50% !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    .voice-record-label img,
-    .video-record-label img {
-        width: 28px !important;
-        height: 28px !important;
-        filter: brightness(0) invert(1) !important;
-    }
-    
-    /* Кнопка эмодзи — оставляем эмодзи, но фон зелёный */
-    .btn-icon {
-        color: white !important;
-        font-size: 24px !important;
-        background: linear-gradient(135deg, var(--forest), var(--lime)) !important;
-    }
-    
-    /* Строка ввода — отступы */
-    .message-input-area {
-        padding: 10px 12px;
-        gap: 8px;
-    }
-}
-
-/* Для очень маленьких телефонов (ширина до 480px) — чуть меньше */
-@media (max-width: 480px) {
-    .file-attach-label,
-    .btn-send,
-    .voice-record-label,
-    .video-record-label,
-    .btn-icon {
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
-    }
-    
-    .file-attach-label img,
-    .voice-record-label img,
-    .video-record-label img {
-        width: 24px !important;
-        height: 24px !important;
-    }
-    
-    .btn-icon {
-        font-size: 22px !important;
-    }
-    
-    .message-input-area {
-        padding: 8px 10px;
-        gap: 6px;
-    }
-    
-    .message-input-area input[type="text"] {
-        padding: 10px 14px;
-        font-size: 15px;
-    }
-}
-/* === МОБИЛЬНЫЕ: картинка прикрепления файла размером с зелёный круг отправки === */
-@media (max-width: 768px) {
-    /* Кнопка прикрепления файла — просто контейнер размером 52x52 */
+    /* Кнопка прикрепления файла — размером с зелёный круг отправки (52x52) */
     .file-attach-label {
         width: 52px !important;
         height: 52px !important;
@@ -2088,30 +1711,21 @@ body {
         min-height: 52px !important;
         background: none !important;
         border-radius: 0 !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
     }
-    
-    /* Сама картинка — занимает всю кнопку 52x52 */
+
     .file-attach-label img {
         width: 52px !important;
         height: 52px !important;
         object-fit: contain !important;
-        filter: none !important;
-        background: none !important;
     }
-    
-    /* Кнопка отправки сообщения (зелёный круг) — остаётся 52x52 */
+
     .btn-send {
         width: 52px !important;
         height: 52px !important;
         min-width: 52px !important;
         min-height: 52px !important;
     }
-    
-    /* Остальные кнопки (голосовое, видео, эмодзи) — тоже 52x52, но оставляем их зелёными кругами */
+
     .voice-record-label,
     .video-record-label,
     .btn-icon {
@@ -2121,31 +1735,29 @@ body {
         min-height: 52px !important;
         background: linear-gradient(135deg, var(--forest), var(--lime)) !important;
         border-radius: 50% !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
     }
-    
+
     .voice-record-label img,
     .video-record-label img {
         width: 28px !important;
         height: 28px !important;
         filter: brightness(0) invert(1) !important;
     }
-    
+
     .btn-icon {
         color: white !important;
         font-size: 24px !important;
+        background: linear-gradient(135deg, var(--forest), var(--lime)) !important;
+        border-radius: 50% !important;
     }
-    
-    /* Строка ввода — отступы */
+
     .message-input-area {
         padding: 10px 12px;
         gap: 8px;
     }
 }
 
-/* Для очень маленьких телефонов (ширина до 480px) — 48x48 */
+/* Для очень маленьких телефонов */
 @media (max-width: 480px) {
     .file-attach-label {
         width: 48px !important;
@@ -2153,12 +1765,12 @@ body {
         min-width: 48px !important;
         min-height: 48px !important;
     }
-    
+
     .file-attach-label img {
         width: 48px !important;
         height: 48px !important;
     }
-    
+
     .btn-send,
     .voice-record-label,
     .video-record-label,
@@ -2168,19 +1780,34 @@ body {
         min-width: 48px !important;
         min-height: 48px !important;
     }
-    
+
     .voice-record-label img,
     .video-record-label img {
         width: 24px !important;
         height: 24px !important;
     }
-    
+
     .btn-icon {
         font-size: 22px !important;
     }
-    
+
     .message-input-area {
         padding: 8px 10px;
         gap: 6px;
     }
+
+    .message-input-area input[type="text"] {
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+}
+
+/* СКРОЛЛБАР */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--sage);
+    border-radius: 3px;
 }
