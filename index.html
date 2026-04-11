@@ -2,442 +2,991 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#228B22">
-    <title>Kukumber Messenger</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥒</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Akur TV</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        
+        body {
+            background: #080808;
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #121212;
+            display: flex;
+            flex-direction: column;
+            padding-top: 30px;
+            z-index: 100;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+        
+        .logo-area {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo-text {
+            font-size: 32px;
+            font-weight: 800;
+            color: #E50914;
+            letter-spacing: 2px;
+        }
+        
+        .menu-item {
+            padding: 18px 30px;
+            font-size: 18px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        
+        .menu-item:hover, .menu-item.focused {
+            background-color: #333;
+            color: white;
+            border-left-color: #E50914;
+        }
+        
+        .menu-item.active {
+            color: white;
+            font-weight: 600;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 30px 50px;
+            background: radial-gradient(at top right, #1f1f1f, #000);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #ddd;
+        }
+        
+        .nav-breadcrumb {
+            display: flex;
+            gap: 10px;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .nav-breadcrumb span {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .nav-breadcrumb span:hover {
+            color: #E50914;
+        }
+        
+        .back-btn {
+            background: #333;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+            display: inline-block;
+        }
+        
+        .back-btn:hover {
+            background: #E50914;
+        }
+        
+        .user-avatar {
+            background: #E50914;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        
+        .user-avatar:hover, .user-avatar.focused {
+            background: #ff1a1a;
+            transform: scale(1.05);
+            outline: 2px solid white;
+        }
+        
+        #search-box {
+            display: none;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        
+        #search-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            background: #222;
+            border: 2px solid #444;
+            color: white;
+            border-radius: 8px;
+            outline: none;
+        }
+        
+        #search-input:focus {
+            border-color: #E50914;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 30px;
+            align-content: start;
+            overflow-y: auto;
+            padding-bottom: 250px;
+            padding-right: 15px;
+            padding-left: 5px;
+            padding-top: 10px;
+            flex: 1;
+            scroll-behavior: smooth;
+        }
+        
+        .grid::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .grid::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        
+        .card {
+            background: #222;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 2/3;
+            border: 3px solid transparent;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .card:hover, .card.focused {
+            transform: scale(1.05);
+            border-color: #E50914;
+            z-index: 10;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.9);
+        }
+        
+        .folder-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(229, 9, 20, 0.95);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            text-transform: uppercase;
+            z-index: 2;
+        }
+        
+        .folder-badge.franchise {
+            background: rgba(0, 113, 235, 0.95);
+        }
+        
+        .rating-badge {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.85);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            backdrop-filter: blur(4px);
+        }
+        
+        #info-panel {
+            position: fixed;
+            bottom: 0;
+            left: 280px;
+            right: 0;
+            background: linear-gradient(to top, #000 10%, rgba(0,0,0,0.95) 70%, transparent 100%);
+            color: white;
+            padding: 20px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+            z-index: 90;
+        }
+        
+        #info-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        .info-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 2px 10px black;
+        }
+        
+        .info-meta {
+            font-size: 16px;
+            color: #E50914;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .info-desc {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ddd;
+            max-width: 70%;
+        }
+        
+        .rating-stars {
+            margin-top: 15px;
+            display: flex;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .star {
+            font-size: 28px;
+            color: #555;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        
+        .star:hover,
+        .star.active {
+            color: #ffc107;
+            text-shadow: 0 0 10px rgba(255,193,7,0.5);
+        }
+        
+        #player {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 200;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        #close-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 201;
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: 0.2s;
+        }
+        
+        #next-btn {
+            position: absolute;
+            top: 30px;
+            right: 200px;
+            background: rgba(229, 9, 20, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 201;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: none;
+        }
+        
+        #close-btn:hover, #next-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .logo-text {
+                font-size: 18px;
+            }
+            .menu-item {
+                padding: 12px;
+                text-align: center;
+                font-size: 11px;
+            }
+            .content {
+                margin-left: 80px;
+                padding: 15px;
+            }
+            .grid {
+                gap: 15px;
+            }
+            #info-panel {
+                left: 80px;
+                padding: 15px 20px;
+            }
+            .info-title {
+                font-size: 20px;
+            }
+            .info-desc {
+                max-width: 100%;
+                font-size: 12px;
+            }
+            .star {
+                font-size: 20px;
+            }
+            #close-btn, #next-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+                top: 15px;
+            }
+            #next-btn {
+                right: 130px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- ЭКРАН ЗАГРУЗКИ -->
-    <div id="loading-screen" class="loading-screen">
-        <div class="logo-container">
-            <div class="cucumber-logo">🥒</div>
-            <h1>Kukumber</h1>
-            <p class="loading-text">Свежее общение...</p>
-            <div class="loading-dots">
-                <span></span><span></span><span></span>
-            </div>
+    <div class="sidebar">
+        <div class="logo-area">
+            <div class="logo-text">AKUR</div>
         </div>
+        <div class="menu-item" data-nav="home">🏠 Главная</div>
+        <div class="menu-item" data-nav="history">🕒 История</div>
+        <div class="menu-item" data-nav="kids">👶 Детям</div>
+        <div class="menu-item" data-nav="genres">🎭 Жанры</div>
+        <div class="menu-item" id="admin-menu" style="display: none;" data-nav="admin">⚙️ Админ</div>
     </div>
-
-    <!-- ЭКРАН АВТОРИЗАЦИИ -->
-    <div id="auth-screen" class="auth-screen hidden">
-        <div class="auth-container">
-            <div class="auth-logo">
-                <div class="cucumber-icon">🥒</div>
-                <h1>Kukumber</h1>
-                <p class="tagline">Свежее общение каждый день</p>
-            </div>
-            
-            <div id="login-form" class="auth-form">
-                <h2>Вход</h2>
-                <input type="email" id="login-email" placeholder="Email">
-                <input type="password" id="login-password" placeholder="Пароль">
-                <button onclick="login()" class="btn-primary">Войти</button>
-                <p class="switch-form">Нет аккаунта? <a onclick="showRegister()">Регистрация</a></p>
-            </div>
-            
-            <div id="register-form" class="auth-form hidden">
-                <h2>Регистрация</h2>
-                <input type="text" id="reg-username" placeholder="Имя пользователя">
-                <input type="email" id="reg-email" placeholder="Email">
-                <input type="tel" id="reg-phone" placeholder="Телефон (необязательно)">
-                <input type="password" id="reg-password" placeholder="Пароль (мин. 6 символов)">
-                <input type="password" id="reg-password-confirm" placeholder="Подтвердите пароль">
-                <button onclick="register()" class="btn-primary">Создать аккаунт</button>
-                <p class="switch-form">Есть аккаунт? <a onclick="showLogin()">Войти</a></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- ГЛАВНЫЙ ЭКРАН -->
-    <div id="main-screen" class="main-screen hidden">
-        
-        <!-- ВКЛАДКА ЧАТЫ -->
-        <div id="chats-tab" class="tab-content">
-            <div class="app-container">
-                
-                <!-- БОКОВАЯ ПАНЕЛЬ -->
-                <aside class="sidebar" id="sidebar">
-                    <div class="sidebar-header">
-                        <div class="user-info" onclick="switchToTab('settings')">
-                            <div class="avatar" id="user-avatar">🥒</div>
-                            <div class="user-details">
-                                <h3 id="current-username">Пользователь</h3>
-                                <span class="status online">В сети</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="search-bar">
-                        <input type="text" id="search-chats" placeholder="🔍 Поиск по чатам..." oninput="searchChats()">
-                    </div>
-                    
-                    <div class="create-buttons">
-                        <button onclick="showNewChatDialog()" class="btn-create"><span>💬</span><span>Чат</span></button>
-                        <button onclick="showCreateGroupDialog()" class="btn-create"><span>👥</span><span>Группа</span></button>
-                        <button onclick="showCreateChannelDialog()" class="btn-create"><span>📢</span><span>Канал</span></button>
-                        <button onclick="showGlobalSearch()" class="btn-create"><span>🔍</span><span>Найти</span></button>
-                    </div>
-                    
-                    <div class="chats-list" id="chats-list">
-                        <div class="empty-chats"><p>Нет чатов</p></div>
-                    </div>
-                </aside>
-
-                <!-- ОБЛАСТЬ ЧАТА -->
-                <main class="chat-area" id="chat-area">
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-                    
-                    <div id="no-chat-selected" class="no-chat">
-                        <div class="cucumber-large">🥒</div>
-                        <h2>Выберите чат</h2>
-                    </div>
-                    
-                    <div id="active-chat" class="active-chat hidden">
-                        <!-- ШАПКА ЧАТА С КНОПКАМИ ЗВОНКОВ (ИСПРАВЛЕНО) -->
-                        <div class="chat-header">
-                            <button class="back-btn" onclick="closeChat()">←</button>
-                            <div class="chat-user-info" onclick="showChatInfo()">
-                                <div class="avatar" id="chat-avatar">👤</div>
-                                <div>
-                                    <h3 id="chat-username">Пользователь</h3>
-                                    <span id="chat-status">был(а) недавно</span>
-                                </div>
-                            </div>
-                            <div class="chat-actions">
-                                <button class="call-btn" id="voice-call-btn" onclick="startVoiceCall()" title="Аудиозвонок" style="font-size:22px; background:var(--forest); color:white; width:40px; height:40px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;">📞</button>
-                                <button class="call-btn" id="video-call-btn" onclick="startVideoCall()" title="Видеозвонок" style="font-size:22px; background:var(--forest); color:white; width:40px; height:40px; border-radius:50%; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;">📹</button>
-                            </div>
-                        </div>
-                        
-                        <div class="messages-container" id="messages-container"></div>
-                        
-                        <div class="message-input-area" id="message-input-area">
-                            <label for="file-input" class="attach-btn" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">📎</label>
-                            <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)" style="display:none;">
-                            
-                            <button id="voice-record-btn" class="voice-btn" ontouchstart="startRecording()" ontouchend="stopRecording()" onmousedown="startRecording()" onmouseup="stopRecording()" title="Голосовое сообщение" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px;">🎤</button>
-                            
-                            <button id="video-record-btn" class="video-btn" ontouchstart="startVideoCircle()" ontouchend="stopVideoCircle()" onmousedown="startVideoCircle()" onmouseup="stopVideoCircle()" title="Видеокружок" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px;">📹</button>
-                            
-                            <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="handleMessageKeyPress(event)" oninput="onTyping()" style="flex:1; padding:12px 16px; border:2px solid #d4e4d4; border-radius:24px; font-size:15px;">
-                            
-                            <button onclick="toggleEmojiPicker()" class="emoji-btn" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px;">😊</button>
-                            <button onclick="sendMessage()" class="send-btn" style="width:44px; height:44px; background:linear-gradient(135deg, #228B22, #32CD32); color:white; border:none; border-radius:50%; font-size:18px; cursor:pointer;">➤</button>
-                        </div>
-                        
-                        <div class="channel-footer hidden" id="channel-footer">
-                            <p>Только админы могут писать</p>
-                        </div>
-                        
-                        <div id="emoji-picker" class="emoji-picker hidden">
-                            <div class="emoji-grid"></div>
-                        </div>
-                    </div>
-                </main>
-            </div>
-        </div>
-
-        <!-- ВКЛАДКА РЕЕЛСЫ -->
-        <div id="reels-tab" class="tab-content hidden">
-            <div class="reels-container">
-                <div class="reels-header">
-                    <h2>🎬 Реелсы</h2>
-                    <button onclick="showCreateReelModal()" class="btn-create-reel">+ Создать</button>
-                </div>
-                <div class="reels-tabs">
-                    <button class="reel-tab-btn active" onclick="switchReelsTab('feed')">Лента</button>
-                    <button class="reel-tab-btn" onclick="switchReelsTab('my')">Мои</button>
-                    <button class="reel-tab-btn" onclick="switchReelsTab('liked')">Понравилось</button>
-                </div>
-                <div id="reels-feed" class="reels-feed"></div>
-            </div>
-        </div>
-
-        <!-- ВКЛАДКА НАСТРОЙКИ -->
-        <div id="settings-tab" class="tab-content hidden">
-            <div class="settings-container">
-                <div class="settings-header">
-                    <h2>⚙️ Настройки</h2>
-                </div>
-                
-                <div class="settings-profile" onclick="showEditProfileModal()">
-                    <div class="settings-avatar" id="settings-avatar">🥒</div>
-                    <div class="settings-profile-info">
-                        <h3 id="settings-username">Пользователь</h3>
-                        <p id="settings-phone"></p>
-                    </div>
-                    <span class="arrow">›</span>
-                </div>
-
-                <div class="settings-section">
-                    <div class="settings-item" onclick="showNotificationSettings()">
-                        <span class="settings-icon">🔔</span>
-                        <span>Уведомления</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="settings-item" onclick="showPrivacySettings()">
-                        <span class="settings-icon">🔒</span>
-                        <span>Конфиденциальность</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="settings-item" onclick="showThemeSettings()">
-                        <span class="settings-icon">🎨</span>
-                        <span>Оформление</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="settings-item" onclick="showLanguageSettings()">
-                        <span class="settings-icon">🌍</span>
-                        <span>Язык</span>
-                        <span class="settings-value">Русский</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="settings-item" onclick="showStorageSettings()">
-                        <span class="settings-icon">💾</span>
-                        <span>Данные и память</span>
-                        <span class="arrow">›</span>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <div class="settings-item" onclick="showAbout()">
-                        <span class="settings-icon">ℹ️</span>
-                        <span>О приложении</span>
-                        <span class="settings-value">v1.0</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="settings-item" onclick="showHelp()">
-                        <span class="settings-icon">❓</span>
-                        <span>Помощь</span>
-                        <span class="arrow">›</span>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <div class="settings-item danger" onclick="logout()">
-                        <span class="settings-icon">🚪</span>
-                        <span>Выйти из аккаунта</span>
-                    </div>
-                </div>
-
-                <div class="settings-footer">
-                    <p>Kukumber Messenger</p>
-                    <p>Свежее общение каждый день 🥒</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- НИЖНЯЯ НАВИГАЦИЯ -->
-        <nav class="bottom-nav" id="bottom-nav">
-            <button onclick="switchToTab('chats')" class="nav-item active" id="nav-chats">
-                <span class="nav-icon">💬</span>
-                <span class="nav-label">Чаты</span>
-            </button>
-            <button onclick="switchToTab('reels')" class="nav-item" id="nav-reels">
-                <span class="nav-icon">🎬</span>
-                <span class="nav-label">Реелсы</span>
-            </button>
-            <button onclick="switchToTab('settings')" class="nav-item" id="nav-settings">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-label">Настройки</span>
-            </button>
-        </nav>
-    </div>
-
-    <!-- МОДАЛЬНЫЕ ОКНА -->
     
-    <div id="global-search-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3>🔍 Поиск пользователей</h3><button onclick="closeGlobalSearch()" class="btn-close">×</button></div>
-            <input type="text" id="global-search-input" placeholder="Имя" oninput="searchGlobalUsers()">
-            <div id="global-users-list" class="users-list"></div>
+    <div class="content">
+        <div class="header">
+            <h2 id="page-title">Студии</h2>
+            <div id="user-avatar" class="user-avatar" tabindex="0">👤 Войти</div>
+        </div>
+        <div class="nav-breadcrumb" id="breadcrumb"></div>
+        <div id="search-box">
+            <input type="text" id="search-input" placeholder="🔍 Найти фильм по названию или жанру...">
+        </div>
+        <div id="grid" class="grid">
+            <div class="loading">Загрузка...</div>
+        </div>
+        <div id="info-panel">
+            <div class="info-title" id="info-title"></div>
+            <div class="info-meta" id="info-meta"></div>
+            <div class="info-desc" id="info-desc"></div>
+            <div class="rating-stars" id="rating-stars"></div>
         </div>
     </div>
-
-    <div id="new-chat-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3>💬 Новый чат (из контактов)</h3><button onclick="closeNewChatDialog()" class="btn-close">×</button></div>
-            <input type="text" id="new-chat-search" placeholder="Поиск среди контактов..." oninput="searchContacts()">
-            <div id="users-list" class="users-list"></div>
-        </div>
+    
+    <div id="player">
+        <div id="next-btn" onclick="window.playNext()">⏩ СЛЕДУЮЩАЯ СЕРИЯ</div>
+        <div id="close-btn" onclick="window.closePlayer()">❌ ВЫЙТИ</div>
+        <iframe id="video-frame" src="" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
     </div>
 
-    <div id="create-group-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3>👥 Группа</h3><button onclick="closeCreateGroupDialog()" class="btn-close">×</button></div>
-            <div id="group-step-1">
-                <div class="avatar-upload"><div class="avatar-preview" id="group-avatar-preview">👥</div><label>Загрузить фото<input type="file" accept="image/*" onchange="previewGroupAvatar(event)" style="display:none;"></label></div>
-                <input type="text" id="group-name" placeholder="Название группы">
-                <textarea id="group-description" placeholder="Описание"></textarea>
-                <button onclick="goToGroupStep2()" class="btn-primary">Далее</button>
-            </div>
-            <div id="group-step-2" class="hidden">
-                <p>Добавьте участников (из контактов):</p>
-                <input type="text" id="group-members-search" placeholder="Поиск..." oninput="searchGroupMembers()">
-                <div id="selected-members" class="selected-members"></div>
-                <div id="group-members-list" class="users-list"></div>
-                <div class="modal-buttons"><button onclick="goToGroupStep1()" class="btn-secondary">Назад</button><button onclick="createGroup()" class="btn-primary">Создать</button></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="create-channel-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3>📢 Канал</h3><button onclick="closeCreateChannelDialog()" class="btn-close">×</button></div>
-            <div class="avatar-upload"><div class="avatar-preview" id="channel-avatar-preview">📢</div><label>Загрузить фото<input type="file" accept="image/*" onchange="previewChannelAvatar(event)" style="display:none;"></label></div>
-            <input type="text" id="channel-name" placeholder="Название канала">
-            <textarea id="channel-description" placeholder="Описание"></textarea>
-            <div class="channel-type-options">
-                <label><input type="radio" name="channel-type" value="public" checked> 🌍 Публичный</label>
-                <label><input type="radio" name="channel-type" value="private"> 🔒 Приватный</label>
-            </div>
-            <input type="text" id="channel-link" placeholder="Ссылка (например: mychannel)" oninput="validateChannelLink()">
-            <p id="channel-link-hint" class="hint"></p>
-            <button onclick="createChannel()" class="btn-primary">Создать</button>
-        </div>
-    </div>
-
-    <div id="chat-info-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3 id="info-title">Информация</h3><button onclick="closeChatInfo()" class="btn-close">×</button></div>
-            <div class="chat-info-body">
-                <div class="info-avatar" id="info-avatar">👤</div>
-                <h2 id="info-name">Имя</h2>
-                <p id="info-status"></p>
-                <p id="info-description"></p>
-                <div id="channel-stats" class="hidden"><span id="subscribers-count">0</span> подписчиков</div>
-                <div id="group-members-section" class="hidden">
-                    <h4>Участники (<span id="members-count">0</span>)</h4>
-                    <button onclick="showAddMembersDialog()" id="add-member-btn" class="btn-small">+ Добавить</button>
-                    <div id="info-members-list"></div>
-                </div>
-                <div class="info-actions">
-                    <button id="leave-btn" onclick="leaveChat()" class="btn-danger hidden">Покинуть</button>
-                    <button id="subscribe-btn" onclick="subscribeToChannel()" class="btn-primary hidden">Подписаться</button>
-                    <button id="unsubscribe-btn" onclick="unsubscribeFromChannel()" class="btn-secondary hidden">Отписаться</button>
-                    <button id="delete-btn" onclick="deleteChat()" class="btn-danger hidden">Удалить</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="add-members-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Добавить участников</h3><button onclick="closeAddMembersDialog()" class="btn-close">×</button></div>
-            <input type="text" id="add-members-search" placeholder="Поиск..." oninput="searchAddMembers()">
-            <div id="add-members-list" class="users-list"></div>
-        </div>
-    </div>
-
-    <div id="create-reel-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3>🎬 Новый реелс</h3><button onclick="closeCreateReelModal()" class="btn-close">×</button></div>
-            <div class="reel-upload-area" id="reel-upload-area" onclick="document.getElementById('reel-file-input').click()">
-                <span>📹</span>
-                <p>Нажмите чтобы выбрать видео или фото</p>
-                <input type="file" id="reel-file-input" accept="image/*,video/*" onchange="previewReelMedia(event)" style="display:none;">
-            </div>
-            <div id="reel-preview" class="reel-preview hidden"></div>
-            <textarea id="reel-caption" placeholder="Описание..." maxlength="500"></textarea>
-            <div class="reel-options">
-                <label><input type="checkbox" id="reel-comments-enabled" checked> Разрешить комментарии</label>
-            </div>
-            <button onclick="publishReel()" class="btn-primary">Опубликовать</button>
-        </div>
-    </div>
-
-    <div id="edit-profile-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header"><h3>Редактировать профиль</h3><button onclick="closeEditProfileModal()" class="btn-close">×</button></div>
-            <div class="avatar-upload">
-                <div class="avatar-preview" id="edit-avatar-preview">🥒</div>
-                <label>Изменить фото<input type="file" id="edit-avatar-input" accept="image/*" onchange="previewEditAvatar(event)" style="display:none;"></label>
-            </div>
-            <input type="text" id="edit-username" placeholder="Имя пользователя">
-            <input type="text" id="edit-bio" placeholder="О себе">
-            <button onclick="saveProfile()" class="btn-primary">Сохранить</button>
-        </div>
-    </div>
-
-    <div id="view-reel-modal" class="modal hidden">
-        <div class="reel-viewer">
-            <button class="reel-close-btn" onclick="closeViewReelModal()">×</button>
-            <div class="reel-media" id="reel-media-container"></div>
-            <div class="reel-info">
-                <div class="reel-author">
-                    <div class="avatar" id="reel-author-avatar">👤</div>
-                    <span id="reel-author-name">Автор</span>
-                </div>
-                <p id="reel-caption-view"></p>
-            </div>
-            <div class="reel-actions-bar">
-                <button onclick="likeReel()" class="reel-action" id="like-reel-btn">❤️ <span id="reel-likes-count">0</span></button>
-                <button onclick="showReelComments()" class="reel-action">💬 <span id="reel-comments-count">0</span></button>
-                <button onclick="shareReel()" class="reel-action">↗️</button>
-                <button id="delete-reel-btn" onclick="deleteCurrentReel()" class="reel-action" style="display:none;">🗑️</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="call-modal" class="modal hidden">
-        <div class="call-container">
-            <div class="call-header"><h3 id="call-username">Звонок</h3><span id="call-status">Соединение...</span><span id="call-timer">00:00</span></div>
-            <div class="video-container">
-                <video id="remote-video" autoplay playsinline></video>
-                <video id="local-video" autoplay playsinline muted></video>
-                <div id="call-avatar" class="call-avatar"><div class="avatar-large">👤</div></div>
-            </div>
-            <div class="call-controls">
-                <button onclick="toggleMute()" class="btn-call" id="mute-btn">🎤</button>
-                <button onclick="toggleVideo()" class="btn-call" id="video-btn">📹</button>
-                <button onclick="endCall()" class="btn-call btn-end-call">📵</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="incoming-call-modal" class="modal hidden">
-        <div class="incoming-call-container">
-            <div class="incoming-call-avatar">👤</div>
-            <h3 id="incoming-call-username">Входящий звонок</h3>
-            <p id="incoming-call-type">Аудиозвонок</p>
-            <div class="incoming-call-actions">
-                <button onclick="rejectCall()" class="btn-call btn-reject">❌</button>
-                <button onclick="acceptCall()" class="btn-call btn-accept">✅</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="image-preview-modal" class="modal hidden">
-        <div class="image-preview-container">
-            <div class="modal-header"><h3>Отправить</h3><button onclick="closeImagePreview()" class="btn-close">×</button></div>
-            <img id="preview-image" src="">
-            <input type="text" id="image-caption" placeholder="Подпись...">
-            <button onclick="confirmImageSend()" class="btn-primary">Отправить</button>
-        </div>
-    </div>
-
-    <div id="image-lightbox" class="image-lightbox hidden" onclick="closeLightbox()">
-        <img id="lightbox-image" src="">
-    </div>
-
-    <div id="notifications-container" class="notifications-container"></div>
-
-    <!-- Firebase + PeerJS -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
-    <!-- Скрипты -->
-    <script src="js/app.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/chat.js"></script>
-    <script src="js/calls.js"></script>
-    <script src="js/upload.js"></script>
-    <script src="js/reels.js"></script>
-    <script src="js/settings.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+        import { getDatabase, ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPwpR81prWq4_Ef1KX1T_uA4WsgyFMR8k",
+            authDomain: "akur-tv.firebaseapp.com",
+            databaseURL: "https://akur-tv-default-rtdb.firebaseio.com",
+            projectId: "akur-tv",
+            storageBucket: "akur-tv.firebasestorage.app",
+            messagingSenderId: "260087189248",
+            appId: "1:260087189248:web:2230651bb99a274bd86de5",
+            measurementId: "G-GJHMDS0KM7"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        
+        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+        let currentUser = null;
+        let allItems = [];
+        let currentItems = [];
+        let navigationStack = [];
+        let activeGridIndex = 0;
+        let appState = 'grid';          // 'menu', 'grid', 'userMenu'
+        let activeMenuIndex = 0;
+        let activeUserMenuIndex = 0;    // для меню пользователя (Войти/Выйти)
+        let showUserMenu = false;        // показывать ли меню пользователя
+        let infoTimeout = null;
+        let userRatings = {};
+        
+        // DOM элементы
+        const gridEl = document.getElementById('grid');
+        const userAvatar = document.getElementById('user-avatar');
+        const adminMenu = document.getElementById('admin-menu');
+        const pageTitle = document.getElementById('page-title');
+        const breadcrumbDiv = document.getElementById('breadcrumb');
+        const searchBox = document.getElementById('search-box');
+        const searchInput = document.getElementById('search-input');
+        const playerDiv = document.getElementById('player');
+        const videoFrame = document.getElementById('video-frame');
+        const nextBtn = document.getElementById('next-btn');
+        const infoPanel = document.getElementById('info-panel');
+        const infoTitle = document.getElementById('info-title');
+        const infoMeta = document.getElementById('info-meta');
+        const infoDesc = document.getElementById('info-desc');
+        const ratingStarsDiv = document.getElementById('rating-stars');
+        const menuItems = document.querySelectorAll('.menu-item');
+        
+        // Кол-во колонок
+        let COLS = window.innerWidth < 768 ? 2 : 6;
+        
+        window.addEventListener('resize', () => {
+            COLS = window.innerWidth < 768 ? 2 : 6;
+            if (currentItems.length && appState === 'grid') renderGrid();
+        });
+        
+        // ========== ЗАГРУЗКА ДАННЫХ ==========
+        async function loadAllData() {
+            try {
+                const itemsRef = ref(db, 'items');
+                const snapshot = await get(itemsRef);
+                if (snapshot.exists()) {
+                    const itemsObj = snapshot.val();
+                    allItems = Object.keys(itemsObj).map(key => ({ id: key, ...itemsObj[key] }));
+                } else {
+                    allItems = [];
+                }
+                console.log(`Загружено ${allItems.length} элементов`);
+                return allItems;
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                gridEl.innerHTML = '<div class="loading">❌ Ошибка загрузки</div>';
+                return [];
+            }
+        }
+        
+        async function loadUserRatings() {
+            if (!currentUser) return;
+            try {
+                const ratingsRef = ref(db, `ratings/${currentUser.uid}`);
+                const snapshot = await get(ratingsRef);
+                userRatings = snapshot.exists() ? snapshot.val() : {};
+            } catch (error) {
+                console.error('Ошибка загрузки оценок:', error);
+            }
+        }
+        
+        function getChildren(parentId) {
+            return allItems.filter(item => item.parentId === parentId);
+        }
+        
+        function getRootItems() {
+            return allItems.filter(item => !item.parentId || item.parentId === 'root');
+        }
+        
+        // ========== ОТРИСОВКА ==========
+        function renderGrid() {
+            if (!currentItems.length) {
+                gridEl.innerHTML = '<div class="loading">📭 Ничего не найдено</div>';
+                return;
+            }
+            gridEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+            gridEl.style.gap = window.innerWidth < 768 ? '15px' : '30px';
+            gridEl.innerHTML = '';
+            
+            currentItems.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => openItem(item, idx);
+                card.onmouseenter = () => {
+                    if (appState === 'grid') {
+                        activeGridIndex = idx;
+                        renderFocus();
+                    }
+                };
+                
+                let badgeHtml = '';
+                if (item.type === 'studio') badgeHtml = '<div class="folder-badge">СТУДИЯ</div>';
+                else if (item.type === 'franchise') badgeHtml = '<div class="folder-badge franchise">ФРАНШИЗА</div>';
+                
+                const avgRating = item.rating || 0;
+                const ratingHtml = avgRating > 0 ? `<div class="rating-badge">⭐ ${avgRating.toFixed(1)}</div>` : '';
+                
+                card.innerHTML = `${badgeHtml}<img src="${item.poster || 'https://via.placeholder.com/300x450?text=No+Image'}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/300x450?text=Ошибка'">${ratingHtml}`;
+                gridEl.appendChild(card);
+            });
+            renderFocus();
+        }
+        
+        function renderFocus() {
+            // Сброс фокусов
+            document.querySelectorAll('.card').forEach(el => el.classList.remove('focused'));
+            menuItems.forEach(el => el.classList.remove('focused'));
+            userAvatar.classList.remove('focused');
+            
+            if (appState === 'userMenu') {
+                userAvatar.classList.add('focused');
+            } else if (appState === 'menu') {
+                if (menuItems[activeMenuIndex]) menuItems[activeMenuIndex].classList.add('focused');
+            } else if (appState === 'grid' && currentItems.length > 0) {
+                const cards = document.querySelectorAll('.card');
+                if (cards[activeGridIndex]) {
+                    cards[activeGridIndex].classList.add('focused');
+                    cards[activeGridIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (currentItems[activeGridIndex]) showInfoPanel(currentItems[activeGridIndex]);
+                }
+            }
+        }
+        
+        function showInfoPanel(item) {
+            if (infoTimeout) clearTimeout(infoTimeout);
+            infoTitle.innerText = item.title || 'Без названия';
+            infoMeta.innerHTML = `${item.year || '----'} <span>•</span> ${item.genre || (item.type === 'studio' ? 'Студия' : item.type === 'franchise' ? 'Франшиза' : 'Фильм')}`;
+            infoDesc.innerText = item.description || 'Описание отсутствует';
+            
+            if (currentUser && item.type === 'movie' && item.id) {
+                ratingStarsDiv.style.display = 'flex';
+                ratingStarsDiv.innerHTML = '';
+                const userRating = userRatings[item.id] || 0;
+                for (let i = 1; i <= 10; i++) {
+                    const star = document.createElement('span');
+                    star.className = 'star';
+                    star.innerHTML = i <= userRating ? '★' : '☆';
+                    star.onclick = (e) => { e.stopPropagation(); rateMovie(item.id, i); };
+                    ratingStarsDiv.appendChild(star);
+                }
+            } else {
+                ratingStarsDiv.style.display = 'none';
+            }
+            infoPanel.classList.add('visible');
+            infoTimeout = setTimeout(() => infoPanel.classList.remove('visible'), 5000);
+        }
+        
+        async function rateMovie(movieId, rating) {
+            if (!currentUser) { alert('Войдите в аккаунт'); return; }
+            try {
+                const ratingRef = ref(db, `ratings/${currentUser.uid}/${movieId}`);
+                await set(ratingRef, rating);
+                userRatings[movieId] = rating;
+                
+                const allRatingsRef = ref(db, 'ratings');
+                const snapshot = await get(allRatingsRef);
+                let total = 0, count = 0;
+                if (snapshot.exists()) {
+                    const allRatings = snapshot.val();
+                    for (const userId in allRatings) {
+                        const userRating = allRatings[userId][movieId];
+                        if (userRating) { total += userRating; count++; }
+                    }
+                }
+                const avgRating = count > 0 ? total / count : 0;
+                await set(ref(db, `items/${movieId}/rating`), avgRating);
+                
+                const idx = allItems.findIndex(i => i.id === movieId);
+                if (idx !== -1) allItems[idx].rating = avgRating;
+                const curIdx = currentItems.findIndex(i => i.id === movieId);
+                if (curIdx !== -1) { currentItems[curIdx].rating = avgRating; showInfoPanel(currentItems[curIdx]); }
+                renderGrid();
+                alert(`✅ Оценка ${rating}/10`);
+            } catch (error) { console.error(error); alert('Ошибка'); }
+        }
+        
+        // ========== ОТКРЫТИЕ ==========
+        async function openItem(item, index) {
+            if (item.type === 'studio' || item.type === 'franchise') {
+                navigationStack.push({ parentId: item.id, title: item.title, items: [...currentItems], scrollIndex: activeGridIndex });
+                updateBreadcrumb();
+                currentItems = getChildren(item.id);
+                pageTitle.innerText = item.title;
+                searchBox.style.display = 'none';
+                activeGridIndex = 0;
+                appState = 'grid';
+                renderGrid();
+                return;
+            }
+            if (item.type === 'movie') {
+                if (!currentUser) { alert('🔐 Войдите в аккаунт'); window.location.href = 'login.html'; return; }
+                try {
+                    const historyRef = ref(db, `history/${currentUser.uid}`);
+                    const newHistoryRef = push(historyRef);
+                    await set(newHistoryRef, { movieId: item.id, movieTitle: item.title, timestamp: Date.now() });
+                } catch(e) { console.error(e); }
+                let url = item.url;
+                if (url && !url.includes('autoplay=1')) url += (url.includes('?') ? '&autoplay=1' : '?autoplay=1');
+                if (url && !url.includes('hd=')) url += (url.includes('?') ? '&hd=2' : '?hd=2');
+                videoFrame.src = url || '';
+                playerDiv.style.display = 'block';
+                appState = 'player';
+                if (currentItems[index + 1] && currentItems[index + 1].type === 'movie') {
+                    nextBtn.style.display = 'block';
+                    window.nextMovie = currentItems[index + 1];
+                    window.nextIndex = index + 1;
+                } else { nextBtn.style.display = 'none'; }
+            }
+        }
+        
+        function updateBreadcrumb() {
+            if (navigationStack.length === 0) { breadcrumbDiv.innerHTML = ''; return; }
+            let html = '<span class="back-btn" onclick="window.goBack()">← Назад</span> ';
+            navigationStack.forEach((nav, idx) => {
+                html += `<span onclick="window.goToLevel(${idx})">${nav.title}</span>`;
+                if (idx < navigationStack.length - 1) html += ' / ';
+            });
+            breadcrumbDiv.innerHTML = html;
+        }
+        
+        window.goBack = function() {
+            if (navigationStack.length > 0) {
+                const last = navigationStack.pop();
+                currentItems = last.items;
+                pageTitle.innerText = last.title;
+                activeGridIndex = last.scrollIndex || 0;
+                updateBreadcrumb();
+                searchBox.style.display = 'none';
+                appState = 'grid';
+                renderGrid();
+            } else { navigateToHome(); }
+        };
+        
+        window.goToLevel = function(level) {
+            while (navigationStack.length > level + 1) navigationStack.pop();
+            if (navigationStack.length > 0) {
+                const current = navigationStack[navigationStack.length - 1];
+                currentItems = current.items;
+                pageTitle.innerText = current.title;
+                activeGridIndex = current.scrollIndex || 0;
+                updateBreadcrumb();
+                searchBox.style.display = 'none';
+                appState = 'grid';
+                renderGrid();
+            } else { navigateToHome(); }
+        };
+        
+        window.playNext = function() { if (window.nextMovie) openItem(window.nextMovie, window.nextIndex); };
+        window.closePlayer = function() { videoFrame.src = 'about:blank'; playerDiv.style.display = 'none'; appState = 'grid'; renderFocus(); };
+        
+        // ========== НАВИГАЦИЯ ПО МЕНЮ ==========
+        async function navigateToHome() {
+            navigationStack = []; updateBreadcrumb();
+            pageTitle.innerText = 'Студии';
+            searchBox.style.display = 'block';
+            currentItems = getRootItems();
+            activeGridIndex = 0;
+            appState = 'grid';
+            renderGrid();
+        }
+        
+        async function navigateToHistory() {
+            if (!currentUser) { alert('Войдите в аккаунт'); return; }
+            navigationStack = []; updateBreadcrumb();
+            try {
+                const historyRef = ref(db, `history/${currentUser.uid}`);
+                const snapshot = await get(historyRef);
+                const historyMovies = [];
+                if (snapshot.exists()) {
+                    const historyObj = snapshot.val();
+                    const historyArray = Object.values(historyObj).sort((a,b) => b.timestamp - a.timestamp);
+                    for (const item of historyArray.slice(0, 50)) {
+                        const movie = allItems.find(i => i.id === item.movieId && i.type === 'movie');
+                        if (movie) historyMovies.push(movie);
+                    }
+                }
+                currentItems = historyMovies;
+                pageTitle.innerText = '🕒 История просмотров';
+                searchBox.style.display = 'none';
+                renderGrid();
+            } catch(e) { gridEl.innerHTML = '<div class="loading">❌ Ошибка</div>'; }
+        }
+        
+        function navigateToKids() {
+            navigationStack = []; updateBreadcrumb();
+            currentItems = allItems.filter(i => i.type === 'movie' && (i.forKids === true || i.genre === 'Мультфильм' || i.genre === 'Семейный'));
+            pageTitle.innerText = '👶 Детям';
+            searchBox.style.display = 'none';
+            renderGrid();
+        }
+        
+        function navigateToGenres() {
+            navigationStack = []; updateBreadcrumb();
+            const movies = allItems.filter(i => i.type === 'movie');
+            const genres = [...new Set(movies.map(m => m.genre).filter(g => g))];
+            gridEl.innerHTML = genres.map(g => `<div class="card" style="aspect-ratio:auto; padding:20px; text-align:center; display:flex; align-items:center; justify-content:center; flex-direction:column;" onclick="window.navigateToGenre('${g}')">🎬<br><strong>${g}</strong></div>`).join('');
+            pageTitle.innerText = '🎭 Жанры';
+            searchBox.style.display = 'none';
+            currentItems = [];
+        }
+        
+        window.navigateToGenre = function(genre) {
+            navigationStack = []; updateBreadcrumb();
+            currentItems = allItems.filter(i => i.type === 'movie' && i.genre === genre);
+            pageTitle.innerText = genre;
+            searchBox.style.display = 'block';
+            renderGrid();
+        };
+        
+        // Функции для меню пользователя
+        function openUserMenu() {
+            showUserMenu = true;
+            appState = 'userMenu';
+            activeUserMenuIndex = 0;
+            renderFocus();
+        }
+        
+        function closeUserMenu() {
+            showUserMenu = false;
+            appState = 'grid';
+            renderFocus();
+        }
+        
+        function executeUserAction() {
+            if (!currentUser) {
+                window.location.href = 'login.html';
+            } else {
+                signOut(auth).then(() => window.location.reload());
+            }
+        }
+        
+        // Поиск
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length === 0) {
+                currentItems = getRootItems();
+                pageTitle.innerText = 'Студии';
+            } else {
+                const movies = allItems.filter(i => i.type === 'movie');
+                currentItems = movies.filter(m => (m.title && m.title.toLowerCase().includes(query)) || (m.genre && m.genre.toLowerCase().includes(query)));
+                pageTitle.innerText = `Результаты: ${query}`;
+            }
+            renderGrid();
+        });
+        
+        // ========== КЛАВИАТУРНАЯ НАВИГАЦИЯ (ТВ) ==========
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+            
+            // Плеер
+            if (appState === 'player') {
+                if (key === 'Escape' || key === 'Backspace') { e.preventDefault(); window.closePlayer(); }
+                return;
+            }
+            
+            // Меню пользователя
+            if (appState === 'userMenu') {
+                if (key === 'ArrowUp' || key === 'ArrowDown') {
+                    e.preventDefault();
+                    // просто переключение между входом/выходом (1 пункт)
+                } else if (key === 'Enter') {
+                    e.preventDefault();
+                    executeUserAction();
+                } else if (key === 'Escape' || key === 'Backspace' || key === 'ArrowLeft') {
+                    e.preventDefault();
+                    closeUserMenu();
+                }
+                return;
+            }
+            
+            // Поле поиска
+            if (document.activeElement === searchInput) {
+                if (key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (currentItems.length) {
+                        searchInput.blur();
+                        appState = 'grid';
+                        activeGridIndex = 0;
+                        renderFocus();
+                    }
+                }
+                return;
+            }
+            
+            // Клик по аватару пользователя (для мыши)
+            userAvatar.onclick = () => {
+                if (!currentUser) {
+                    window.location.href = 'login.html';
+                } else {
+                    if (confirm('Выйти из аккаунта?')) {
+                        signOut(auth).then(() => window.location.reload());
+                    }
+                }
+            };
+            
+            // Навигация по основным элементам
+            if (appState === 'menu') {
+                if (key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeMenuIndex = (activeMenuIndex - 1 + menuItems.length) % menuItems.length;
+                    renderFocus();
+                } else if (key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeMenuIndex = (activeMenuIndex + 1) % menuItems.length;
+                    renderFocus();
+                } else if (key === 'ArrowRight') {
+                    e.preventDefault();
+                    if (currentItems.length) {
+                        appState = 'grid';
+                        activeGridIndex = 0;
+                        renderFocus();
+                    }
+                } else if (key === 'Enter') {
+                    e.preventDefault();
+                    const nav = menuItems[activeMenuIndex].dataset.nav;
+                    if (nav === 'home') navigateToHome();
+                    else if (nav === 'history') navigateToHistory();
+                    else if (nav === 'kids') navigateToKids();
+                    else if (nav === 'genres') navigateToGenres();
+                    else if (nav === 'admin' && currentUser) window.location.href = 'admin.html';
+                }
+            }
+            else if (appState === 'grid') {
+                const total = currentItems.length;
+                if (total === 0) return;
+                
+                if (key === 'ArrowRight') {
+                    e.preventDefault();
+                    if (activeGridIndex + 1 < total) activeGridIndex++;
+                    renderFocus();
+                } 
+                else if (key === 'ArrowLeft') {
+                    e.preventDefault();
+                    if (activeGridIndex > 0) {
+                        activeGridIndex--;
+                    } else {
+                        // Переход в меню
+                        appState = 'menu';
+                        activeMenuIndex = 0;
+                        renderFocus();
+                    }
+                    renderFocus();
+                } 
+                else if (key === 'ArrowDown') {
+                    e.preventDefault();
+                    let next = activeGridIndex + COLS;
+                    if (next < total) activeGridIndex = next;
+                    renderFocus();
+                } 
+                else if (key === 'ArrowUp') {
+                    e.preventDefault();
+                    let prev = activeGridIndex - COLS;
+                    if (prev >= 0) {
+                        activeGridIndex = prev;
+                    } else {
+                        // Вверх из верхнего ряда
+                        if (searchBox.style.display === 'block') {
+                            searchInput.focus();
+                        } else {
+                            appState = 'menu';
+                            activeMenuIndex = 0;
+                        }
+                    }
+                    renderFocus();
+                } 
+                else if (key === 'Enter') {
+                    e.preventDefault();
+                    if (currentItems[activeGridIndex]) openItem(currentItems[activeGridIndex], activeGridIndex);
+                } 
+                else if (key === 'Backspace' || key === 'Escape') {
+                    e.preventDefault();
+                    window.goBack();
+                }
+            }
+        });
+        
+        // Клики по меню
+        document.querySelectorAll('[data-nav]').forEach(el => {
+            el.addEventListener('click', () => {
+                const nav = el.dataset.nav;
+                if (nav === 'home') navigateToHome();
+                else if (nav === 'history') navigateToHistory();
+                else if (nav === 'kids') navigateToKids();
+                else if (nav === 'genres') navigateToGenres();
+                else if (nav === 'admin' && currentUser) window.location.href = 'admin.html';
+            });
+        });
+        
+        // ========== АВТОРИЗАЦИЯ ==========
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                userAvatar.innerHTML = `👤 ${user.email.split('@')[0].slice(0, 15)}`;
+                const userRef = ref(db, `users/${user.uid}/isAdmin`);
+                const snapshot = await get(userRef);
+                if (snapshot.exists() && snapshot.val() === true) adminMenu.style.display = 'block';
+                await loadUserRatings();
+                await loadAllData();
+                navigateToHome();
+            } else {
+                currentUser = null;
+                userAvatar.innerHTML = '👤 Войти';
+                adminMenu.style.display = 'none';
+                userRatings = {};
+                await loadAllData();
+                navigateToHome();
+            }
+        });
+        
+        window.navigateToGenre = navigateToGenre;
+    </script>
 </body>
 </html>
