@@ -97,7 +97,6 @@
                     </div>
                     
                     <div id="active-chat" class="active-chat hidden">
-                        <!-- ШАПКА ЧАТА С КНОПКАМИ ЗВОНКОВ (ИСПРАВЛЕНО) -->
                         <div class="chat-header">
                             <button class="back-btn" onclick="closeChat()">←</button>
                             <div class="chat-user-info" onclick="showChatInfo()">
@@ -115,10 +114,8 @@
                         
                         <div class="messages-container" id="messages-container"></div>
                         
+                        <!-- СТРОКА ВВОДА СООБЩЕНИЯ (БЕЗ КНОПКИ ПРИКРЕПЛЕНИЯ ФАЙЛА, НОВАЯ КНОПКА ОТПРАВКИ) -->
                         <div class="message-input-area" id="message-input-area">
-                            <label for="file-input" class="attach-btn" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">📎</label>
-                            <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)" style="display:none;">
-                            
                             <button id="voice-record-btn" class="voice-btn" ontouchstart="startRecording()" ontouchend="stopRecording()" onmousedown="startRecording()" onmouseup="stopRecording()" title="Голосовое сообщение" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px;">🎤</button>
                             
                             <button id="video-record-btn" class="video-btn" ontouchstart="startVideoCircle()" ontouchend="stopVideoCircle()" onmousedown="startVideoCircle()" onmouseup="stopVideoCircle()" title="Видеокружок" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px;">📹</button>
@@ -126,7 +123,11 @@
                             <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="handleMessageKeyPress(event)" oninput="onTyping()" style="flex:1; padding:12px 16px; border:2px solid #d4e4d4; border-radius:24px; font-size:15px;">
                             
                             <button onclick="toggleEmojiPicker()" class="emoji-btn" style="font-size:22px; background:none; border:none; cursor:pointer; width:40px; height:40px;">😊</button>
-                            <button onclick="sendMessage()" class="send-btn" style="width:44px; height:44px; background:linear-gradient(135deg, #228B22, #32CD32); color:white; border:none; border-radius:50%; font-size:18px; cursor:pointer;">➤</button>
+                            
+                            <!-- НОВАЯ КНОПКА ОТПРАВКИ С ВАШИМ ИЗОБРАЖЕНИЕМ (ВМЕСТО СТАРОЙ СТРЕЛКИ) -->
+                            <button onclick="sendMessage()" class="send-btn" style="background: none; border: none; padding: 0; width: 44px; height: 44px; cursor: pointer; border-radius: 50%; overflow: hidden;">
+                                <img src="https://i.ibb.co/TDFN8s1J/Picsart-26-04-10-15-45-03-668.png" alt="Отправить" style="width: 100%; height: 100%; object-fit: cover;">
+                            </button>
                         </div>
                         
                         <div class="channel-footer hidden" id="channel-footer">
@@ -192,7 +193,6 @@
                     <div class="settings-item" onclick="showLanguageSettings()">
                         <span class="settings-icon">🌍</span>
                         <span>Язык</span>
-                        <span class="settings-value">Русский</span>
                         <span class="arrow">›</span>
                     </div>
                     <div class="settings-item" onclick="showStorageSettings()">
@@ -248,7 +248,6 @@
     </div>
 
     <!-- МОДАЛЬНЫЕ ОКНА -->
-    
     <div id="global-search-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header"><h3>🔍 Поиск пользователей</h3><button onclick="closeGlobalSearch()" class="btn-close">×</button></div>
@@ -431,7 +430,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
-    <!-- Скрипты -->
+    <!-- Скрипты приложения -->
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chat.js"></script>
