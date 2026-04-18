@@ -408,16 +408,23 @@ function createMessageElement(message) {
     
     div.innerHTML = '<div class="message-content">'+senderHtml+content+'<div class="message-time">'+formatTime(message.timestamp)+'</div><div class="message-reactions">'+reactionsHtml+'</div></div>';
     
-    // Контекстное меню
+    // === КОНТЕКСТНОЕ МЕНЮ (ПКМ и долгое нажатие) ===
+    // ПКМ для компьютеров
     div.addEventListener('contextmenu', function(e) {
         e.preventDefault();
         e.stopPropagation();
         showMessageContextMenu(e, message.id, message.senderId, message.text, message.type, message.imageUrl);
     });
     
-    // Долгое нажатие для мобильных
+    // Долгое нажатие для мобильных устройств
     var touchTimer;
     div.addEventListener('touchstart', function(e) {
+        // Сохраняем координаты касания для позиционирования меню
+        var touch = e.touches[0];
+        if (touch) {
+            window.lastTouchX = touch.clientX;
+            window.lastTouchY = touch.clientY;
+        }
         touchTimer = setTimeout(function() {
             showMessageContextMenu(e, message.id, message.senderId, message.text, message.type, message.imageUrl);
         }, 500);
@@ -464,6 +471,7 @@ document.head.appendChild(reactionStyle);
 
 // ========== КОНТЕКСТНОЕ МЕНЮ ==========
 function showMessageContextMenu(event, messageId, senderId, messageText, messageType, imageUrl) {
+    // Удаляем старое меню, если есть
     var oldMenu = document.getElementById('message-context-menu');
     if (oldMenu) oldMenu.remove();
     
@@ -503,18 +511,30 @@ function showMessageContextMenu(event, messageId, senderId, messageText, message
     menu.innerHTML = menuHtml;
     document.body.appendChild(menu);
     
-    var x = event.clientX;
-    var y = event.clientY;
+    // Позиционирование меню
+    var x, y;
+    if (event.touches) {
+        // Мобильное устройство: используем сохранённые координаты
+        x = window.lastTouchX || event.changedTouches[0].clientX;
+        y = window.lastTouchY || event.changedTouches[0].clientY;
+    } else {
+        x = event.clientX;
+        y = event.clientY;
+    }
+    
     var menuRect = menu.getBoundingClientRect();
     var windowWidth = window.innerWidth;
     var windowHeight = window.innerHeight;
     
     if (x + menuRect.width > windowWidth) x = windowWidth - menuRect.width - 10;
     if (y + menuRect.height > windowHeight) y = windowHeight - menuRect.height - 10;
+    if (x < 10) x = 10;
+    if (y < 10) y = 10;
     
     menu.style.left = x + 'px';
     menu.style.top = y + 'px';
     
+    // Закрытие меню при клике вне его
     setTimeout(function() {
         document.addEventListener('click', function closeMenu(e) {
             if (!menu.contains(e.target)) {
