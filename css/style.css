@@ -359,6 +359,7 @@ html, body {
     background: var(--background);
     position: relative;
     height: 100%;
+    overflow: hidden;
 }
 .mobile-menu-btn {
     display: none;
@@ -391,6 +392,7 @@ html, body {
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
 }
 .chat-header {
     padding: 12px 15px;
@@ -1452,6 +1454,16 @@ html, body {
     .message-input-area input[type="text"] {
         font-size: 16px;
         padding: 10px 14px;
+    }
+    /* Убеждаемся, что область сообщений занимает всё доступное место */
+    .active-chat {
+        flex: 1;
+        min-height: 0;
+    }
+    .messages-container {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
     }
     /* Уменьшаем отступы в шапке чата */
     .chat-header {
