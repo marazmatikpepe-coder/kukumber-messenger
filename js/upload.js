@@ -1,115 +1,27 @@
-// UPLOAD - ImgBB для фото + Google Photos API для видео
-
+// UPLOAD - ImgBB для фото + Catbox для файлов
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
-// === GOOGLE PHOTOS CONFIGURATION ===
-const GOOGLE_CLIENT_ID = '965350324182-jhlpkpq74hulj33hlg4m38d4dum2ssrp.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = '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';
-const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/photoslibrary.appendonly';
-let googleAccessToken = null;
-
-// === АВТОРИЗАЦИЯ В GOOGLE PHOTOS ===
-async function authorizeGooglePhotos() {
-    return new Promise((resolve, reject) => {
-        // Проверяем, есть ли уже токен
-        const savedToken = localStorage.getItem('google_photos_token');
-        const tokenExpiry = localStorage.getItem('google_photos_expiry');
-        
-        if (savedToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
-            googleAccessToken = savedToken;
-            resolve(googleAccessToken);
-            return;
-        }
-        
-        // Загружаем Google API клиент
-        if (typeof google === 'undefined' || !google.accounts) {
-            const script = document.createElement('script');
-            script.src = 'https://accounts.google.com/gsi/client';
-            script.onload = () => {
-                initTokenClient(resolve, reject);
-            };
-            document.head.appendChild(script);
-        } else {
-            initTokenClient(resolve, reject);
-        }
-    });
-}
-
-function initTokenClient(resolve, reject) {
-    const client = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: GOOGLE_SCOPES,
-        callback: (response) => {
-            if (response.access_token) {
-                googleAccessToken = response.access_token;
-                // Сохраняем токен на 1 час
-                localStorage.setItem('google_photos_token', googleAccessToken);
-                localStorage.setItem('google_photos_expiry', Date.now() + 3600000);
-                resolve(googleAccessToken);
-            } else {
-                reject(new Error('Ошибка авторизации Google'));
-            }
-        }
-    });
-    client.requestAccessToken();
-}
-
-// === ЗАГРУЗКА ВИДЕО НА GOOGLE PHOTOS ===
-async function uploadToGooglePhotos(file) {
-    // Получаем токен доступа
-    if (!googleAccessToken) {
-        await authorizeGooglePhotos();
-    }
+// === ЗАГРУЗКА НА CATBOX (для любых файлов) ===
+async function uploadToCatbox(file) {
+    const formData = new FormData();
+    formData.append('reqtype', 'fileupload');
+    formData.append('fileToUpload', file);
     
-    // ШАГ 1: Загружаем байты файла
-    const uploadUrl = 'https://photoslibrary.googleapis.com/v1/uploads';
-    const uploadResponse = await fetch(uploadUrl, {
+    const response = await fetch('https://catbox.moe/user/api.php', {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${googleAccessToken}`,
-            'Content-Type': 'application/octet-stream',
-            'X-Goog-Upload-Content-Type': file.type,
-            'X-Goog-Upload-Protocol': 'raw'
-        },
-        body: await file.arrayBuffer()
+        body: formData
     });
     
-    const uploadToken = await uploadResponse.text();
-    if (!uploadToken) {
-        throw new Error('Не удалось получить upload token');
-    }
-    
-    // ШАГ 2: Создаём медиа-элемент в Google Фото
-    const createUrl = 'https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate';
-    const createResponse = await fetch(createUrl, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${googleAccessToken}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            newMediaItems: [{
-                description: `Видео от ${new Date().toLocaleString()}`,
-                simpleMediaItem: {
-                    fileName: file.name,
-                    uploadToken: uploadToken
-                }
-            }]
-        })
-    });
-    
-    const result = await createResponse.json();
-    if (result.newMediaItemResults && result.newMediaItemResults[0]?.mediaItem) {
-        // Возвращаем ссылку на видео в Google Фото
-        return result.newMediaItemResults[0].mediaItem.productUrl;
+    const url = await response.text();
+    if (url.startsWith('https://')) {
+        return url;
     } else {
-        console.error('Ошибка Google Photos:', result);
-        throw new Error('Ошибка создания медиа-элемента');
+        throw new Error('Ошибка загрузки на Catbox');
     }
 }
 
-// === ЗАГРУЗКА НА IMGBB (для фото) ===
+// === ЗАГРУЗКА НА IMGBB ===
 function uploadImageToImgBB(file) {
     return new Promise((resolve, reject) => {
         if (!file) { reject(new Error('Нет файла')); return; }
@@ -167,26 +79,18 @@ async function sendAnyFile(file) {
         return;
     }
     
-    showNotification('Авторизация в Google Фото...', 'info');
+    showNotification('Загрузка файла...', 'info');
     
     try {
-        const url = await uploadToGooglePhotos(file);
+        const url = await uploadToCatbox(file);
         
         var message = {};
-        if (file.type.startsWith('video/')) {
-            message = {
-                type: 'video',
-                videoUrl: url,
-                fileName: file.name,
-                fileSize: file.size,
-                senderId: currentUser.uid,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-        } else if (file.type.startsWith('audio/')) {
+        if (file.type.startsWith('audio/')) {
             message = {
                 type: 'audio',
                 audioUrl: url,
                 fileName: file.name,
+                fileSize: file.size,
                 senderId: currentUser.uid,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
@@ -205,8 +109,7 @@ async function sendAnyFile(file) {
         await database.ref('messages/' + currentChatId).push(message);
         
         var lastMsg = '';
-        if (file.type.startsWith('video/')) lastMsg = '🎬 ' + file.name;
-        else if (file.type.startsWith('audio/')) lastMsg = '🎵 ' + file.name;
+        if (file.type.startsWith('audio/')) lastMsg = '🎵 ' + file.name;
         else lastMsg = '📎 ' + file.name;
         if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
         
@@ -214,14 +117,14 @@ async function sendAnyFile(file) {
             lastMessage: lastMsg,
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP
         });
-        showNotification('Файл отправлен в Google Фото!', 'success');
+        showNotification('Файл отправлен!', 'success');
     } catch (error) {
         console.error(error);
-        showNotification('Ошибка загрузки файла. Попробуйте ещё раз.', 'error');
+        showNotification('Ошибка загрузки файла', 'error');
     }
 }
 
-// === ФОТО (через ImgBB) ===
+// === ФОТО ===
 function showImagePreview(file) {
     pendingImageFile = file;
     var reader = new FileReader();
@@ -276,7 +179,7 @@ function confirmImageSend() {
     pendingImageFile = null;
 }
 
-// === ГОЛОСОВЫЕ (через Google Photos) ===
+// === ГОЛОСОВЫЕ ===
 var mediaRecorder, audioChunks, isRecording = false;
 
 function startRecording() {
@@ -307,331 +210,23 @@ function stopRecording() {
     }
 }
 
-async function sendAudioMessage(blob) {
+function sendAudioMessage(blob) {
     if (!currentChatId) return;
     var file = new File([blob], 'audio_' + Date.now() + '.webm', { type: 'audio/webm' });
-    
-    try {
-        const url = await uploadToGooglePhotos(file);
+    uploadToCatbox(file).then(url => {
         var message = {
             type: 'audio',
             audioUrl: url,
             senderId: currentUser.uid,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         };
-        await database.ref('messages/' + currentChatId).push(message);
-        await database.ref('chats/' + currentChatId).update({
-            lastMessage: '🎤 Голосовое сообщение',
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        database.ref('messages/' + currentChatId).push(message).then(() => {
+            database.ref('chats/' + currentChatId).update({
+                lastMessage: '🎤 Голосовое сообщение',
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
         });
-    } catch(err) {
-        showNotification('Ошибка загрузки аудио', 'error');
-    }
-}
-
-// === ВИДЕОКРУЖКИ (через Google Photos) ===
-var circleStream = null;
-var circleRecorder = null;
-var circleChunks = [];
-var circleTimerInterval = null;
-var circleSeconds = 0;
-var circleMaxSeconds = 60;
-var isCircleRecording = false;
-var isCirclePaused = false;
-var currentFacingMode = 'user';
-var circleVideoBlob = null;
-
-async function getCircleMedia(facingMode) {
-    try {
-        return await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: facingMode } },
-            audio: true
-        });
-    } catch (err) {
-        return await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode },
-            audio: true
-        });
-    }
-}
-
-async function startVideoCircle() {
-    closeCircleModal();
-    
-    const modal = document.getElementById('circle-video-modal');
-    modal.classList.remove('hidden');
-    
-    circleSeconds = 0;
-    isCircleRecording = false;
-    isCirclePaused = false;
-    circleVideoBlob = null;
-    circleChunks = [];
-    updateCircleTimerDisplay();
-    updateCircleProgress(0);
-    
-    document.getElementById('circle-pause-btn').classList.remove('hidden');
-    document.getElementById('circle-play-btn').classList.add('hidden');
-    
-    try {
-        if (circleStream) {
-            circleStream.getTracks().forEach(t => t.stop());
-        }
-        circleStream = await getCircleMedia('user');
-        currentFacingMode = 'user';
-        const video = document.getElementById('circle-video-preview');
-        video.srcObject = circleStream;
-        
-        setupCircleButtons();
-        
-        setTimeout(() => {
-            startCircleRecording();
-        }, 100);
-        
-    } catch (err) {
-        console.error('Ошибка доступа к камере:', err);
-        showNotification('Не удалось получить доступ к камере', 'error');
-        closeCircleModal();
-    }
-}
-
-function closeCircleModal() {
-    const modal = document.getElementById('circle-video-modal');
-    if (modal) modal.classList.add('hidden');
-    
-    if (circleStream) {
-        circleStream.getTracks().forEach(t => t.stop());
-        circleStream = null;
-    }
-    if (circleTimerInterval) {
-        clearInterval(circleTimerInterval);
-        circleTimerInterval = null;
-    }
-    if (circleRecorder && (circleRecorder.state === 'recording' || circleRecorder.state === 'paused')) {
-        try { circleRecorder.stop(); } catch(e) {}
-    }
-    isCircleRecording = false;
-    isCirclePaused = false;
-    circleVideoBlob = null;
-    circleChunks = [];
-}
-
-function setupCircleButtons() {
-    const stopBtn = document.getElementById('circle-stop-btn');
-    const pauseBtn = document.getElementById('circle-pause-btn');
-    const playBtn = document.getElementById('circle-play-btn');
-    const deleteBtn = document.getElementById('circle-delete-btn');
-    const sendBtn = document.getElementById('circle-send-btn');
-    const flipBtn = document.getElementById('circle-flip-camera');
-    const closeBtn = document.getElementById('circle-close-btn');
-    
-    deleteBtn.classList.remove('active');
-    sendBtn.classList.remove('active');
-    
-    stopBtn.onclick = () => {
-        if (isCircleRecording) {
-            stopCircleRecording(true);
-        }
-    };
-    
-    pauseBtn.onclick = () => {
-        if (isCircleRecording && circleRecorder && circleRecorder.state === 'recording') {
-            circleRecorder.pause();
-            isCirclePaused = true;
-            isCircleRecording = false;
-            pauseBtn.classList.add('hidden');
-            playBtn.classList.remove('hidden');
-            if (circleTimerInterval) clearInterval(circleTimerInterval);
-        }
-    };
-    
-    playBtn.onclick = () => {
-        if (circleRecorder && circleRecorder.state === 'paused') {
-            circleRecorder.resume();
-            isCirclePaused = false;
-            isCircleRecording = true;
-            playBtn.classList.add('hidden');
-            pauseBtn.classList.remove('hidden');
-            if (circleTimerInterval) clearInterval(circleTimerInterval);
-            circleTimerInterval = setInterval(updateCircleTimer, 1000);
-        }
-    };
-    
-    sendBtn.onclick = async () => {
-        if (circleVideoBlob) {
-            await sendCircleVideo(circleVideoBlob);
-        } else if (isCircleRecording) {
-            stopCircleRecording(true);
-        }
-    };
-    
-    deleteBtn.onclick = () => {
-        if (circleVideoBlob) {
-            circleVideoBlob = null;
-            circleSeconds = 0;
-            circleChunks = [];
-            updateCircleTimerDisplay();
-            updateCircleProgress(0);
-            deleteBtn.classList.remove('active');
-            sendBtn.classList.remove('active');
-            showNotification('Видео удалено', 'info');
-            startCircleRecording();
-        } else if (isCircleRecording) {
-            stopCircleRecording(false);
-            startCircleRecording();
-        }
-    };
-    
-    flipBtn.onclick = async () => {
-        if (isCircleRecording) {
-            showNotification('Сначала остановите запись', 'info');
-            return;
-        }
-        const newMode = currentFacingMode === 'user' ? 'environment' : 'user';
-        try {
-            const newStream = await getCircleMedia(newMode);
-            if (circleStream) {
-                circleStream.getTracks().forEach(t => t.stop());
-            }
-            circleStream = newStream;
-            currentFacingMode = newMode;
-            const video = document.getElementById('circle-video-preview');
-            video.srcObject = circleStream;
-        } catch (err) {
-            showNotification('Не удалось переключить камеру', 'error');
-        }
-    };
-    
-    closeBtn.onclick = () => {
-        closeCircleModal();
-    };
-}
-
-function startCircleRecording() {
-    if (!circleStream) return;
-    
-    circleChunks = [];
-    circleSeconds = 0;
-    isCircleRecording = true;
-    isCirclePaused = false;
-    circleVideoBlob = null;
-    
-    updateCircleTimerDisplay();
-    updateCircleProgress(0);
-    
-    document.getElementById('circle-delete-btn').classList.remove('active');
-    document.getElementById('circle-send-btn').classList.remove('active');
-    document.getElementById('circle-pause-btn').classList.remove('hidden');
-    document.getElementById('circle-play-btn').classList.add('hidden');
-    
-    if (circleTimerInterval) clearInterval(circleTimerInterval);
-    circleTimerInterval = setInterval(updateCircleTimer, 1000);
-    
-    try {
-        let mimeType = 'video/webm';
-        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
-            mimeType = 'video/webm;codecs=vp9';
-        }
-        
-        circleRecorder = new MediaRecorder(circleStream, { mimeType: mimeType });
-        circleRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) {
-                circleChunks.push(e.data);
-            }
-        };
-        circleRecorder.onstop = () => {
-            if (circleChunks.length > 0 && !circleVideoBlob) {
-                circleVideoBlob = new Blob(circleChunks, { type: 'video/webm' });
-                const sendBtn = document.getElementById('circle-send-btn');
-                const deleteBtn = document.getElementById('circle-delete-btn');
-                sendBtn.classList.add('active');
-                deleteBtn.classList.add('active');
-                showNotification('Запись завершена!', 'success');
-            }
-            isCircleRecording = false;
-            if (circleTimerInterval) clearInterval(circleTimerInterval);
-        };
-        
-        circleRecorder.start(100);
-    } catch (err) {
-        console.error('Ошибка записи:', err);
-        showNotification('Ошибка записи видео', 'error');
-        stopCircleRecording(false);
-    }
-}
-
-function stopCircleRecording(sendAfterStop = true) {
-    if (circleRecorder && (circleRecorder.state === 'recording' || circleRecorder.state === 'paused')) {
-        circleRecorder.stop();
-    }
-    if (circleTimerInterval) {
-        clearInterval(circleTimerInterval);
-        circleTimerInterval = null;
-    }
-    
-    if (sendAfterStop && circleVideoBlob) {
-        sendCircleVideo(circleVideoBlob);
-    } else if (!sendAfterStop) {
-        circleVideoBlob = null;
-        circleChunks = [];
-        circleSeconds = 0;
-        updateCircleTimerDisplay();
-        updateCircleProgress(0);
-        document.getElementById('circle-delete-btn').classList.remove('active');
-        document.getElementById('circle-send-btn').classList.remove('active');
-    }
-}
-
-function updateCircleTimer() {
-    if (circleSeconds < circleMaxSeconds && isCircleRecording && !isCirclePaused) {
-        circleSeconds++;
-        updateCircleTimerDisplay();
-        updateCircleProgress((circleSeconds / circleMaxSeconds) * 100);
-        
-        if (circleSeconds >= circleMaxSeconds) {
-            stopCircleRecording(true);
-        }
-    }
-}
-
-async function sendCircleVideo(blob) {
-    if (!blob || !currentChatId) {
-        showNotification('Ошибка отправки: чат не выбран', 'error');
-        return;
-    }
-    
-    showNotification('Отправка видео...', 'info');
-    const file = new File([blob], 'circle_' + Date.now() + '.webm', { type: 'video/webm' });
-    
-    try {
-        const url = await uploadToGooglePhotos(file);
-        
-        const message = {
-            type: 'video_circle',
-            videoUrl: url,
-            senderId: currentUser.uid,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
-        await database.ref('messages/' + currentChatId).push(message);
-        await database.ref('chats/' + currentChatId).update({
-            lastMessage: '📹 Видеокружок',
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-        });
-        showNotification('Видеокружок отправлен!', 'success');
-        closeCircleModal();
-    } catch (err) {
-        console.error('Ошибка отправки видео:', err);
-        showNotification('Ошибка отправки видео. Попробуйте ещё раз.', 'error');
-    }
-}
-
-function updateCircleTimerDisplay() {
-    const mins = Math.floor(circleSeconds / 60).toString().padStart(2, '0');
-    const secs = (circleSeconds % 60).toString().padStart(2, '0');
-    document.getElementById('circle-current-time').textContent = `${mins}:${secs}`;
-}
-
-function updateCircleProgress(percent) {
-    document.getElementById('circle-progress-fill').style.width = `${percent}%`;
+    }).catch(err => showNotification('Ошибка загрузки аудио', 'error'));
 }
 
 // === АВАТАРКИ ===
@@ -678,4 +273,4 @@ function previewEditAvatar(event) {
         reader.readAsDataURL(file);
         window.pendingAvatarFile = file;
     }
-}ы
+}
