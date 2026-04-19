@@ -892,54 +892,181 @@ html, body {
         max-width: 200px;
     }
 }
-/* === ВИДЕОКРУЖОК В ЧАТЕ === */
-.message .video-circle-message {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
+/* === КРУЖОК (ВИДЕО) - ИСПРАВЛЕННАЯ ВЕРСИЯ === */
+.circle-video-wrapper {
+    background: #000;
+    border-radius: 24px;
+    width: 90vw;
+    max-width: 400px;
     overflow: hidden;
     position: relative;
-    background: #000;
-    margin: 5px 0;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 
-.message .video-circle-message video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Для мобильных устройств */
-@media (max-width: 768px) {
-    .message .video-circle-message {
-        width: 150px;
-        height: 150px;
-    }
-}
-
-/* === МОДАЛКА ПРОСМОТРА КРУЖКА === */
-.circle-viewer-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.95);
+.circle-header {
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    z-index: 10;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10001;
+    justify-content: space-between;
+    padding: 0 15px;
 }
 
-.circle-viewer-content {
-    width: 90vw;
-    height: 90vw;
-    max-width: 400px;
-    max-height: 400px;
+.circle-flip-btn, .circle-close-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(0,0,0,0.6);
+    border: none;
     border-radius: 50%;
-    overflow: hidden;
+    font-size: 20px;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.circle-video-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     background: #000;
 }
 
-.circle-viewer-content video {
+#circle-video-preview {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.circle-controls-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.circle-stop-btn, .circle-pause-btn, .circle-play-btn {
+    width: 44px;
+    height: 44px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.circle-stop-btn {
+    background: #dc3545;
+}
+
+.circle-footer {
+    padding: 20px;
+    background: #1a1a1a;
+}
+
+.circle-timer {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    font-family: monospace;
+    margin-bottom: 10px;
+}
+
+.circle-timer span:first-child {
+    color: #32CD32;
+}
+
+.circle-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+#circle-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #32CD32;
+    transition: width 0.1s linear;
+}
+
+.circle-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.circle-delete-btn, .circle-send-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 40px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.circle-delete-btn {
+    background: #333;
+    color: white;
+}
+
+.circle-delete-btn.active {
+    background: #dc3545;
+    transform: scale(1.02);
+}
+
+.circle-send-btn {
+    background: #228B22;
+    color: white;
+}
+
+.circle-send-btn.active {
+    background: #32CD32;
+    transform: scale(1.02);
+}
+
+.circle-send-btn svg, .circle-delete-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .circle-video-wrapper {
+        width: 95vw;
+        max-width: 380px;
+    }
+    .circle-timer {
+        font-size: 20px;
+    }
+    .circle-actions button {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    .circle-stop-btn, .circle-pause-btn, .circle-play-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
 }
