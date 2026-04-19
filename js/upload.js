@@ -167,7 +167,7 @@ function confirmImageSend() {
     pendingImageFile = null;
 }
 
-// === ГОЛОСОВЫЕ СООБЩЕНИЯ (через Catbox) ===
+// === ГОЛОСОВЫЕ СООБЩЕНИЯ ===
 var mediaRecorder, audioChunks, isRecording = false;
 
 function startRecording() {
@@ -217,7 +217,7 @@ function sendAudioMessage(blob) {
     }).catch(err => showNotification('Ошибка загрузки аудио', 'error'));
 }
 
-// === ВИДЕОКРУЖКИ (через Catbox) ===
+// === ВИДЕОКРУЖКИ ===
 var videoRecorder, videoChunks, isVideoRecording = false;
 
 function startVideoCircle() {
