@@ -376,9 +376,13 @@ function createMessageElement(message) {
     } else if (message.type === 'audio') {
         content = '<div class="audio-message"><button onclick="playAudio(\''+message.audioUrl+'\')">▶️</button><span>Голосовое сообщение</span></div>';
     } else if (message.type === 'video_circle') {
-        content = '<div class="video-message"><video src="'+message.videoUrl+'" controls></video></div>';
+        // КРУГЛОЕ ВИДЕО
+        content = '<div class="video-circle-message" onclick="openCircleViewer(\''+message.videoUrl+'\')">' +
+            '<video src="'+message.videoUrl+'" muted></video>' +
+            '<div class="play-icon-overlay">▶️</div>' +
+        '</div>';
     } else if (message.type === 'video') {
-        content = '<div class="video-message"><video src="'+message.videoUrl+'" controls style="max-width:250px; max-height:300px;"></video><div class="message-text">'+escapeHtml(message.text || '')+'</div></div>';
+        content = '<div class="video-message"><video src="'+message.videoUrl+'" controls style="max-width:250px; max-height:300px; border-radius:12px;"></video><div class="message-text">'+escapeHtml(message.fileName || 'Видео')+'</div></div>';
     } else if (message.type === 'file') {
         var fileIcon = '📎';
         if (message.fileType && message.fileType.startsWith('video/')) fileIcon = '🎬';
@@ -468,10 +472,121 @@ function updateMessageElement(message) {
     }
 }
 
-// Стили для реакций
-var reactionStyle = document.createElement('style');
-reactionStyle.textContent = '.message-reactions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; } .reaction-badge { background: rgba(0,0,0,0.1); border-radius: 20px; padding: 2px 8px; font-size: 12px; cursor: pointer; } .message.sent .reaction-badge { background: rgba(255,255,255,0.2); } .file-message { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 8px 12px; border-radius: 12px; margin-top: 4px; } .message.sent .file-message { background: rgba(255,255,255,0.15); } .file-message a { color: inherit; text-decoration: none; word-break: break-all; } .file-message a:hover { text-decoration: underline; } .video-message video { max-width: 250px; max-height: 300px; border-radius: 12px; margin: 5px 0; }';
-document.head.appendChild(reactionStyle);
+// === ПРОСМОТР КРУЖКА В ПОЛНЫЙ ЭКРАН ===
+function openCircleViewer(videoUrl) {
+    var modal = document.createElement('div');
+    modal.className = 'circle-viewer-modal';
+    modal.innerHTML = '<div class="circle-viewer-content"><video src="'+videoUrl+'" autoplay controls loop playsinline></video></div>';
+    modal.onclick = function() { modal.remove(); };
+    document.body.appendChild(modal);
+}
+
+// === СТИЛИ ДЛЯ КРУЖКА (добавляем динамически, чтобы не менять CSS) ===
+var circleStyles = document.createElement('style');
+circleStyles.textContent = `
+    .video-circle-message {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        overflow: hidden;
+        position: relative;
+        background: #000;
+        margin: 5px 0;
+        cursor: pointer;
+    }
+    .video-circle-message video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .video-circle-message .play-icon-overlay {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.6);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: white;
+    }
+    .circle-viewer-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10001;
+        cursor: pointer;
+    }
+    .circle-viewer-content {
+        width: 90vw;
+        height: 90vw;
+        max-width: 400px;
+        max-height: 400px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #000;
+    }
+    .circle-viewer-content video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    @media (max-width: 768px) {
+        .video-circle-message {
+            width: 150px;
+            height: 150px;
+        }
+    }
+    .message-reactions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 5px;
+    }
+    .reaction-badge {
+        background: rgba(0,0,0,0.1);
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .message.sent .reaction-badge {
+        background: rgba(255,255,255,0.2);
+    }
+    .file-message {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0,0,0,0.05);
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin-top: 4px;
+    }
+    .message.sent .file-message {
+        background: rgba(255,255,255,0.15);
+    }
+    .file-message a {
+        color: inherit;
+        text-decoration: none;
+        word-break: break-all;
+    }
+    .file-message a:hover {
+        text-decoration: underline;
+    }
+    .video-message video {
+        max-width: 250px;
+        max-height: 300px;
+        border-radius: 12px;
+        margin: 5px 0;
+    }
+`;
+document.head.appendChild(circleStyles);
 
 // ========== КОНТЕКСТНОЕ МЕНЮ ==========
 function showMessageContextMenu(event, messageId, senderId, messageText, messageType, imageUrl) {
