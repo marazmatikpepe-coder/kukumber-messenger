@@ -1,41 +1,27 @@
-// UPLOAD - Полная поддержка всех файлов на любых устройствах
+// UPLOAD - ImgBB для фото + Filemail для видео и файлов
 
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
-// === ПРОВЕРКА ПОДДЕРЖКИ ТИПА ФАЙЛА ===
-function isVideoFile(file) {
-    return file.type.startsWith('video/');
-}
-
-function isAudioFile(file) {
-    return file.type.startsWith('audio/');
-}
-
-function isImageFile(file) {
-    return file.type.startsWith('image/');
-}
-
-// === ЗАГРУЗКА НА CATBOX (для любых файлов) ===
-async function uploadToCatbox(file) {
+// === ЗАГРУЗКА НА FILEMAIL (для видео и любых файлов до 5 ГБ) ===
+async function uploadToFilemail(file) {
     const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('fileToUpload', file);
+    formData.append('file', file);
     
-    const response = await fetch('https://catbox.moe/user/api.php', {
+    const response = await fetch('https://ws1.filemail.com/api/upload', {
         method: 'POST',
         body: formData
     });
     
-    const url = await response.text();
-    if (url.startsWith('https://')) {
-        return url;
+    const data = await response.json();
+    if (data && data.url) {
+        return data.url;
     } else {
-        throw new Error('Ошибка загрузки на Catbox');
+        throw new Error('Ошибка загрузки на Filemail');
     }
 }
 
-// === ЗАГРУЗКА НА IMGBB ===
+// === ЗАГРУЗКА НА IMGBB (только фото) ===
 function uploadImageToImgBB(file) {
     return new Promise((resolve, reject) => {
         if (!file) { reject(new Error('Нет файла')); return; }
@@ -74,12 +60,12 @@ function showUploadProgress(show) {
     }
 }
 
-// === ОБРАБОТКА ВЫБОРА ФАЙЛА (РАБОТАЕТ НА ТЕЛЕФОНЕ) ===
+// === ОБРАБОТКА ВЫБОРА ФАЙЛА ===
 function handleFileSelect(event) {
     var file = event.target.files[0];
     if (!file) return;
     
-    if (isImageFile(file)) {
+    if (file.type.startsWith('image/')) {
         showImagePreview(file);
     } else {
         sendAnyFile(file);
@@ -96,10 +82,10 @@ async function sendAnyFile(file) {
     showNotification('Загрузка файла...', 'info');
     
     try {
-        const url = await uploadToCatbox(file);
+        const url = await uploadToFilemail(file);
         
         var message = {};
-        if (isVideoFile(file)) {
+        if (file.type.startsWith('video/')) {
             message = {
                 type: 'video',
                 videoUrl: url,
@@ -108,7 +94,7 @@ async function sendAnyFile(file) {
                 senderId: currentUser.uid,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
-        } else if (isAudioFile(file)) {
+        } else if (file.type.startsWith('audio/')) {
             message = {
                 type: 'audio',
                 audioUrl: url,
@@ -131,8 +117,8 @@ async function sendAnyFile(file) {
         await database.ref('messages/' + currentChatId).push(message);
         
         var lastMsg = '';
-        if (isVideoFile(file)) lastMsg = '🎬 ' + file.name;
-        else if (isAudioFile(file)) lastMsg = '🎵 ' + file.name;
+        if (file.type.startsWith('video/')) lastMsg = '🎬 ' + file.name;
+        else if (file.type.startsWith('audio/')) lastMsg = '🎵 ' + file.name;
         else lastMsg = '📎 ' + file.name;
         if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
         
@@ -147,7 +133,7 @@ async function sendAnyFile(file) {
     }
 }
 
-// === ВИДЕОКРУЖОК (ИСПРАВЛЕННАЯ ВЕРСИЯ) ===
+// === ВИДЕОКРУЖОК ===
 var circleStream = null;
 var circleRecorder = null;
 var circleChunks = [];
@@ -421,7 +407,7 @@ async function sendCircleVideo(blob) {
     const file = new File([blob], 'circle_' + Date.now() + '.webm', { type: 'video/webm' });
     
     try {
-        const url = await uploadToCatbox(file);
+        const url = await uploadToFilemail(file);
         
         const message = {
             type: 'video_circle',
@@ -451,6 +437,7 @@ function updateCircleTimerDisplay() {
 function updateCircleProgress(percent) {
     document.getElementById('circle-progress-fill').style.width = `${percent}%`;
 }
+
 // === ФОТО ===
 function showImagePreview(file) {
     pendingImageFile = file;
@@ -540,7 +527,7 @@ function stopRecording() {
 function sendAudioMessage(blob) {
     if (!currentChatId) return;
     var file = new File([blob], 'audio_' + Date.now() + '.webm', { type: 'audio/webm' });
-    uploadToCatbox(file).then(url => {
+    uploadToFilemail(file).then(url => {
         var message = {
             type: 'audio',
             audioUrl: url,
