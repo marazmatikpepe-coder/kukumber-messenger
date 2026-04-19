@@ -1,27 +1,115 @@
-// UPLOAD - ImgBB для фото + Filemail для видео и файлов
+// UPLOAD - ImgBB для фото + Google Photos API для видео
 
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
-// === ЗАГРУЗКА НА FILEMAIL (для видео и любых файлов до 5 ГБ) ===
-async function uploadToFilemail(file) {
-    const formData = new FormData();
-    formData.append('file', file);
+// === GOOGLE PHOTOS CONFIGURATION ===
+const GOOGLE_CLIENT_ID = '965350324182-jhlpkpq74hulj33hlg4m38d4dum2ssrp.apps.googleusercontent.com';
+const GOOGLE_CLIENT_SECRET = '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';
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/photoslibrary.appendonly';
+let googleAccessToken = null;
+
+// === АВТОРИЗАЦИЯ В GOOGLE PHOTOS ===
+async function authorizeGooglePhotos() {
+    return new Promise((resolve, reject) => {
+        // Проверяем, есть ли уже токен
+        const savedToken = localStorage.getItem('google_photos_token');
+        const tokenExpiry = localStorage.getItem('google_photos_expiry');
+        
+        if (savedToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
+            googleAccessToken = savedToken;
+            resolve(googleAccessToken);
+            return;
+        }
+        
+        // Загружаем Google API клиент
+        if (typeof google === 'undefined' || !google.accounts) {
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.onload = () => {
+                initTokenClient(resolve, reject);
+            };
+            document.head.appendChild(script);
+        } else {
+            initTokenClient(resolve, reject);
+        }
+    });
+}
+
+function initTokenClient(resolve, reject) {
+    const client = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_SCOPES,
+        callback: (response) => {
+            if (response.access_token) {
+                googleAccessToken = response.access_token;
+                // Сохраняем токен на 1 час
+                localStorage.setItem('google_photos_token', googleAccessToken);
+                localStorage.setItem('google_photos_expiry', Date.now() + 3600000);
+                resolve(googleAccessToken);
+            } else {
+                reject(new Error('Ошибка авторизации Google'));
+            }
+        }
+    });
+    client.requestAccessToken();
+}
+
+// === ЗАГРУЗКА ВИДЕО НА GOOGLE PHOTOS ===
+async function uploadToGooglePhotos(file) {
+    // Получаем токен доступа
+    if (!googleAccessToken) {
+        await authorizeGooglePhotos();
+    }
     
-    const response = await fetch('https://ws1.filemail.com/api/upload', {
+    // ШАГ 1: Загружаем байты файла
+    const uploadUrl = 'https://photoslibrary.googleapis.com/v1/uploads';
+    const uploadResponse = await fetch(uploadUrl, {
         method: 'POST',
-        body: formData
+        headers: {
+            'Authorization': `Bearer ${googleAccessToken}`,
+            'Content-Type': 'application/octet-stream',
+            'X-Goog-Upload-Content-Type': file.type,
+            'X-Goog-Upload-Protocol': 'raw'
+        },
+        body: await file.arrayBuffer()
     });
     
-    const data = await response.json();
-    if (data && data.url) {
-        return data.url;
+    const uploadToken = await uploadResponse.text();
+    if (!uploadToken) {
+        throw new Error('Не удалось получить upload token');
+    }
+    
+    // ШАГ 2: Создаём медиа-элемент в Google Фото
+    const createUrl = 'https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate';
+    const createResponse = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${googleAccessToken}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            newMediaItems: [{
+                description: `Видео от ${new Date().toLocaleString()}`,
+                simpleMediaItem: {
+                    fileName: file.name,
+                    uploadToken: uploadToken
+                }
+            }]
+        })
+    });
+    
+    const result = await createResponse.json();
+    if (result.newMediaItemResults && result.newMediaItemResults[0]?.mediaItem) {
+        // Возвращаем ссылку на видео в Google Фото
+        return result.newMediaItemResults[0].mediaItem.productUrl;
     } else {
-        throw new Error('Ошибка загрузки на Filemail');
+        console.error('Ошибка Google Photos:', result);
+        throw new Error('Ошибка создания медиа-элемента');
     }
 }
 
-// === ЗАГРУЗКА НА IMGBB (только фото) ===
+// === ЗАГРУЗКА НА IMGBB (для фото) ===
 function uploadImageToImgBB(file) {
     return new Promise((resolve, reject) => {
         if (!file) { reject(new Error('Нет файла')); return; }
@@ -79,10 +167,10 @@ async function sendAnyFile(file) {
         return;
     }
     
-    showNotification('Загрузка файла...', 'info');
+    showNotification('Авторизация в Google Фото...', 'info');
     
     try {
-        const url = await uploadToFilemail(file);
+        const url = await uploadToGooglePhotos(file);
         
         var message = {};
         if (file.type.startsWith('video/')) {
@@ -126,14 +214,122 @@ async function sendAnyFile(file) {
             lastMessage: lastMsg,
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP
         });
-        showNotification('Файл отправлен!', 'success');
+        showNotification('Файл отправлен в Google Фото!', 'success');
     } catch (error) {
         console.error(error);
-        showNotification('Ошибка загрузки файла', 'error');
+        showNotification('Ошибка загрузки файла. Попробуйте ещё раз.', 'error');
     }
 }
 
-// === ВИДЕОКРУЖОК ===
+// === ФОТО (через ImgBB) ===
+function showImagePreview(file) {
+    pendingImageFile = file;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('preview-image').src = e.target.result;
+        document.getElementById('image-caption').value = '';
+        document.getElementById('image-preview-modal').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+function closeImagePreview() {
+    document.getElementById('image-preview-modal').classList.add('hidden');
+    pendingImageFile = null;
+}
+
+function confirmImageSend() {
+    if (!pendingImageFile || !currentChatId) {
+        showNotification('Ошибка отправки', 'error');
+        return;
+    }
+    var caption = document.getElementById('image-caption').value.trim();
+    var file = pendingImageFile;
+    closeImagePreview();
+    
+    uploadImageToImgBB(file)
+        .then(data => {
+            var message = {
+                type: 'image',
+                imageUrl: data.url,
+                caption: caption,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            return database.ref('messages/' + currentChatId).push(message);
+        })
+        .then(() => {
+            var lastMsg = caption ? '📷 ' + caption : '📷 Фото';
+            if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
+            return database.ref('chats/' + currentChatId).update({
+                lastMessage: lastMsg,
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+        })
+        .then(() => {
+            showNotification('Фото отправлено!', 'success');
+        })
+        .catch(err => {
+            showNotification('Ошибка отправки фото', 'error');
+            console.error(err);
+        });
+    pendingImageFile = null;
+}
+
+// === ГОЛОСОВЫЕ (через Google Photos) ===
+var mediaRecorder, audioChunks, isRecording = false;
+
+function startRecording() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                var blob = new Blob(audioChunks, { type: 'audio/webm' });
+                sendAudioMessage(blob);
+                stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            var btn = document.getElementById('voice-record-btn');
+            if (btn) btn.classList.add('recording');
+        })
+        .catch(err => showNotification('Нет доступа к микрофону', 'error'));
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        var btn = document.getElementById('voice-record-btn');
+        if (btn) btn.classList.remove('recording');
+    }
+}
+
+async function sendAudioMessage(blob) {
+    if (!currentChatId) return;
+    var file = new File([blob], 'audio_' + Date.now() + '.webm', { type: 'audio/webm' });
+    
+    try {
+        const url = await uploadToGooglePhotos(file);
+        var message = {
+            type: 'audio',
+            audioUrl: url,
+            senderId: currentUser.uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        await database.ref('messages/' + currentChatId).push(message);
+        await database.ref('chats/' + currentChatId).update({
+            lastMessage: '🎤 Голосовое сообщение',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+    } catch(err) {
+        showNotification('Ошибка загрузки аудио', 'error');
+    }
+}
+
+// === ВИДЕОКРУЖКИ (через Google Photos) ===
 var circleStream = null;
 var circleRecorder = null;
 var circleChunks = [];
@@ -407,7 +603,7 @@ async function sendCircleVideo(blob) {
     const file = new File([blob], 'circle_' + Date.now() + '.webm', { type: 'video/webm' });
     
     try {
-        const url = await uploadToFilemail(file);
+        const url = await uploadToGooglePhotos(file);
         
         const message = {
             type: 'video_circle',
@@ -436,111 +632,6 @@ function updateCircleTimerDisplay() {
 
 function updateCircleProgress(percent) {
     document.getElementById('circle-progress-fill').style.width = `${percent}%`;
-}
-
-// === ФОТО ===
-function showImagePreview(file) {
-    pendingImageFile = file;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('preview-image').src = e.target.result;
-        document.getElementById('image-caption').value = '';
-        document.getElementById('image-preview-modal').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
-function closeImagePreview() {
-    document.getElementById('image-preview-modal').classList.add('hidden');
-    pendingImageFile = null;
-}
-
-function confirmImageSend() {
-    if (!pendingImageFile || !currentChatId) {
-        showNotification('Ошибка отправки', 'error');
-        return;
-    }
-    var caption = document.getElementById('image-caption').value.trim();
-    var file = pendingImageFile;
-    closeImagePreview();
-    
-    uploadImageToImgBB(file)
-        .then(data => {
-            var message = {
-                type: 'image',
-                imageUrl: data.url,
-                caption: caption,
-                senderId: currentUser.uid,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-            return database.ref('messages/' + currentChatId).push(message);
-        })
-        .then(() => {
-            var lastMsg = caption ? '📷 ' + caption : '📷 Фото';
-            if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
-            return database.ref('chats/' + currentChatId).update({
-                lastMessage: lastMsg,
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-        })
-        .then(() => {
-            showNotification('Фото отправлено!', 'success');
-        })
-        .catch(err => {
-            showNotification('Ошибка отправки фото', 'error');
-            console.error(err);
-        });
-    pendingImageFile = null;
-}
-
-// === ГОЛОСОВЫЕ ===
-var mediaRecorder, audioChunks, isRecording = false;
-
-function startRecording() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                var blob = new Blob(audioChunks, { type: 'audio/webm' });
-                sendAudioMessage(blob);
-                stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            var btn = document.getElementById('voice-record-btn');
-            if (btn) btn.classList.add('recording');
-        })
-        .catch(err => showNotification('Нет доступа к микрофону', 'error'));
-}
-
-function stopRecording() {
-    if (mediaRecorder && isRecording) {
-        mediaRecorder.stop();
-        isRecording = false;
-        var btn = document.getElementById('voice-record-btn');
-        if (btn) btn.classList.remove('recording');
-    }
-}
-
-function sendAudioMessage(blob) {
-    if (!currentChatId) return;
-    var file = new File([blob], 'audio_' + Date.now() + '.webm', { type: 'audio/webm' });
-    uploadToFilemail(file).then(url => {
-        var message = {
-            type: 'audio',
-            audioUrl: url,
-            senderId: currentUser.uid,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
-        database.ref('messages/' + currentChatId).push(message).then(() => {
-            database.ref('chats/' + currentChatId).update({
-                lastMessage: '🎤 Голосовое сообщение',
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-        });
-    }).catch(err => showNotification('Ошибка загрузки аудио', 'error'));
 }
 
 // === АВАТАРКИ ===
@@ -587,4 +678,4 @@ function previewEditAvatar(event) {
         reader.readAsDataURL(file);
         window.pendingAvatarFile = file;
     }
-}
+}ы
