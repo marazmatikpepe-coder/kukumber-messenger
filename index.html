@@ -261,34 +261,44 @@
     <script src="js/upload.js"></script>
     <script src="js/reels.js"></script>
     <script src="js/settings.js"></script>
-    <!-- МОДАЛКА ЗАПИСИ ВИДЕОКРУЖКА -->
+   <!-- МОДАЛКА ЗАПИСИ ВИДЕОКРУЖКА (НОВАЯ ВЕРСИЯ) -->
 <div id="circle-video-modal" class="modal hidden">
-    <div class="circle-video-container">
-        <div class="circle-video-inner">
+    <div class="circle-video-wrapper">
+        <div class="circle-header">
+            <button id="circle-flip-camera" class="circle-flip-btn" title="Переключить камеру">🔄</button>
+            <button id="circle-close-btn" class="circle-close-btn" title="Закрыть">✕</button>
+        </div>
+        
+        <div class="circle-video-container">
             <video id="circle-video-preview" autoplay playsinline muted></video>
-            <div class="circle-video-overlay">
-                <div class="circle-timer">
-                    <span id="circle-timer">00:00</span>
-                    <div class="circle-progress-bar">
-                        <div id="circle-progress-fill"></div>
-                    </div>
-                    <span id="circle-timer-max">01:00</span>
-                </div>
-                <button id="circle-flip-camera" class="circle-flip-btn" title="Переключить камеру">🔄</button>
+            <div class="circle-controls-overlay">
+                <button id="circle-stop-btn" class="circle-stop-btn">⏹️</button>
+                <button id="circle-pause-btn" class="circle-pause-btn">⏸️</button>
+                <button id="circle-play-btn" class="circle-play-btn hidden">▶️</button>
             </div>
-            <div class="circle-controls">
+        </div>
+        
+        <div class="circle-footer">
+            <div class="circle-timer">
+                <span id="circle-current-time">00:00</span>
+                <span> / </span>
+                <span id="circle-max-time">01:00</span>
+            </div>
+            <div class="circle-progress-bar">
+                <div id="circle-progress-fill"></div>
+            </div>
+            <div class="circle-actions">
                 <button id="circle-delete-btn" class="circle-delete-btn">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
-                </button>
-                <button id="circle-stop-btn" class="circle-stop-btn">
-                    <div class="stop-square"></div>
+                    <span>Удалить</span>
                 </button>
                 <button id="circle-send-btn" class="circle-send-btn">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                     </svg>
+                    <span>Отправить</span>
                 </button>
             </div>
         </div>
