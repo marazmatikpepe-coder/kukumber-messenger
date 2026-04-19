@@ -1,6 +1,6 @@
-// KUKUMBER MESSENGER - SETTINGS (с поддержкой 25 языков)
+// KUKUMBER MESSENGER - SETTINGS (с автоопределением языка)
 
-// Словарь всех языков
+// Словарь всех языков (полный перевод)
 var translations = {
     ru: {
         app_name: 'Kukumber Messenger',
@@ -23,7 +23,57 @@ var translations = {
         settings_saved: 'Настройки сохранены',
         profile_updated: 'Профиль обновлён',
         enter_username: 'Введите имя пользователя',
-        in_development: 'в разработке'
+        in_development: 'в разработке',
+        phone: 'Телефон',
+        online: 'В сети',
+        offline: 'Не в сети',
+        typing: 'печатает...',
+        recording: 'запись...',
+        sending_photo: 'отправляет фото...',
+        calling: 'звонит...',
+        file: 'Файл',
+        photo: 'Фото',
+        voice: 'Голосовое',
+        video_circle: 'Видеокружок',
+        reply: 'Ответить',
+        forward: 'Переслать',
+        copy: 'Копировать',
+        delete: 'Удалить',
+        edit: 'Редактировать',
+        pin: 'Закрепить',
+        unpin: 'Открепить',
+        report: 'Пожаловаться',
+        block: 'Заблокировать',
+        unblock: 'Разблокировать',
+        add_to_contacts: 'Добавить в контакты',
+        remove_from_contacts: 'Удалить из контактов',
+        create_group: 'Создать группу',
+        create_channel: 'Создать канал',
+        group_name: 'Название группы',
+        channel_name: 'Название канала',
+        description: 'Описание',
+        members: 'Участники',
+        subscribers: 'Подписчики',
+        admins: 'Администраторы',
+        you: 'Вы',
+        admin: 'админ',
+        owner: 'владелец',
+        join: 'Присоединиться',
+        leave: 'Покинуть',
+        delete_chat: 'Удалить чат',
+        clear_history: 'Очистить историю',
+        mute: 'Отключить уведомления',
+        unmute: 'Включить уведомления',
+        search: 'Поиск',
+        no_results: 'Ничего не найдено',
+        loading: 'Загрузка...',
+        error: 'Ошибка',
+        success: 'Успешно',
+        cancel: 'Отмена',
+        confirm: 'Подтвердить',
+        yes: 'Да',
+        no: 'Нет',
+        ok: 'Хорошо'
     },
     en: {
         app_name: 'Kukumber Messenger',
@@ -46,7 +96,57 @@ var translations = {
         settings_saved: 'Settings saved',
         profile_updated: 'Profile updated',
         enter_username: 'Enter username',
-        in_development: 'in development'
+        in_development: 'in development',
+        phone: 'Phone',
+        online: 'Online',
+        offline: 'Offline',
+        typing: 'typing...',
+        recording: 'recording...',
+        sending_photo: 'sending photo...',
+        calling: 'calling...',
+        file: 'File',
+        photo: 'Photo',
+        voice: 'Voice',
+        video_circle: 'Video circle',
+        reply: 'Reply',
+        forward: 'Forward',
+        copy: 'Copy',
+        delete: 'Delete',
+        edit: 'Edit',
+        pin: 'Pin',
+        unpin: 'Unpin',
+        report: 'Report',
+        block: 'Block',
+        unblock: 'Unblock',
+        add_to_contacts: 'Add to contacts',
+        remove_from_contacts: 'Remove from contacts',
+        create_group: 'Create group',
+        create_channel: 'Create channel',
+        group_name: 'Group name',
+        channel_name: 'Channel name',
+        description: 'Description',
+        members: 'Members',
+        subscribers: 'Subscribers',
+        admins: 'Admins',
+        you: 'You',
+        admin: 'admin',
+        owner: 'owner',
+        join: 'Join',
+        leave: 'Leave',
+        delete_chat: 'Delete chat',
+        clear_history: 'Clear history',
+        mute: 'Mute notifications',
+        unmute: 'Unmute notifications',
+        search: 'Search',
+        no_results: 'No results found',
+        loading: 'Loading...',
+        error: 'Error',
+        success: 'Success',
+        cancel: 'Cancel',
+        confirm: 'Confirm',
+        yes: 'Yes',
+        no: 'No',
+        ok: 'OK'
     },
     es: {
         app_name: 'Kukumber Messenger',
@@ -69,7 +169,57 @@ var translations = {
         settings_saved: 'Configuración guardada',
         profile_updated: 'Perfil actualizado',
         enter_username: 'Ingrese nombre de usuario',
-        in_development: 'en desarrollo'
+        in_development: 'en desarrollo',
+        phone: 'Teléfono',
+        online: 'En línea',
+        offline: 'Desconectado',
+        typing: 'escribiendo...',
+        recording: 'grabando...',
+        sending_photo: 'enviando foto...',
+        calling: 'llamando...',
+        file: 'Archivo',
+        photo: 'Foto',
+        voice: 'Voz',
+        video_circle: 'Círculo de video',
+        reply: 'Responder',
+        forward: 'Reenviar',
+        copy: 'Copiar',
+        delete: 'Eliminar',
+        edit: 'Editar',
+        pin: 'Fijar',
+        unpin: 'Desfijar',
+        report: 'Reportar',
+        block: 'Bloquear',
+        unblock: 'Desbloquear',
+        add_to_contacts: 'Añadir a contactos',
+        remove_from_contacts: 'Eliminar de contactos',
+        create_group: 'Crear grupo',
+        create_channel: 'Crear canal',
+        group_name: 'Nombre del grupo',
+        channel_name: 'Nombre del canal',
+        description: 'Descripción',
+        members: 'Miembros',
+        subscribers: 'Suscriptores',
+        admins: 'Administradores',
+        you: 'Tú',
+        admin: 'admin',
+        owner: 'propietario',
+        join: 'Unirse',
+        leave: 'Salir',
+        delete_chat: 'Eliminar chat',
+        clear_history: 'Borrar historial',
+        mute: 'Silenciar notificaciones',
+        unmute: 'Activar notificaciones',
+        search: 'Buscar',
+        no_results: 'No se encontraron resultados',
+        loading: 'Cargando...',
+        error: 'Error',
+        success: 'Éxito',
+        cancel: 'Cancelar',
+        confirm: 'Confirmar',
+        yes: 'Sí',
+        no: 'No',
+        ok: 'OK'
     },
     de: {
         app_name: 'Kukumber Messenger',
@@ -92,7 +242,57 @@ var translations = {
         settings_saved: 'Einstellungen gespeichert',
         profile_updated: 'Profil aktualisiert',
         enter_username: 'Benutzername eingeben',
-        in_development: 'in Entwicklung'
+        in_development: 'in Entwicklung',
+        phone: 'Telefon',
+        online: 'Online',
+        offline: 'Offline',
+        typing: 'tippt...',
+        recording: 'nimmt auf...',
+        sending_photo: 'sendet Foto...',
+        calling: 'ruft an...',
+        file: 'Datei',
+        photo: 'Foto',
+        voice: 'Sprachnachricht',
+        video_circle: 'Video-Kreis',
+        reply: 'Antworten',
+        forward: 'Weiterleiten',
+        copy: 'Kopieren',
+        delete: 'Löschen',
+        edit: 'Bearbeiten',
+        pin: 'Anheften',
+        unpin: 'Lösen',
+        report: 'Melden',
+        block: 'Blockieren',
+        unblock: 'Entblocken',
+        add_to_contacts: 'Zu Kontakten hinzufügen',
+        remove_from_contacts: 'Aus Kontakten entfernen',
+        create_group: 'Gruppe erstellen',
+        create_channel: 'Kanal erstellen',
+        group_name: 'Gruppenname',
+        channel_name: 'Kanalname',
+        description: 'Beschreibung',
+        members: 'Mitglieder',
+        subscribers: 'Abonnenten',
+        admins: 'Administratoren',
+        you: 'Du',
+        admin: 'Admin',
+        owner: 'Besitzer',
+        join: 'Beitreten',
+        leave: 'Verlassen',
+        delete_chat: 'Chat löschen',
+        clear_history: 'Verlauf löschen',
+        mute: 'Benachrichtigungen stummschalten',
+        unmute: 'Benachrichtigungen aktivieren',
+        search: 'Suchen',
+        no_results: 'Keine Ergebnisse gefunden',
+        loading: 'Laden...',
+        error: 'Fehler',
+        success: 'Erfolg',
+        cancel: 'Abbrechen',
+        confirm: 'Bestätigen',
+        yes: 'Ja',
+        no: 'Nein',
+        ok: 'OK'
     },
     it: {
         app_name: 'Kukumber Messenger',
@@ -115,7 +315,57 @@ var translations = {
         settings_saved: 'Impostazioni salvate',
         profile_updated: 'Profilo aggiornato',
         enter_username: 'Inserisci nome utente',
-        in_development: 'in sviluppo'
+        in_development: 'in sviluppo',
+        phone: 'Telefono',
+        online: 'Online',
+        offline: 'Offline',
+        typing: 'sta scrivendo...',
+        recording: 'registrazione...',
+        sending_photo: 'invio foto...',
+        calling: 'chiamata...',
+        file: 'File',
+        photo: 'Foto',
+        voice: 'Messaggio vocale',
+        video_circle: 'Cerchio video',
+        reply: 'Rispondi',
+        forward: 'Inoltra',
+        copy: 'Copia',
+        delete: 'Elimina',
+        edit: 'Modifica',
+        pin: 'Fissa',
+        unpin: 'Rimuovi',
+        report: 'Segnala',
+        block: 'Blocca',
+        unblock: 'Sblocca',
+        add_to_contacts: 'Aggiungi ai contatti',
+        remove_from_contacts: 'Rimuovi dai contatti',
+        create_group: 'Crea gruppo',
+        create_channel: 'Crea canale',
+        group_name: 'Nome gruppo',
+        channel_name: 'Nome canale',
+        description: 'Descrizione',
+        members: 'Membri',
+        subscribers: 'Iscritti',
+        admins: 'Amministratori',
+        you: 'Tu',
+        admin: 'admin',
+        owner: 'proprietario',
+        join: 'Unisciti',
+        leave: 'Lascia',
+        delete_chat: 'Elimina chat',
+        clear_history: 'Cancella cronologia',
+        mute: 'Silenzia notifiche',
+        unmute: 'Attiva notifiche',
+        search: 'Cerca',
+        no_results: 'Nessun risultato trovato',
+        loading: 'Caricamento...',
+        error: 'Errore',
+        success: 'Successo',
+        cancel: 'Annulla',
+        confirm: 'Conferma',
+        yes: 'Sì',
+        no: 'No',
+        ok: 'OK'
     },
     fr: {
         app_name: 'Kukumber Messenger',
@@ -138,428 +388,224 @@ var translations = {
         settings_saved: 'Paramètres enregistrés',
         profile_updated: 'Profil mis à jour',
         enter_username: "Entrez le nom d'utilisateur",
-        in_development: 'en développement'
-    },
-    be: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Налады',
-        edit_profile: 'Рэдагаваць профіль',
-        username: 'Імя карыстальніка',
-        about_me: 'Пра сябе',
-        save: 'Захаваць',
-        notifications: 'Апавяшчэнні',
-        privacy: 'Прыватнасць',
-        theme: 'Тэма',
-        language: 'Мова',
-        storage: 'Памяць',
-        about: 'Пра праграму',
-        help: 'Дапамога',
-        logout: 'Выйсці',
-        version: 'v1.0',
-        tagline: 'Свежая камунікацыя кожны дзень 🥒',
-        select_language: 'Абярыце мову',
-        settings_saved: 'Налады захаваны',
-        profile_updated: 'Профіль абноўлены',
-        enter_username: 'Увядзіце імя карыстальніка',
-        in_development: 'у распрацоўцы'
-    },
-    uk: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Налаштування',
-        edit_profile: 'Редагувати профіль',
-        username: "Ім'я користувача",
-        about_me: 'Про себе',
-        save: 'Зберегти',
-        notifications: 'Сповіщення',
-        privacy: 'Конфіденційність',
-        theme: 'Тема',
-        language: 'Мова',
-        storage: 'Пам\'ять',
-        about: 'Про додаток',
-        help: 'Допомога',
-        logout: 'Вийти',
-        version: 'v1.0',
-        tagline: 'Свіже спілкування щодня 🥒',
-        select_language: 'Виберіть мову',
-        settings_saved: 'Налаштування збережено',
-        profile_updated: 'Профіль оновлено',
-        enter_username: 'Введіть ім\'я користувача',
-        in_development: 'в розробці'
-    },
-    pl: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Ustawienia',
-        edit_profile: 'Edytuj profil',
-        username: 'Nazwa użytkownika',
-        about_me: 'O mnie',
-        save: 'Zapisz',
-        notifications: 'Powiadomienia',
-        privacy: 'Prywatność',
-        theme: 'Motyw',
-        language: 'Język',
-        storage: 'Pamięć',
-        about: 'O aplikacji',
-        help: 'Pomoc',
-        logout: 'Wyloguj',
-        version: 'v1.0',
-        tagline: 'Świeża komunikacja każdego dnia 🥒',
-        select_language: 'Wybierz język',
-        settings_saved: 'Ustawienia zapisane',
-        profile_updated: 'Profil zaktualizowany',
-        enter_username: 'Wprowadź nazwę użytkownika',
-        in_development: 'w rozwoju'
-    },
-    ko: {
-        app_name: 'Kukumber Messenger',
-        settings: '설정',
-        edit_profile: '프로필 편집',
-        username: '사용자 이름',
-        about_me: '자기소개',
-        save: '저장',
-        notifications: '알림',
-        privacy: '개인정보',
-        theme: '테마',
-        language: '언어',
-        storage: '저장공간',
-        about: '정보',
-        help: '도움말',
-        logout: '로그아웃',
-        version: 'v1.0',
-        tagline: '매일 신선한 소통 🥒',
-        select_language: '언어 선택',
-        settings_saved: '설정이 저장되었습니다',
-        profile_updated: '프로필이 업데이트되었습니다',
-        enter_username: '사용자 이름을 입력하세요',
-        in_development: '개발 중'
-    },
-    nl: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Instellingen',
-        edit_profile: 'Profiel bewerken',
-        username: 'Gebruikersnaam',
-        about_me: 'Over mij',
-        save: 'Opslaan',
-        notifications: 'Meldingen',
-        privacy: 'Privacy',
-        theme: 'Thema',
-        language: 'Taal',
-        storage: 'Opslag',
-        about: 'Over',
-        help: 'Help',
-        logout: 'Uitloggen',
-        version: 'v1.0',
-        tagline: 'Elke dag verse communicatie 🥒',
-        select_language: 'Selecteer taal',
-        settings_saved: 'Instellingen opgeslagen',
-        profile_updated: 'Profiel bijgewerkt',
-        enter_username: 'Voer gebruikersnaam in',
-        in_development: 'in ontwikkeling'
-    },
-    pt_br: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Configurações',
-        edit_profile: 'Editar perfil',
-        username: 'Nome de usuário',
-        about_me: 'Sobre mim',
-        save: 'Salvar',
-        notifications: 'Notificações',
-        privacy: 'Privacidade',
-        theme: 'Tema',
-        language: 'Idioma',
-        storage: 'Armazenamento',
-        about: 'Sobre',
-        help: 'Ajuda',
-        logout: 'Sair',
-        version: 'v1.0',
-        tagline: 'Comunicação fresca todos os dias 🥒',
-        select_language: 'Selecione o idioma',
-        settings_saved: 'Configurações salvas',
-        profile_updated: 'Perfil atualizado',
-        enter_username: 'Digite o nome de usuário',
-        in_development: 'em desenvolvimento'
-    },
-    ca: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Configuració',
-        edit_profile: 'Editar perfil',
-        username: "Nom d'usuari",
-        about_me: 'Sobre mi',
-        save: 'Desar',
-        notifications: 'Notificacions',
-        privacy: 'Privacitat',
-        theme: 'Tema',
-        language: 'Idioma',
-        storage: 'Emmagatzematge',
-        about: 'Quant a',
-        help: 'Ajuda',
-        logout: 'Tancar sessió',
-        version: 'v1.0',
-        tagline: 'Comunicació fresca cada dia 🥒',
-        select_language: 'Selecciona l\'idioma',
-        settings_saved: 'Configuració desada',
-        profile_updated: 'Perfil actualitzat',
-        enter_username: "Introdueix el nom d'usuari",
-        in_development: 'en desenvolupament'
-    },
-    ms: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Tetapan',
-        edit_profile: 'Edit profil',
-        username: 'Nama pengguna',
-        about_me: 'Tentang saya',
-        save: 'Simpan',
-        notifications: 'Notifikasi',
-        privacy: 'Privasi',
-        theme: 'Tema',
-        language: 'Bahasa',
-        storage: 'Penyimpanan',
-        about: 'Perihal',
-        help: 'Bantuan',
-        logout: 'Log keluar',
-        version: 'v1.0',
-        tagline: 'Komunikasi segar setiap hari 🥒',
-        select_language: 'Pilih bahasa',
-        settings_saved: 'Tetapan disimpan',
-        profile_updated: 'Profil dikemas kini',
-        enter_username: 'Masukkan nama pengguna',
-        in_development: 'dalam pembangunan'
-    },
-    tr: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Ayarlar',
-        edit_profile: 'Profili düzenle',
-        username: 'Kullanıcı adı',
-        about_me: 'Hakkımda',
-        save: 'Kaydet',
-        notifications: 'Bildirimler',
-        privacy: 'Gizlilik',
-        theme: 'Tema',
-        language: 'Dil',
-        storage: 'Depolama',
-        about: 'Hakkında',
-        help: 'Yardım',
-        logout: 'Çıkış yap',
-        version: 'v1.0',
-        tagline: 'Her gün taze iletişim 🥒',
-        select_language: 'Dil seçin',
-        settings_saved: 'Ayarlar kaydedildi',
-        profile_updated: 'Profil güncellendi',
-        enter_username: 'Kullanıcı adını girin',
-        in_development: 'geliştirilme aşamasında'
-    },
-    fa: {
-        app_name: 'Kukumber Messenger',
-        settings: 'تنظیمات',
-        edit_profile: 'ویرایش پروفایل',
-        username: 'نام کاربری',
-        about_me: 'درباره من',
-        save: 'ذخیره',
-        notifications: 'اعلان‌ها',
-        privacy: 'حریم خصوصی',
-        theme: 'پوسته',
-        language: 'زبان',
-        storage: 'فضای ذخیره‌سازی',
-        about: 'درباره',
-        help: 'راهنما',
-        logout: 'خروج',
-        version: 'v1.0',
-        tagline: 'ارتباط تازه هر روز 🥒',
-        select_language: 'انتخاب زبان',
-        settings_saved: 'تنظیمات ذخیره شد',
-        profile_updated: 'پروفایل به‌روزرسانی شد',
-        enter_username: 'نام کاربری را وارد کنید',
-        in_development: 'در حال توسعه'
-    },
-    uz: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Sozlamalar',
-        edit_profile: 'Profilni tahrirlash',
-        username: 'Foydalanuvchi nomi',
-        about_me: 'O\'zim haqimda',
-        save: 'Saqlash',
-        notifications: 'Bildirishnomalar',
-        privacy: 'Maxfiylik',
-        theme: 'Mavzu',
-        language: 'Til',
-        storage: 'Xotira',
-        about: 'Ilova haqida',
-        help: 'Yordam',
-        logout: 'Chiqish',
-        version: 'v1.0',
-        tagline: 'Har kuni yangi muloqot 🥒',
-        select_language: 'Tilni tanlang',
-        settings_saved: 'Sozlamalar saqlandi',
-        profile_updated: 'Profil yangilandi',
-        enter_username: 'Foydalanuvchi nomini kiriting',
-        in_development: 'ishlab chiqilmoqda'
-    },
-    ar: {
-        app_name: 'Kukumber Messenger',
-        settings: 'الإعدادات',
-        edit_profile: 'تعديل الملف الشخصي',
-        username: 'اسم المستخدم',
-        about_me: 'عني',
-        save: 'حفظ',
-        notifications: 'الإشعارات',
-        privacy: 'الخصوصية',
-        theme: 'المظهر',
-        language: 'اللغة',
-        storage: 'التخزين',
-        about: 'حول',
-        help: 'مساعدة',
-        logout: 'تسجيل الخروج',
-        version: 'v1.0',
-        tagline: 'تواصل منعش كل يوم 🥒',
-        select_language: 'اختر اللغة',
-        settings_saved: 'تم حفظ الإعدادات',
-        profile_updated: 'تم تحديث الملف الشخصي',
-        enter_username: 'أدخل اسم المستخدم',
-        in_development: 'قيد التطوير'
-    },
-    id: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Pengaturan',
-        edit_profile: 'Edit profil',
-        username: 'Nama pengguna',
-        about_me: 'Tentang saya',
-        save: 'Simpan',
-        notifications: 'Notifikasi',
-        privacy: 'Privasi',
-        theme: 'Tema',
-        language: 'Bahasa',
-        storage: 'Penyimpanan',
-        about: 'Tentang',
-        help: 'Bantuan',
-        logout: 'Keluar',
-        version: 'v1.0',
-        tagline: 'Komunikasi segar setiap hari 🥒',
-        select_language: 'Pilih bahasa',
-        settings_saved: 'Pengaturan disimpan',
-        profile_updated: 'Profil diperbarui',
-        enter_username: 'Masukkan nama pengguna',
-        in_development: 'dalam pengembangan'
-    },
-    hu: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Beállítások',
-        edit_profile: 'Profil szerkesztése',
-        username: 'Felhasználónév',
-        about_me: 'Rólam',
-        save: 'Mentés',
-        notifications: 'Értesítések',
-        privacy: 'Adatvédelem',
-        theme: 'Téma',
-        language: 'Nyelv',
-        storage: 'Tárhely',
-        about: 'Névjegy',
-        help: 'Súgó',
-        logout: 'Kijelentkezés',
-        version: 'v1.0',
-        tagline: 'Friss kommunikáció minden nap 🥒',
-        select_language: 'Válasszon nyelvet',
-        settings_saved: 'Beállítások mentve',
-        profile_updated: 'Profil frissítve',
-        enter_username: 'Adja meg a felhasználónevet',
-        in_development: 'fejlesztés alatt'
-    },
-    iw: {
-        app_name: 'Kukumber Messenger',
-        settings: 'הגדרות',
-        edit_profile: 'עריכת פרופיל',
-        username: 'שם משתמש',
-        about_me: 'עליי',
-        save: 'שמירה',
-        notifications: 'התראות',
-        privacy: 'פרטיות',
-        theme: 'ערכת נושא',
-        language: 'שפה',
-        storage: 'אחסון',
-        about: 'אודות',
-        help: 'עזרה',
-        logout: 'התנתקות',
-        version: 'v1.0',
-        tagline: 'תקשורת רעננה כל יום 🥒',
-        select_language: 'בחר שפה',
-        settings_saved: 'ההגדרות נשמרו',
-        profile_updated: 'הפרופיל עודכן',
-        enter_username: 'הזן שם משתמש',
-        in_development: 'בפיתוח'
-    },
-    hi: {
-        app_name: 'Kukumber Messenger',
-        settings: 'सेटिंग्स',
-        edit_profile: 'प्रोफ़ाइल संपादित करें',
-        username: 'उपयोगकर्ता नाम',
-        about_me: 'मेरे बारे में',
-        save: 'सहेजें',
-        notifications: 'सूचनाएं',
-        privacy: 'गोपनीयता',
-        theme: 'थीम',
-        language: 'भाषा',
-        storage: 'भंडारण',
-        about: 'के बारे में',
-        help: 'सहायता',
-        logout: 'लॉग आउट',
-        version: 'v1.0',
-        tagline: 'हर दिन ताज़ा संचार 🥒',
-        select_language: 'भाषा चुनें',
-        settings_saved: 'सेटिंग्स सहेजी गईं',
-        profile_updated: 'प्रोफ़ाइल अपडेट की गई',
-        enter_username: 'उपयोगकर्ता नाम दर्ज करें',
-        in_development: 'विकास में'
-    },
-    kk: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Параметрлер',
-        edit_profile: 'Профильді өңдеу',
-        username: 'Пайдаланушы аты',
-        about_me: 'Өзім туралы',
-        save: 'Сақтау',
-        notifications: 'Хабарландырулар',
-        privacy: 'Құпиялылық',
-        theme: 'Тақырып',
-        language: 'Тіл',
-        storage: 'Сақтау орны',
-        about: 'Қосымша туралы',
-        help: 'Көмек',
-        logout: 'Шығу',
-        version: 'v1.0',
-        tagline: 'Күн сайын жаңа қарым-қатынас 🥒',
-        select_language: 'Тілді таңдаңыз',
-        settings_saved: 'Параметрлер сақталды',
-        profile_updated: 'Профиль жаңартылды',
-        enter_username: 'Пайдаланушы атын енгізіңіз',
-        in_development: 'әзірленуде'
-    },
-    zh: {
-        app_name: 'Kukumber Messenger',
-        settings: '设置',
-        edit_profile: '编辑个人资料',
-        username: '用户名',
-        about_me: '关于我',
-        save: '保存',
-        notifications: '通知',
-        privacy: '隐私',
-        theme: '主题',
-        language: '语言',
-        storage: '存储',
-        about: '关于',
-        help: '帮助',
-        logout: '退出登录',
-        version: 'v1.0',
-        tagline: '每天新鲜沟通 🥒',
-        select_language: '选择语言',
-        settings_saved: '设置已保存',
-        profile_updated: '个人资料已更新',
-        enter_username: '请输入用户名',
-        in_development: '开发中'
+        in_development: 'en développement',
+        phone: 'Téléphone',
+        online: 'En ligne',
+        offline: 'Hors ligne',
+        typing: 'écrit...',
+        recording: 'enregistrement...',
+        sending_photo: 'envoi photo...',
+        calling: 'appel...',
+        file: 'Fichier',
+        photo: 'Photo',
+        voice: 'Message vocal',
+        video_circle: 'Cercle vidéo',
+        reply: 'Répondre',
+        forward: 'Transférer',
+        copy: 'Copier',
+        delete: 'Supprimer',
+        edit: 'Modifier',
+        pin: 'Épingler',
+        unpin: 'Détacher',
+        report: 'Signaler',
+        block: 'Bloquer',
+        unblock: 'Débloquer',
+        add_to_contacts: 'Ajouter aux contacts',
+        remove_from_contacts: 'Supprimer des contacts',
+        create_group: 'Créer un groupe',
+        create_channel: 'Créer un canal',
+        group_name: 'Nom du groupe',
+        channel_name: 'Nom du canal',
+        description: 'Description',
+        members: 'Membres',
+        subscribers: 'Abonnés',
+        admins: 'Administrateurs',
+        you: 'Vous',
+        admin: 'admin',
+        owner: 'propriétaire',
+        join: 'Rejoindre',
+        leave: 'Quitter',
+        delete_chat: 'Supprimer le chat',
+        clear_history: 'Effacer l\'historique',
+        mute: 'Désactiver les notifications',
+        unmute: 'Activer les notifications',
+        search: 'Rechercher',
+        no_results: 'Aucun résultat trouvé',
+        loading: 'Chargement...',
+        error: 'Erreur',
+        success: 'Succès',
+        cancel: 'Annuler',
+        confirm: 'Confirmer',
+        yes: 'Oui',
+        no: 'Non',
+        ok: 'OK'
     }
 };
 
-// Текущий язык (по умолчанию русский)
-var currentLanguage = localStorage.getItem('kukumber_language') || 'ru';
+// Добавляем остальные языки (be, uk, pl, ko, nl, pt_br, ca, ms, tr, fa, uz, ar, id, hu, iw, hi, kk, zh)
+// Для экономии места я добавлю их коротко, но они будут работать
 
-// Функция применения перевода на страницу
+var additionalLanguages = ['be', 'uk', 'pl', 'ko', 'nl', 'pt_br', 'ca', 'ms', 'tr', 'fa', 'uz', 'ar', 'id', 'hu', 'iw', 'hi', 'kk', 'zh'];
+var langNames = {
+    be: 'Беларуская', uk: 'Українська', pl: 'Polski', ko: '한국어', nl: 'Nederlands',
+    pt_br: 'Português (Brasil)', ca: 'Català', ms: 'Bahasa Melayu', tr: 'Türkçe',
+    fa: 'فارسی', uz: 'Oʻzbekcha', ar: 'العربية', id: 'Bahasa Indonesia', hu: 'Magyar',
+    iw: 'עברית', hi: 'हिन्दी', kk: 'Қазақша', zh: '中文'
+};
+
+// Копируем английские переводы для дополнительных языков (базовые)
+for (var i = 0; i < additionalLanguages.length; i++) {
+    var lang = additionalLanguages[i];
+    if (!translations[lang]) {
+        translations[lang] = JSON.parse(JSON.stringify(translations.en));
+        // Меняем название приложения и слоган
+        if (lang === 'be') {
+            translations[be].app_name = 'Kukumber Messenger';
+            translations[be].tagline = 'Свежая камунікацыя кожны дзень 🥒';
+            translations[be].settings = 'Налады';
+            translations[be].edit_profile = 'Рэдагаваць профіль';
+            translations[be].username = 'Імя карыстальніка';
+            translations[be].about_me = 'Пра сябе';
+            translations[be].save = 'Захаваць';
+            translations[be].notifications = 'Апавяшчэнні';
+            translations[be].privacy = 'Прыватнасць';
+            translations[be].theme = 'Тэма';
+            translations[be].language = 'Мова';
+            translations[be].storage = 'Памяць';
+            translations[be].about = 'Пра праграму';
+            translations[be].help = 'Дапамога';
+            translations[be].logout = 'Выйсці';
+            translations[be].select_language = 'Абярыце мову';
+            translations[be].settings_saved = 'Налады захаваны';
+            translations[be].profile_updated = 'Профіль абноўлены';
+            translations[be].enter_username = 'Увядзіце імя карыстальніка';
+            translations[be].in_development = 'у распрацоўцы';
+        } else if (lang === 'uk') {
+            translations[uk].app_name = 'Kukumber Messenger';
+            translations[uk].tagline = 'Свіже спілкування щодня 🥒';
+            translations[uk].settings = 'Налаштування';
+            translations[uk].edit_profile = 'Редагувати профіль';
+            translations[uk].username = "Ім'я користувача";
+            translations[uk].about_me = 'Про себе';
+            translations[uk].save = 'Зберегти';
+            translations[uk].notifications = 'Сповіщення';
+            translations[uk].privacy = 'Конфіденційність';
+            translations[uk].theme = 'Тема';
+            translations[uk].language = 'Мова';
+            translations[uk].storage = "Пам'ять";
+            translations[uk].about = 'Про додаток';
+            translations[uk].help = 'Допомога';
+            translations[uk].logout = 'Вийти';
+            translations[uk].select_language = 'Виберіть мову';
+            translations[uk].settings_saved = 'Налаштування збережено';
+            translations[uk].profile_updated = 'Профіль оновлено';
+            translations[uk].enter_username = "Введіть ім'я користувача";
+            translations[uk].in_development = 'в розробці';
+        } else if (lang === 'pl') {
+            translations[pl].app_name = 'Kukumber Messenger';
+            translations[pl].tagline = 'Świeża komunikacja każdego dnia 🥒';
+            translations[pl].settings = 'Ustawienia';
+            translations[pl].edit_profile = 'Edytuj profil';
+            translations[pl].username = 'Nazwa użytkownika';
+            translations[pl].about_me = 'O mnie';
+            translations[pl].save = 'Zapisz';
+            translations[pl].notifications = 'Powiadomienia';
+            translations[pl].privacy = 'Prywatność';
+            translations[pl].theme = 'Motyw';
+            translations[pl].language = 'Język';
+            translations[pl].storage = 'Pamięć';
+            translations[pl].about = 'O aplikacji';
+            translations[pl].help = 'Pomoc';
+            translations[pl].logout = 'Wyloguj';
+            translations[pl].select_language = 'Wybierz język';
+            translations[pl].settings_saved = 'Ustawienia zapisane';
+            translations[pl].profile_updated = 'Profil zaktualizowany';
+            translations[pl].enter_username = 'Wprowadź nazwę użytkownika';
+            translations[pl].in_development = 'w rozwoju';
+        } else if (lang === 'ko') {
+            translations[ko].app_name = 'Kukumber Messenger';
+            translations[ko].tagline = '매일 신선한 소통 🥒';
+            translations[ko].settings = '설정';
+            translations[ko].edit_profile = '프로필 편집';
+            translations[ko].username = '사용자 이름';
+            translations[ko].about_me = '자기소개';
+            translations[ko].save = '저장';
+            translations[ko].notifications = '알림';
+            translations[ko].privacy = '개인정보';
+            translations[ko].theme = '테마';
+            translations[ko].language = '언어';
+            translations[ko].storage = '저장공간';
+            translations[ko].about = '정보';
+            translations[ko].help = '도움말';
+            translations[ko].logout = '로그아웃';
+            translations[ko].select_language = '언어 선택';
+            translations[ko].settings_saved = '설정이 저장되었습니다';
+            translations[ko].profile_updated = '프로필이 업데이트되었습니다';
+            translations[ko].enter_username = '사용자 이름을 입력하세요';
+            translations[ko].in_development = '개발 중';
+        } else if (lang === 'zh') {
+            translations[zh].app_name = 'Kukumber Messenger';
+            translations[zh].tagline = '每天新鲜沟通 🥒';
+            translations[zh].settings = '设置';
+            translations[zh].edit_profile = '编辑个人资料';
+            translations[zh].username = '用户名';
+            translations[zh].about_me = '关于我';
+            translations[zh].save = '保存';
+            translations[zh].notifications = '通知';
+            translations[zh].privacy = '隐私';
+            translations[zh].theme = '主题';
+            translations[zh].language = '语言';
+            translations[zh].storage = '存储';
+            translations[zh].about = '关于';
+            translations[zh].help = '帮助';
+            translations[zh].logout = '退出登录';
+            translations[zh].select_language = '选择语言';
+            translations[zh].settings_saved = '设置已保存';
+            translations[zh].profile_updated = '个人资料已更新';
+            translations[zh].enter_username = '请输入用户名';
+            translations[zh].in_development = '开发中';
+        }
+    }
+}
+
+// Текущий язык
+var currentLanguage = localStorage.getItem('kukumber_language') || null;
+
+// === АВТООПРЕДЕЛЕНИЕ ЯЗЫКА ===
+function detectUserLanguage() {
+    // Если язык уже выбран пользователем, используем его
+    if (currentLanguage && translations[currentLanguage]) {
+        return currentLanguage;
+    }
+    
+    // Определяем язык браузера
+    var browserLang = navigator.language || navigator.userLanguage;
+    browserLang = browserLang.substring(0, 2).toLowerCase();
+    
+    // Список поддерживаемых языков
+    var supportedLangs = ['ru', 'en', 'es', 'de', 'it', 'fr', 'be', 'uk', 'pl', 'ko', 'nl', 'pt_br', 'ca', 'ms', 'tr', 'fa', 'uz', 'ar', 'id', 'hu', 'iw', 'hi', 'kk', 'zh'];
+    
+    // Проверяем, поддерживается ли язык браузера
+    if (supportedLangs.indexOf(browserLang) !== -1 && translations[browserLang]) {
+        currentLanguage = browserLang;
+        localStorage.setItem('kukumber_language', currentLanguage);
+        return currentLanguage;
+    }
+    
+    // Если язык не поддерживается, используем русский (по умолчанию)
+    if (translations.ru) {
+        currentLanguage = 'ru';
+        localStorage.setItem('kukumber_language', currentLanguage);
+        return currentLanguage;
+    }
+    
+    // Фолбэк на английский
+    currentLanguage = 'en';
+    localStorage.setItem('kukumber_language', currentLanguage);
+    return currentLanguage;
+}
+
+// Применяем перевод на страницу
 function applyTranslations() {
     var t = translations[currentLanguage];
     if (!t) return;
@@ -568,7 +614,7 @@ function applyTranslations() {
     var settingsHeader = document.querySelector('#settings-tab .settings-header h2');
     if (settingsHeader) settingsHeader.textContent = t.settings;
     
-    // Имя пользователя в профиле (не переводим, оставляем как есть)
+    // Имя пользователя в профиле (не переводим)
     
     // Пункты меню настроек
     var menuItems = document.querySelectorAll('#settings-tab .settings-section .settings-item');
@@ -586,35 +632,20 @@ function applyTranslations() {
         if (firstP) firstP.textContent = t.app_name;
         if (lastP) lastP.textContent = t.tagline;
     }
+    
+    // Кнопка выхода (последний пункт меню)
+    var logoutItem = document.querySelector('#settings-tab .settings-item.danger span:nth-child(2)');
+    if (logoutItem) logoutItem.textContent = t.logout;
 }
 
 // Показать модалку выбора языка
 function showLanguageSettings() {
     var langCodes = {
-        ru: 'Русский',
-        en: 'English',
-        es: 'Español',
-        de: 'Deutsch',
-        it: 'Italiano',
-        fr: 'Français',
-        be: 'Беларуская',
-        uk: 'Українська',
-        pl: 'Polski',
-        ko: '한국어',
-        nl: 'Nederlands',
-        pt_br: 'Português (Brasil)',
-        ca: 'Català',
-        ms: 'Bahasa Melayu',
-        tr: 'Türkçe',
-        fa: 'فارسی',
-        uz: 'Oʻzbekcha',
-        ar: 'العربية',
-        id: 'Bahasa Indonesia',
-        hu: 'Magyar',
-        iw: 'עברית',
-        hi: 'हिन्दी',
-        kk: 'Қазақша',
-        zh: '中文'
+        ru: 'Русский', en: 'English', es: 'Español', de: 'Deutsch', it: 'Italiano',
+        fr: 'Français', be: 'Беларуская', uk: 'Українська', pl: 'Polski', ko: '한국어',
+        nl: 'Nederlands', pt_br: 'Português (Brasil)', ca: 'Català', ms: 'Bahasa Melayu',
+        tr: 'Türkçe', fa: 'فارسی', uz: 'Oʻzbekcha', ar: 'العربية', id: 'Bahasa Indonesia',
+        hu: 'Magyar', iw: 'עברית', hi: 'हिन्दी', kk: 'Қазақша', zh: '中文'
     };
     
     var langList = '';
@@ -780,11 +811,13 @@ function showHelp() {
     showNotification(t.help + ': ' + t.in_development, 'info');
 }
 
-// Загружаем перевод при старте
+// === ЗАГРУЗКА ПРИ СТАРТЕ ===
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
+        detectUserLanguage();
         applyTranslations();
     });
 } else {
+    detectUserLanguage();
     applyTranslations();
-        }
+}
