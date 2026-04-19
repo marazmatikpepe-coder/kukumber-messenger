@@ -261,5 +261,38 @@
     <script src="js/upload.js"></script>
     <script src="js/reels.js"></script>
     <script src="js/settings.js"></script>
+    <!-- МОДАЛКА ЗАПИСИ ВИДЕОКРУЖКА -->
+<div id="circle-video-modal" class="modal hidden">
+    <div class="circle-video-container">
+        <div class="circle-video-inner">
+            <video id="circle-video-preview" autoplay playsinline muted></video>
+            <div class="circle-video-overlay">
+                <div class="circle-timer">
+                    <span id="circle-timer">00:00</span>
+                    <div class="circle-progress-bar">
+                        <div id="circle-progress-fill"></div>
+                    </div>
+                    <span id="circle-timer-max">01:00</span>
+                </div>
+                <button id="circle-flip-camera" class="circle-flip-btn" title="Переключить камеру">🔄</button>
+            </div>
+            <div class="circle-controls">
+                <button id="circle-delete-btn" class="circle-delete-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                </button>
+                <button id="circle-stop-btn" class="circle-stop-btn">
+                    <div class="stop-square"></div>
+                </button>
+                <button id="circle-send-btn" class="circle-send-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
