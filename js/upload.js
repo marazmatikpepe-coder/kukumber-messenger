@@ -147,7 +147,7 @@ async function sendAnyFile(file) {
     }
 }
 
-// === ВИДЕОКРУЖОК ===
+// === ВИДЕОКРУЖОК (ИСПРАВЛЕННАЯ ВЕРСИЯ) ===
 var circleStream = null;
 var circleRecorder = null;
 var circleChunks = [];
@@ -224,11 +224,13 @@ function closeCircleModal() {
         clearInterval(circleTimerInterval);
         circleTimerInterval = null;
     }
-    if (circleRecorder && isCircleRecording) {
+    if (circleRecorder && (circleRecorder.state === 'recording' || circleRecorder.state === 'paused')) {
         try { circleRecorder.stop(); } catch(e) {}
     }
     isCircleRecording = false;
     isCirclePaused = false;
+    circleVideoBlob = null;
+    circleChunks = [];
 }
 
 function setupCircleButtons() {
@@ -272,9 +274,9 @@ function setupCircleButtons() {
         }
     };
     
-    sendBtn.onclick = () => {
+    sendBtn.onclick = async () => {
         if (circleVideoBlob) {
-            sendCircleVideo(circleVideoBlob);
+            await sendCircleVideo(circleVideoBlob);
         } else if (isCircleRecording) {
             stopCircleRecording(true);
         }
@@ -449,7 +451,6 @@ function updateCircleTimerDisplay() {
 function updateCircleProgress(percent) {
     document.getElementById('circle-progress-fill').style.width = `${percent}%`;
 }
-
 // === ФОТО ===
 function showImagePreview(file) {
     pendingImageFile = file;
