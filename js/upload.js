@@ -1,9 +1,22 @@
-// UPLOAD - ImgBB для фото + Catbox + GoFile для видео
+// UPLOAD - Полная поддержка всех файлов на любых устройствах
 
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
-// === ЗАГРУЗКА НА CATBOX (для файлов) ===
+// === ПРОВЕРКА ПОДДЕРЖКИ ТИПА ФАЙЛА ===
+function isVideoFile(file) {
+    return file.type.startsWith('video/');
+}
+
+function isAudioFile(file) {
+    return file.type.startsWith('audio/');
+}
+
+function isImageFile(file) {
+    return file.type.startsWith('image/');
+}
+
+// === ЗАГРУЗКА НА CATBOX (для любых файлов) ===
 async function uploadToCatbox(file) {
     const formData = new FormData();
     formData.append('reqtype', 'fileupload');
@@ -22,48 +35,115 @@ async function uploadToCatbox(file) {
     }
 }
 
-// === ЗАГРУЗКА НА GOPFILE (альтернатива для видео) ===
-async function uploadToGoFile(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await fetch('https://store1.gofile.io/uploadFile', {
-        method: 'POST',
-        body: formData
+// === ЗАГРУЗКА НА IMGBB ===
+function uploadImageToImgBB(file) {
+    return new Promise((resolve, reject) => {
+        if (!file) { reject(new Error('Нет файла')); return; }
+        if (!file.type.startsWith('image/')) { reject(new Error('Не изображение')); return; }
+        if (file.size > 32 * 1024 * 1024) { reject(new Error('Файл >32 МБ')); return; }
+        
+        showUploadProgress(true);
+        var formData = new FormData();
+        formData.append('image', file);
+        formData.append('key', IMGBB_API_KEY);
+        
+        fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                showUploadProgress(false);
+                if (data.success) resolve({ url: data.data.url });
+                else reject('Ошибка ImgBB');
+            })
+            .catch(error => {
+                showUploadProgress(false);
+                reject(error);
+            });
     });
-    
-    const data = await response.json();
-    if (data.status === 'ok') {
-        return data.data.downloadPage;
-    } else {
-        throw new Error('Ошибка загрузки на GoFile');
+}
+
+function showUploadProgress(show) {
+    var div = document.getElementById('upload-progress');
+    if (show && !div) {
+        div = document.createElement('div');
+        div.id = 'upload-progress';
+        div.className = 'upload-progress';
+        div.innerHTML = '<div class="upload-progress-content"><div class="spinner"></div><p>Загрузка...</p></div>';
+        document.body.appendChild(div);
+    } else if (!show && div) {
+        div.remove();
     }
 }
 
-// === ЗАГРУЗКА НА FIREBASE STORAGE (если настроен) ===
-// Раскомментируйте если используете Firebase Storage
-/*
-async function uploadToFirebaseStorage(file, path) {
-    const storageRef = storage.ref(path);
-    const snapshot = await storageRef.put(file);
-    return await snapshot.ref.getDownloadURL();
+// === ОБРАБОТКА ВЫБОРА ФАЙЛА (РАБОТАЕТ НА ТЕЛЕФОНЕ) ===
+function handleFileSelect(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    
+    if (isImageFile(file)) {
+        showImagePreview(file);
+    } else {
+        sendAnyFile(file);
+    }
+    event.target.value = '';
 }
-*/
 
-// === УНИВЕРСАЛЬНАЯ ЗАГРУЗКА ВИДЕО ===
-async function uploadVideo(file) {
-    // Пробуем Catbox
+async function sendAnyFile(file) {
+    if (!currentChatId) {
+        showNotification('Ошибка: чат не выбран', 'error');
+        return;
+    }
+    
+    showNotification('Загрузка файла...', 'info');
+    
     try {
-        return await uploadToCatbox(file);
-    } catch (err) {
-        console.warn('Catbox failed, trying GoFile...', err);
-        // Если Catbox не работает, пробуем GoFile
-        try {
-            return await uploadToGoFile(file);
-        } catch (err2) {
-            console.error('All upload services failed:', err2);
-            throw new Error('Не удалось загрузить видео');
+        const url = await uploadToCatbox(file);
+        
+        var message = {};
+        if (isVideoFile(file)) {
+            message = {
+                type: 'video',
+                videoUrl: url,
+                fileName: file.name,
+                fileSize: file.size,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+        } else if (isAudioFile(file)) {
+            message = {
+                type: 'audio',
+                audioUrl: url,
+                fileName: file.name,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+        } else {
+            message = {
+                type: 'file',
+                fileName: file.name,
+                fileUrl: url,
+                fileSize: file.size,
+                fileType: file.type,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
         }
+        
+        await database.ref('messages/' + currentChatId).push(message);
+        
+        var lastMsg = '';
+        if (isVideoFile(file)) lastMsg = '🎬 ' + file.name;
+        else if (isAudioFile(file)) lastMsg = '🎵 ' + file.name;
+        else lastMsg = '📎 ' + file.name;
+        if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
+        
+        await database.ref('chats/' + currentChatId).update({
+            lastMessage: lastMsg,
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        showNotification('Файл отправлен!', 'success');
+    } catch (error) {
+        console.error(error);
+        showNotification('Ошибка загрузки файла', 'error');
     }
 }
 
@@ -134,7 +214,7 @@ async function startVideoCircle() {
 
 function closeCircleModal() {
     const modal = document.getElementById('circle-video-modal');
-    modal.classList.add('hidden');
+    if (modal) modal.classList.add('hidden');
     
     if (circleStream) {
         circleStream.getTracks().forEach(t => t.stop());
@@ -263,12 +343,9 @@ function startCircleRecording() {
     circleTimerInterval = setInterval(updateCircleTimer, 1000);
     
     try {
-        // Пробуем разные MIME типы для лучшей совместимости
         let mimeType = 'video/webm';
         if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
             mimeType = 'video/webm;codecs=vp9';
-        } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-            mimeType = 'video/mp4';
         }
         
         circleRecorder = new MediaRecorder(circleStream, { mimeType: mimeType });
@@ -342,8 +419,7 @@ async function sendCircleVideo(blob) {
     const file = new File([blob], 'circle_' + Date.now() + '.webm', { type: 'video/webm' });
     
     try {
-        // Пробуем загрузить видео через универсальную функцию
-        const url = await uploadVideo(file);
+        const url = await uploadToCatbox(file);
         
         const message = {
             type: 'video_circle',
@@ -374,108 +450,7 @@ function updateCircleProgress(percent) {
     document.getElementById('circle-progress-fill').style.width = `${percent}%`;
 }
 
-// === ОСТАЛЬНЫЕ ФУНКЦИИ (без изменений) ===
-async function uploadToCatbox(file) {
-    const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('fileToUpload', file);
-    
-    const response = await fetch('https://catbox.moe/user/api.php', {
-        method: 'POST',
-        body: formData
-    });
-    
-    const url = await response.text();
-    if (url.startsWith('https://')) {
-        return url;
-    } else {
-        throw new Error('Ошибка загрузки на Catbox');
-    }
-}
-
-function uploadImageToImgBB(file) {
-    return new Promise((resolve, reject) => {
-        if (!file) { reject(new Error('Нет файла')); return; }
-        if (!file.type.startsWith('image/')) { reject(new Error('Не изображение')); return; }
-        if (file.size > 32 * 1024 * 1024) { reject(new Error('Файл >32 МБ')); return; }
-        
-        showUploadProgress(true);
-        var formData = new FormData();
-        formData.append('image', file);
-        formData.append('key', IMGBB_API_KEY);
-        
-        fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                showUploadProgress(false);
-                if (data.success) resolve({ url: data.data.url });
-                else reject('Ошибка ImgBB');
-            })
-            .catch(error => {
-                showUploadProgress(false);
-                reject(error);
-            });
-    });
-}
-
-function showUploadProgress(show) {
-    var div = document.getElementById('upload-progress');
-    if (show && !div) {
-        div = document.createElement('div');
-        div.id = 'upload-progress';
-        div.className = 'upload-progress';
-        div.innerHTML = '<div class="upload-progress-content"><div class="spinner"></div><p>Загрузка...</p></div>';
-        document.body.appendChild(div);
-    } else if (!show && div) {
-        div.remove();
-    }
-}
-
-function handleFileSelect(event) {
-    var file = event.target.files[0];
-    if (!file) return;
-    
-    if (file.type.startsWith('image/')) {
-        showImagePreview(file);
-    } else {
-        sendAnyFile(file);
-    }
-    event.target.value = '';
-}
-
-async function sendAnyFile(file) {
-    if (!currentChatId) {
-        showNotification('Ошибка: чат не выбран', 'error');
-        return;
-    }
-    
-    showNotification('Загрузка файла...', 'info');
-    
-    try {
-        const url = await uploadToCatbox(file);
-        var message = {
-            type: 'file',
-            fileName: file.name,
-            fileUrl: url,
-            fileSize: file.size,
-            fileType: file.type,
-            senderId: currentUser.uid,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
-        await database.ref('messages/' + currentChatId).push(message);
-        var lastMsg = '📎 ' + file.name;
-        if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
-        await database.ref('chats/' + currentChatId).update({
-            lastMessage: lastMsg,
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-        });
-        showNotification('Файл отправлен!', 'success');
-    } catch (error) {
-        console.error(error);
-        showNotification('Ошибка загрузки файла', 'error');
-    }
-}
-
+// === ФОТО ===
 function showImagePreview(file) {
     pendingImageFile = file;
     var reader = new FileReader();
@@ -530,6 +505,7 @@ function confirmImageSend() {
     pendingImageFile = null;
 }
 
+// === ГОЛОСОВЫЕ ===
 var mediaRecorder, audioChunks, isRecording = false;
 
 function startRecording() {
@@ -579,6 +555,7 @@ function sendAudioMessage(blob) {
     }).catch(err => showNotification('Ошибка загрузки аудио', 'error'));
 }
 
+// === АВАТАРКИ ===
 function previewGroupAvatar(event) {
     var file = event.target.files[0];
     if (file) {
