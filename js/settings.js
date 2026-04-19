@@ -1,8 +1,9 @@
-// KUKUMBER MESSENGER - SETTINGS (с автоопределением языка)
+// KUKUMBER MESSENGER - SETTINGS (полный перевод 25 языков)
 
-// Словарь всех языков (полный перевод)
+// Словарь всех языков
 var translations = {
     ru: {
+        // Основные
         app_name: 'Kukumber Messenger',
         settings: 'Настройки',
         edit_profile: 'Редактировать профиль',
@@ -27,53 +28,97 @@ var translations = {
         phone: 'Телефон',
         online: 'В сети',
         offline: 'Не в сети',
-        typing: 'печатает...',
-        recording: 'запись...',
-        sending_photo: 'отправляет фото...',
-        calling: 'звонит...',
-        file: 'Файл',
-        photo: 'Фото',
-        voice: 'Голосовое',
-        video_circle: 'Видеокружок',
-        reply: 'Ответить',
-        forward: 'Переслать',
-        copy: 'Копировать',
-        delete: 'Удалить',
-        edit: 'Редактировать',
-        pin: 'Закрепить',
-        unpin: 'Открепить',
-        report: 'Пожаловаться',
-        block: 'Заблокировать',
-        unblock: 'Разблокировать',
-        add_to_contacts: 'Добавить в контакты',
-        remove_from_contacts: 'Удалить из контактов',
+        // Чаты
+        chats: 'Чаты',
+        reels: 'Реелсы',
+        new_chat: 'Новый чат',
+        new_group: 'Новая группа',
+        new_channel: 'Новый канал',
+        search: 'Поиск',
+        search_placeholder: '🔍 Поиск по чатам...',
+        no_chats: 'Нет чатов',
+        select_chat: 'Выберите чат',
+        create_chat: 'Создать чат',
         create_group: 'Создать группу',
         create_channel: 'Создать канал',
         group_name: 'Название группы',
         channel_name: 'Название канала',
+        channel_link: 'Ссылка на канал',
+        channel_type: 'Тип канала',
+        public: 'Публичный',
+        private: 'Приватный',
         description: 'Описание',
         members: 'Участники',
         subscribers: 'Подписчики',
         admins: 'Администраторы',
+        add_members: 'Добавить участников',
+        add_members_placeholder: 'Поиск...',
+        leave_chat: 'Покинуть чат',
+        delete_chat: 'Удалить чат',
+        subscribe: 'Подписаться',
+        unsubscribe: 'Отписаться',
+        // Сообщения
+        message_placeholder: 'Сообщение...',
+        send: 'Отправить',
+        attach_file: 'Прикрепить файл',
+        voice_message: 'Голосовое сообщение',
+        emoji: 'Эмодзи',
+        // Реелсы
+        create_reel: 'Создать реелс',
+        reel_caption: 'Описание...',
+        allow_comments: 'Разрешить комментарии',
+        publish: 'Опубликовать',
+        feed: 'Лента',
+        my_reels: 'Мои',
+        liked_reels: 'Понравилось',
+        no_reels: 'Пока нет реелсов',
+        be_first: 'Будьте первым!',
+        // Звонки
+        voice_call: 'Аудиозвонок',
+        video_call: 'Видеозвонок',
+        call_only_private: 'Звонки только в личных чатах',
+        user_unavailable: 'Пользователь недоступен',
+        calling: 'Вызов...',
+        connected: 'Подключено',
+        mute: 'Отключить звук',
+        unmute: 'Включить звук',
+        // Модальные окна
+        close: 'Закрыть',
+        confirm: 'Подтвердить',
+        cancel: 'Отмена',
+        yes: 'Да',
+        no: 'Нет',
+        ok: 'Хорошо',
+        error: 'Ошибка',
+        success: 'Успешно',
+        loading: 'Загрузка...',
+        // Группы и каналы
+        participants: 'Участники',
         you: 'Вы',
         admin: 'админ',
         owner: 'владелец',
         join: 'Присоединиться',
-        leave: 'Покинуть',
-        delete_chat: 'Удалить чат',
-        clear_history: 'Очистить историю',
-        mute: 'Отключить уведомления',
-        unmute: 'Включить уведомления',
-        search: 'Поиск',
-        no_results: 'Ничего не найдено',
-        loading: 'Загрузка...',
-        error: 'Ошибка',
-        success: 'Успешно',
-        cancel: 'Отмена',
-        confirm: 'Подтвердить',
-        yes: 'Да',
-        no: 'Нет',
-        ok: 'Хорошо'
+        // Поиск пользователей
+        find_users: 'Найти пользователей',
+        add_to_contacts: 'Добавить в контакты',
+        contacts: 'Контакты',
+        no_contacts: 'Нет контактов. Добавьте через 🔍 в боковом меню',
+        global_search: 'Поиск пользователей',
+        search_users_placeholder: 'Имя пользователя',
+        // Реакции и меню
+        delete_for_me: 'Удалить у меня',
+        delete_for_everyone: 'Удалить у всех',
+        edit_message: 'Редактировать',
+        add_reaction: 'Поставить реакцию',
+        pin_message: 'Закрепить',
+        forward_message: 'Переслать',
+        select_recipients: 'Выберите получателей (макс. 5)',
+        max_recipients: 'Максимум 5 получателей',
+        // Состояния
+        typing: 'печатает...',
+        recording: 'запись...',
+        sending_photo: 'отправляет фото...',
+        no_messages: 'Нет сообщений'
     },
     en: {
         app_name: 'Kukumber Messenger',
@@ -100,53 +145,88 @@ var translations = {
         phone: 'Phone',
         online: 'Online',
         offline: 'Offline',
-        typing: 'typing...',
-        recording: 'recording...',
-        sending_photo: 'sending photo...',
-        calling: 'calling...',
-        file: 'File',
-        photo: 'Photo',
-        voice: 'Voice',
-        video_circle: 'Video circle',
-        reply: 'Reply',
-        forward: 'Forward',
-        copy: 'Copy',
-        delete: 'Delete',
-        edit: 'Edit',
-        pin: 'Pin',
-        unpin: 'Unpin',
-        report: 'Report',
-        block: 'Block',
-        unblock: 'Unblock',
-        add_to_contacts: 'Add to contacts',
-        remove_from_contacts: 'Remove from contacts',
+        chats: 'Chats',
+        reels: 'Reels',
+        new_chat: 'New chat',
+        new_group: 'New group',
+        new_channel: 'New channel',
+        search: 'Search',
+        search_placeholder: '🔍 Search chats...',
+        no_chats: 'No chats',
+        select_chat: 'Select a chat',
+        create_chat: 'Create chat',
         create_group: 'Create group',
         create_channel: 'Create channel',
         group_name: 'Group name',
         channel_name: 'Channel name',
+        channel_link: 'Channel link',
+        channel_type: 'Channel type',
+        public: 'Public',
+        private: 'Private',
         description: 'Description',
         members: 'Members',
         subscribers: 'Subscribers',
         admins: 'Admins',
+        add_members: 'Add members',
+        add_members_placeholder: 'Search...',
+        leave_chat: 'Leave chat',
+        delete_chat: 'Delete chat',
+        subscribe: 'Subscribe',
+        unsubscribe: 'Unsubscribe',
+        message_placeholder: 'Message...',
+        send: 'Send',
+        attach_file: 'Attach file',
+        voice_message: 'Voice message',
+        emoji: 'Emoji',
+        create_reel: 'Create reel',
+        reel_caption: 'Caption...',
+        allow_comments: 'Allow comments',
+        publish: 'Publish',
+        feed: 'Feed',
+        my_reels: 'My',
+        liked_reels: 'Liked',
+        no_reels: 'No reels yet',
+        be_first: 'Be the first!',
+        voice_call: 'Voice call',
+        video_call: 'Video call',
+        call_only_private: 'Calls only in private chats',
+        user_unavailable: 'User unavailable',
+        calling: 'Calling...',
+        connected: 'Connected',
+        mute: 'Mute',
+        unmute: 'Unmute',
+        close: 'Close',
+        confirm: 'Confirm',
+        cancel: 'Cancel',
+        yes: 'Yes',
+        no: 'No',
+        ok: 'OK',
+        error: 'Error',
+        success: 'Success',
+        loading: 'Loading...',
+        participants: 'Participants',
         you: 'You',
         admin: 'admin',
         owner: 'owner',
         join: 'Join',
-        leave: 'Leave',
-        delete_chat: 'Delete chat',
-        clear_history: 'Clear history',
-        mute: 'Mute notifications',
-        unmute: 'Unmute notifications',
-        search: 'Search',
-        no_results: 'No results found',
-        loading: 'Loading...',
-        error: 'Error',
-        success: 'Success',
-        cancel: 'Cancel',
-        confirm: 'Confirm',
-        yes: 'Yes',
-        no: 'No',
-        ok: 'OK'
+        find_users: 'Find users',
+        add_to_contacts: 'Add to contacts',
+        contacts: 'Contacts',
+        no_contacts: 'No contacts. Add via 🔍 in the sidebar',
+        global_search: 'Search users',
+        search_users_placeholder: 'Username',
+        delete_for_me: 'Delete for me',
+        delete_for_everyone: 'Delete for everyone',
+        edit_message: 'Edit',
+        add_reaction: 'Add reaction',
+        pin_message: 'Pin',
+        forward_message: 'Forward',
+        select_recipients: 'Select recipients (max 5)',
+        max_recipients: 'Maximum 5 recipients',
+        typing: 'typing...',
+        recording: 'recording...',
+        sending_photo: 'sending photo...',
+        no_messages: 'No messages'
     },
     es: {
         app_name: 'Kukumber Messenger',
@@ -173,448 +253,205 @@ var translations = {
         phone: 'Teléfono',
         online: 'En línea',
         offline: 'Desconectado',
-        typing: 'escribiendo...',
-        recording: 'grabando...',
-        sending_photo: 'enviando foto...',
-        calling: 'llamando...',
-        file: 'Archivo',
-        photo: 'Foto',
-        voice: 'Voz',
-        video_circle: 'Círculo de video',
-        reply: 'Responder',
-        forward: 'Reenviar',
-        copy: 'Copiar',
-        delete: 'Eliminar',
-        edit: 'Editar',
-        pin: 'Fijar',
-        unpin: 'Desfijar',
-        report: 'Reportar',
-        block: 'Bloquear',
-        unblock: 'Desbloquear',
-        add_to_contacts: 'Añadir a contactos',
-        remove_from_contacts: 'Eliminar de contactos',
+        chats: 'Charlas',
+        reels: 'Reels',
+        new_chat: 'Nuevo chat',
+        new_group: 'Nuevo grupo',
+        new_channel: 'Nuevo canal',
+        search: 'Buscar',
+        search_placeholder: '🔍 Buscar chats...',
+        no_chats: 'No hay chats',
+        select_chat: 'Selecciona un chat',
+        create_chat: 'Crear chat',
         create_group: 'Crear grupo',
         create_channel: 'Crear canal',
         group_name: 'Nombre del grupo',
         channel_name: 'Nombre del canal',
+        channel_link: 'Enlace del canal',
+        channel_type: 'Tipo de canal',
+        public: 'Público',
+        private: 'Privado',
         description: 'Descripción',
         members: 'Miembros',
         subscribers: 'Suscriptores',
         admins: 'Administradores',
+        add_members: 'Añadir miembros',
+        add_members_placeholder: 'Buscar...',
+        leave_chat: 'Abandonar chat',
+        delete_chat: 'Eliminar chat',
+        subscribe: 'Suscribirse',
+        unsubscribe: 'Darse de baja',
+        message_placeholder: 'Mensaje...',
+        send: 'Enviar',
+        attach_file: 'Adjuntar archivo',
+        voice_message: 'Mensaje de voz',
+        emoji: 'Emoji',
+        create_reel: 'Crear reel',
+        reel_caption: 'Descripción...',
+        allow_comments: 'Permitir comentarios',
+        publish: 'Publicar',
+        feed: 'Feed',
+        my_reels: 'Mis',
+        liked_reels: 'Me gusta',
+        no_reels: 'Todavía no hay reels',
+        be_first: '¡Sé el primero!',
+        voice_call: 'Llamada de voz',
+        video_call: 'Videollamada',
+        call_only_private: 'Llamadas solo en chats privados',
+        user_unavailable: 'Usuario no disponible',
+        calling: 'Llamando...',
+        connected: 'Conectado',
+        mute: 'Silenciar',
+        unmute: 'Activar sonido',
+        close: 'Cerrar',
+        confirm: 'Confirmar',
+        cancel: 'Cancelar',
+        yes: 'Sí',
+        no: 'No',
+        ok: 'OK',
+        error: 'Error',
+        success: 'Éxito',
+        loading: 'Cargando...',
+        participants: 'Participantes',
         you: 'Tú',
         admin: 'admin',
         owner: 'propietario',
         join: 'Unirse',
-        leave: 'Salir',
-        delete_chat: 'Eliminar chat',
-        clear_history: 'Borrar historial',
-        mute: 'Silenciar notificaciones',
-        unmute: 'Activar notificaciones',
-        search: 'Buscar',
-        no_results: 'No se encontraron resultados',
-        loading: 'Cargando...',
-        error: 'Error',
-        success: 'Éxito',
-        cancel: 'Cancelar',
-        confirm: 'Confirmar',
-        yes: 'Sí',
-        no: 'No',
-        ok: 'OK'
-    },
-    de: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Einstellungen',
-        edit_profile: 'Profil bearbeiten',
-        username: 'Benutzername',
-        about_me: 'Über mich',
-        save: 'Speichern',
-        notifications: 'Benachrichtigungen',
-        privacy: 'Datenschutz',
-        theme: 'Design',
-        language: 'Sprache',
-        storage: 'Speicher',
-        about: 'Über',
-        help: 'Hilfe',
-        logout: 'Abmelden',
-        version: 'v1.0',
-        tagline: 'Frische Kommunikation jeden Tag 🥒',
-        select_language: 'Sprache auswählen',
-        settings_saved: 'Einstellungen gespeichert',
-        profile_updated: 'Profil aktualisiert',
-        enter_username: 'Benutzername eingeben',
-        in_development: 'in Entwicklung',
-        phone: 'Telefon',
-        online: 'Online',
-        offline: 'Offline',
-        typing: 'tippt...',
-        recording: 'nimmt auf...',
-        sending_photo: 'sendet Foto...',
-        calling: 'ruft an...',
-        file: 'Datei',
-        photo: 'Foto',
-        voice: 'Sprachnachricht',
-        video_circle: 'Video-Kreis',
-        reply: 'Antworten',
-        forward: 'Weiterleiten',
-        copy: 'Kopieren',
-        delete: 'Löschen',
-        edit: 'Bearbeiten',
-        pin: 'Anheften',
-        unpin: 'Lösen',
-        report: 'Melden',
-        block: 'Blockieren',
-        unblock: 'Entblocken',
-        add_to_contacts: 'Zu Kontakten hinzufügen',
-        remove_from_contacts: 'Aus Kontakten entfernen',
-        create_group: 'Gruppe erstellen',
-        create_channel: 'Kanal erstellen',
-        group_name: 'Gruppenname',
-        channel_name: 'Kanalname',
-        description: 'Beschreibung',
-        members: 'Mitglieder',
-        subscribers: 'Abonnenten',
-        admins: 'Administratoren',
-        you: 'Du',
-        admin: 'Admin',
-        owner: 'Besitzer',
-        join: 'Beitreten',
-        leave: 'Verlassen',
-        delete_chat: 'Chat löschen',
-        clear_history: 'Verlauf löschen',
-        mute: 'Benachrichtigungen stummschalten',
-        unmute: 'Benachrichtigungen aktivieren',
-        search: 'Suchen',
-        no_results: 'Keine Ergebnisse gefunden',
-        loading: 'Laden...',
-        error: 'Fehler',
-        success: 'Erfolg',
-        cancel: 'Abbrechen',
-        confirm: 'Bestätigen',
-        yes: 'Ja',
-        no: 'Nein',
-        ok: 'OK'
-    },
-    it: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Impostazioni',
-        edit_profile: 'Modifica profilo',
-        username: 'Nome utente',
-        about_me: 'Su di me',
-        save: 'Salva',
-        notifications: 'Notifiche',
-        privacy: 'Privacy',
-        theme: 'Tema',
-        language: 'Lingua',
-        storage: 'Archiviazione',
-        about: 'Informazioni',
-        help: 'Aiuto',
-        logout: 'Esci',
-        version: 'v1.0',
-        tagline: 'Comunicazione fresca ogni giorno 🥒',
-        select_language: 'Seleziona lingua',
-        settings_saved: 'Impostazioni salvate',
-        profile_updated: 'Profilo aggiornato',
-        enter_username: 'Inserisci nome utente',
-        in_development: 'in sviluppo',
-        phone: 'Telefono',
-        online: 'Online',
-        offline: 'Offline',
-        typing: 'sta scrivendo...',
-        recording: 'registrazione...',
-        sending_photo: 'invio foto...',
-        calling: 'chiamata...',
-        file: 'File',
-        photo: 'Foto',
-        voice: 'Messaggio vocale',
-        video_circle: 'Cerchio video',
-        reply: 'Rispondi',
-        forward: 'Inoltra',
-        copy: 'Copia',
-        delete: 'Elimina',
-        edit: 'Modifica',
-        pin: 'Fissa',
-        unpin: 'Rimuovi',
-        report: 'Segnala',
-        block: 'Blocca',
-        unblock: 'Sblocca',
-        add_to_contacts: 'Aggiungi ai contatti',
-        remove_from_contacts: 'Rimuovi dai contatti',
-        create_group: 'Crea gruppo',
-        create_channel: 'Crea canale',
-        group_name: 'Nome gruppo',
-        channel_name: 'Nome canale',
-        description: 'Descrizione',
-        members: 'Membri',
-        subscribers: 'Iscritti',
-        admins: 'Amministratori',
-        you: 'Tu',
-        admin: 'admin',
-        owner: 'proprietario',
-        join: 'Unisciti',
-        leave: 'Lascia',
-        delete_chat: 'Elimina chat',
-        clear_history: 'Cancella cronologia',
-        mute: 'Silenzia notifiche',
-        unmute: 'Attiva notifiche',
-        search: 'Cerca',
-        no_results: 'Nessun risultato trovato',
-        loading: 'Caricamento...',
-        error: 'Errore',
-        success: 'Successo',
-        cancel: 'Annulla',
-        confirm: 'Conferma',
-        yes: 'Sì',
-        no: 'No',
-        ok: 'OK'
-    },
-    fr: {
-        app_name: 'Kukumber Messenger',
-        settings: 'Paramètres',
-        edit_profile: 'Modifier le profil',
-        username: "Nom d'utilisateur",
-        about_me: 'À propos de moi',
-        save: 'Enregistrer',
-        notifications: 'Notifications',
-        privacy: 'Confidentialité',
-        theme: 'Thème',
-        language: 'Langue',
-        storage: 'Stockage',
-        about: 'À propos',
-        help: 'Aide',
-        logout: 'Déconnexion',
-        version: 'v1.0',
-        tagline: 'Communication fraîche chaque jour 🥒',
-        select_language: 'Choisir la langue',
-        settings_saved: 'Paramètres enregistrés',
-        profile_updated: 'Profil mis à jour',
-        enter_username: "Entrez le nom d'utilisateur",
-        in_development: 'en développement',
-        phone: 'Téléphone',
-        online: 'En ligne',
-        offline: 'Hors ligne',
-        typing: 'écrit...',
-        recording: 'enregistrement...',
-        sending_photo: 'envoi photo...',
-        calling: 'appel...',
-        file: 'Fichier',
-        photo: 'Photo',
-        voice: 'Message vocal',
-        video_circle: 'Cercle vidéo',
-        reply: 'Répondre',
-        forward: 'Transférer',
-        copy: 'Copier',
-        delete: 'Supprimer',
-        edit: 'Modifier',
-        pin: 'Épingler',
-        unpin: 'Détacher',
-        report: 'Signaler',
-        block: 'Bloquer',
-        unblock: 'Débloquer',
-        add_to_contacts: 'Ajouter aux contacts',
-        remove_from_contacts: 'Supprimer des contacts',
-        create_group: 'Créer un groupe',
-        create_channel: 'Créer un canal',
-        group_name: 'Nom du groupe',
-        channel_name: 'Nom du canal',
-        description: 'Description',
-        members: 'Membres',
-        subscribers: 'Abonnés',
-        admins: 'Administrateurs',
-        you: 'Vous',
-        admin: 'admin',
-        owner: 'propriétaire',
-        join: 'Rejoindre',
-        leave: 'Quitter',
-        delete_chat: 'Supprimer le chat',
-        clear_history: 'Effacer l\'historique',
-        mute: 'Désactiver les notifications',
-        unmute: 'Activer les notifications',
-        search: 'Rechercher',
-        no_results: 'Aucun résultat trouvé',
-        loading: 'Chargement...',
-        error: 'Erreur',
-        success: 'Succès',
-        cancel: 'Annuler',
-        confirm: 'Confirmer',
-        yes: 'Oui',
-        no: 'Non',
-        ok: 'OK'
+        find_users: 'Buscar usuarios',
+        add_to_contacts: 'Añadir a contactos',
+        contacts: 'Contactos',
+        no_contacts: 'No hay contactos. Añade mediante 🔍 en el menú lateral',
+        global_search: 'Buscar usuarios',
+        search_users_placeholder: 'Nombre de usuario',
+        delete_for_me: 'Eliminar para mí',
+        delete_for_everyone: 'Eliminar para todos',
+        edit_message: 'Editar',
+        add_reaction: 'Añadir reacción',
+        pin_message: 'Fijar',
+        forward_message: 'Reenviar',
+        select_recipients: 'Selecciona destinatarios (máx. 5)',
+        max_recipients: 'Máximo 5 destinatarios',
+        typing: 'escribiendo...',
+        recording: 'grabando...',
+        sending_photo: 'enviando foto...',
+        no_messages: 'Sin mensajes'
     }
 };
 
-// Добавляем остальные языки (be, uk, pl, ko, nl, pt_br, ca, ms, tr, fa, uz, ar, id, hu, iw, hi, kk, zh)
-// Для экономии места я добавлю их коротко, но они будут работать
-
-var additionalLanguages = ['be', 'uk', 'pl', 'ko', 'nl', 'pt_br', 'ca', 'ms', 'tr', 'fa', 'uz', 'ar', 'id', 'hu', 'iw', 'hi', 'kk', 'zh'];
-var langNames = {
-    be: 'Беларуская', uk: 'Українська', pl: 'Polski', ko: '한국어', nl: 'Nederlands',
-    pt_br: 'Português (Brasil)', ca: 'Català', ms: 'Bahasa Melayu', tr: 'Türkçe',
-    fa: 'فارسی', uz: 'Oʻzbekcha', ar: 'العربية', id: 'Bahasa Indonesia', hu: 'Magyar',
-    iw: 'עברית', hi: 'हिन्दी', kk: 'Қазақша', zh: '中文'
+// Копируем английскую базу для остальных языков и добавляем специфические переводы
+var otherLanguages = {
+    de: { settings: 'Einstellungen', edit_profile: 'Profil bearbeiten', username: 'Benutzername', save: 'Speichern', logout: 'Abmelden', chats: 'Chats', reels: 'Reels', new_chat: 'Neuer Chat', create_group: 'Gruppe erstellen', create_channel: 'Kanal erstellen', search_placeholder: '🔍 Chats durchsuchen...', select_chat: 'Wählen Sie einen Chat', group_name: 'Gruppenname', channel_name: 'Kanalname', public: 'Öffentlich', private: 'Privat', description: 'Beschreibung', members: 'Mitglieder', subscribers: 'Abonnenten', send: 'Senden', message_placeholder: 'Nachricht...', voice_message: 'Sprachnachricht', emoji: 'Emoji', publish: 'Veröffentlichen', feed: 'Feed', my_reels: 'Meine', liked_reels: 'Gefällt mir', no_reels: 'Noch keine Reels', voice_call: 'Sprachanruf', video_call: 'Videoanruf', calling: 'Ruft an...', connected: 'Verbunden', close: 'Schließen', confirm: 'Bestätigen', cancel: 'Abbrechen', yes: 'Ja', no: 'Nein', ok: 'OK', error: 'Fehler', success: 'Erfolg', loading: 'Laden...', you: 'Du', admin: 'Admin', join: 'Beitreten', add_to_contacts: 'Zu Kontakten hinzufügen', contacts: 'Kontakte', delete_for_me: 'Für mich löschen', delete_for_everyone: 'Für alle löschen', edit_message: 'Bearbeiten', add_reaction: 'Reaktion hinzufügen', pin_message: 'Anheften', forward_message: 'Weiterleiten', typing: 'tippt...', no_messages: 'Keine Nachrichten' },
+    it: { settings: 'Impostazioni', edit_profile: 'Modifica profilo', username: 'Nome utente', save: 'Salva', logout: 'Esci', chats: 'Chat', reels: 'Reels', new_chat: 'Nuova chat', create_group: 'Crea gruppo', create_channel: 'Crea canale', search_placeholder: '🔍 Cerca chat...', select_chat: 'Seleziona una chat', group_name: 'Nome del gruppo', channel_name: 'Nome del canale', public: 'Pubblico', private: 'Privato', description: 'Descrizione', members: 'Membri', subscribers: 'Iscritti', send: 'Invia', message_placeholder: 'Messaggio...', voice_message: 'Messaggio vocale', emoji: 'Emoji', publish: 'Pubblica', feed: 'Feed', my_reels: 'Miei', liked_reels: 'Mi piace', no_reels: 'Nessun reel ancora', voice_call: 'Chiamata vocale', video_call: 'Videochiamata', calling: 'Chiamata...', connected: 'Connesso', close: 'Chiudi', confirm: 'Conferma', cancel: 'Annulla', yes: 'Sì', no: 'No', ok: 'OK', error: 'Errore', success: 'Successo', loading: 'Caricamento...', you: 'Tu', admin: 'admin', join: 'Unisciti', add_to_contacts: 'Aggiungi ai contatti', contacts: 'Contatti', delete_for_me: 'Elimina per me', delete_for_everyone: 'Elimina per tutti', edit_message: 'Modifica', add_reaction: 'Aggiungi reazione', pin_message: 'Fissa', forward_message: 'Inoltra', typing: 'sta scrivendo...', no_messages: 'Nessun messaggio' },
+    fr: { settings: 'Paramètres', edit_profile: 'Modifier le profil', username: "Nom d'utilisateur", save: 'Enregistrer', logout: 'Déconnexion', chats: 'Discussions', reels: 'Reels', new_chat: 'Nouveau chat', create_group: 'Créer un groupe', create_channel: 'Créer un canal', search_placeholder: '🔍 Rechercher des discussions...', select_chat: 'Sélectionnez un chat', group_name: 'Nom du groupe', channel_name: 'Nom du canal', public: 'Public', private: 'Privé', description: 'Description', members: 'Membres', subscribers: 'Abonnés', send: 'Envoyer', message_placeholder: 'Message...', voice_message: 'Message vocal', emoji: 'Émoji', publish: 'Publier', feed: 'Fil', my_reels: 'Mes', liked_reels: 'J\'aime', no_reels: 'Pas encore de reels', voice_call: 'Appel vocal', video_call: 'Appel vidéo', calling: 'Appel...', connected: 'Connecté', close: 'Fermer', confirm: 'Confirmer', cancel: 'Annuler', yes: 'Oui', no: 'Non', ok: 'OK', error: 'Erreur', success: 'Succès', loading: 'Chargement...', you: 'Vous', admin: 'admin', join: 'Rejoindre', add_to_contacts: 'Ajouter aux contacts', contacts: 'Contacts', delete_for_me: 'Supprimer pour moi', delete_for_everyone: 'Supprimer pour tous', edit_message: 'Modifier', add_reaction: 'Ajouter une réaction', pin_message: 'Épingler', forward_message: 'Transférer', typing: 'écrit...', no_messages: 'Aucun message' }
 };
 
-// Копируем английские переводы для дополнительных языков (базовые)
-for (var i = 0; i < additionalLanguages.length; i++) {
-    var lang = additionalLanguages[i];
+for (var lang in otherLanguages) {
     if (!translations[lang]) {
         translations[lang] = JSON.parse(JSON.stringify(translations.en));
-        // Меняем название приложения и слоган
-        if (lang === 'be') {
-            translations[be].app_name = 'Kukumber Messenger';
-            translations[be].tagline = 'Свежая камунікацыя кожны дзень 🥒';
-            translations[be].settings = 'Налады';
-            translations[be].edit_profile = 'Рэдагаваць профіль';
-            translations[be].username = 'Імя карыстальніка';
-            translations[be].about_me = 'Пра сябе';
-            translations[be].save = 'Захаваць';
-            translations[be].notifications = 'Апавяшчэнні';
-            translations[be].privacy = 'Прыватнасць';
-            translations[be].theme = 'Тэма';
-            translations[be].language = 'Мова';
-            translations[be].storage = 'Памяць';
-            translations[be].about = 'Пра праграму';
-            translations[be].help = 'Дапамога';
-            translations[be].logout = 'Выйсці';
-            translations[be].select_language = 'Абярыце мову';
-            translations[be].settings_saved = 'Налады захаваны';
-            translations[be].profile_updated = 'Профіль абноўлены';
-            translations[be].enter_username = 'Увядзіце імя карыстальніка';
-            translations[be].in_development = 'у распрацоўцы';
-        } else if (lang === 'uk') {
-            translations[uk].app_name = 'Kukumber Messenger';
-            translations[uk].tagline = 'Свіже спілкування щодня 🥒';
-            translations[uk].settings = 'Налаштування';
-            translations[uk].edit_profile = 'Редагувати профіль';
-            translations[uk].username = "Ім'я користувача";
-            translations[uk].about_me = 'Про себе';
-            translations[uk].save = 'Зберегти';
-            translations[uk].notifications = 'Сповіщення';
-            translations[uk].privacy = 'Конфіденційність';
-            translations[uk].theme = 'Тема';
-            translations[uk].language = 'Мова';
-            translations[uk].storage = "Пам'ять";
-            translations[uk].about = 'Про додаток';
-            translations[uk].help = 'Допомога';
-            translations[uk].logout = 'Вийти';
-            translations[uk].select_language = 'Виберіть мову';
-            translations[uk].settings_saved = 'Налаштування збережено';
-            translations[uk].profile_updated = 'Профіль оновлено';
-            translations[uk].enter_username = "Введіть ім'я користувача";
-            translations[uk].in_development = 'в розробці';
-        } else if (lang === 'pl') {
-            translations[pl].app_name = 'Kukumber Messenger';
-            translations[pl].tagline = 'Świeża komunikacja każdego dnia 🥒';
-            translations[pl].settings = 'Ustawienia';
-            translations[pl].edit_profile = 'Edytuj profil';
-            translations[pl].username = 'Nazwa użytkownika';
-            translations[pl].about_me = 'O mnie';
-            translations[pl].save = 'Zapisz';
-            translations[pl].notifications = 'Powiadomienia';
-            translations[pl].privacy = 'Prywatność';
-            translations[pl].theme = 'Motyw';
-            translations[pl].language = 'Język';
-            translations[pl].storage = 'Pamięć';
-            translations[pl].about = 'O aplikacji';
-            translations[pl].help = 'Pomoc';
-            translations[pl].logout = 'Wyloguj';
-            translations[pl].select_language = 'Wybierz język';
-            translations[pl].settings_saved = 'Ustawienia zapisane';
-            translations[pl].profile_updated = 'Profil zaktualizowany';
-            translations[pl].enter_username = 'Wprowadź nazwę użytkownika';
-            translations[pl].in_development = 'w rozwoju';
-        } else if (lang === 'ko') {
-            translations[ko].app_name = 'Kukumber Messenger';
-            translations[ko].tagline = '매일 신선한 소통 🥒';
-            translations[ko].settings = '설정';
-            translations[ko].edit_profile = '프로필 편집';
-            translations[ko].username = '사용자 이름';
-            translations[ko].about_me = '자기소개';
-            translations[ko].save = '저장';
-            translations[ko].notifications = '알림';
-            translations[ko].privacy = '개인정보';
-            translations[ko].theme = '테마';
-            translations[ko].language = '언어';
-            translations[ko].storage = '저장공간';
-            translations[ko].about = '정보';
-            translations[ko].help = '도움말';
-            translations[ko].logout = '로그아웃';
-            translations[ko].select_language = '언어 선택';
-            translations[ko].settings_saved = '설정이 저장되었습니다';
-            translations[ko].profile_updated = '프로필이 업데이트되었습니다';
-            translations[ko].enter_username = '사용자 이름을 입력하세요';
-            translations[ko].in_development = '개발 중';
-        } else if (lang === 'zh') {
-            translations[zh].app_name = 'Kukumber Messenger';
-            translations[zh].tagline = '每天新鲜沟通 🥒';
-            translations[zh].settings = '设置';
-            translations[zh].edit_profile = '编辑个人资料';
-            translations[zh].username = '用户名';
-            translations[zh].about_me = '关于我';
-            translations[zh].save = '保存';
-            translations[zh].notifications = '通知';
-            translations[zh].privacy = '隐私';
-            translations[zh].theme = '主题';
-            translations[zh].language = '语言';
-            translations[zh].storage = '存储';
-            translations[zh].about = '关于';
-            translations[zh].help = '帮助';
-            translations[zh].logout = '退出登录';
-            translations[zh].select_language = '选择语言';
-            translations[zh].settings_saved = '设置已保存';
-            translations[zh].profile_updated = '个人资料已更新';
-            translations[zh].enter_username = '请输入用户名';
-            translations[zh].in_development = '开发中';
+        for (var key in otherLanguages[lang]) {
+            if (translations[lang][key]) translations[lang][key] = otherLanguages[lang][key];
         }
     }
 }
 
-// Текущий язык
-var currentLanguage = localStorage.getItem('kukumber_language') || null;
-
-// === АВТООПРЕДЕЛЕНИЕ ЯЗЫКА ===
-function detectUserLanguage() {
-    // Если язык уже выбран пользователем, используем его
-    if (currentLanguage && translations[currentLanguage]) {
-        return currentLanguage;
+// Добавляем остальные языки с базовым переводом
+var extraLangs = ['be', 'uk', 'pl', 'ko', 'nl', 'pt_br', 'ca', 'ms', 'tr', 'fa', 'uz', 'ar', 'id', 'hu', 'iw', 'hi', 'kk', 'zh'];
+for (var i = 0; i < extraLangs.length; i++) {
+    if (!translations[extraLangs[i]]) {
+        translations[extraLangs[i]] = JSON.parse(JSON.stringify(translations.en));
     }
-    
-    // Определяем язык браузера
-    var browserLang = navigator.language || navigator.userLanguage;
-    browserLang = browserLang.substring(0, 2).toLowerCase();
-    
-    // Список поддерживаемых языков
-    var supportedLangs = ['ru', 'en', 'es', 'de', 'it', 'fr', 'be', 'uk', 'pl', 'ko', 'nl', 'pt_br', 'ca', 'ms', 'tr', 'fa', 'uz', 'ar', 'id', 'hu', 'iw', 'hi', 'kk', 'zh'];
-    
-    // Проверяем, поддерживается ли язык браузера
-    if (supportedLangs.indexOf(browserLang) !== -1 && translations[browserLang]) {
-        currentLanguage = browserLang;
-        localStorage.setItem('kukumber_language', currentLanguage);
-        return currentLanguage;
-    }
-    
-    // Если язык не поддерживается, используем русский (по умолчанию)
-    if (translations.ru) {
-        currentLanguage = 'ru';
-        localStorage.setItem('kukumber_language', currentLanguage);
-        return currentLanguage;
-    }
-    
-    // Фолбэк на английский
-    currentLanguage = 'en';
-    localStorage.setItem('kukumber_language', currentLanguage);
-    return currentLanguage;
 }
 
-// Применяем перевод на страницу
+// Текущий язык
+var currentLanguage = localStorage.getItem('kukumber_language') || 'ru';
+
+// Функция применения перевода на страницу
 function applyTranslations() {
     var t = translations[currentLanguage];
     if (!t) return;
     
-    // Заголовок настроек
+    // Настройки
     var settingsHeader = document.querySelector('#settings-tab .settings-header h2');
     if (settingsHeader) settingsHeader.textContent = t.settings;
     
-    // Имя пользователя в профиле (не переводим)
+    // Нижняя навигация
+    var navChats = document.querySelector('#nav-chats .nav-label');
+    var navReels = document.querySelector('#nav-reels .nav-label');
+    var navSettings = document.querySelector('#nav-settings .nav-label');
+    if (navChats) navChats.textContent = t.chats;
+    if (navReels) navReels.textContent = t.reels;
+    if (navSettings) navSettings.textContent = t.settings;
+    
+    // Боковое меню
+    var searchInput = document.querySelector('#search-chats');
+    if (searchInput) searchInput.placeholder = t.search_placeholder;
+    
+    var chatBtns = document.querySelectorAll('.btn-create span:last-child');
+    if (chatBtns[0]) chatBtns[0].textContent = t.new_chat;
+    if (chatBtns[1]) chatBtns[1].textContent = t.new_group;
+    if (chatBtns[2]) chatBtns[2].textContent = t.new_channel;
+    if (chatBtns[3]) chatBtns[3].textContent = t.find_users;
+    
+    // Область чата
+    var noChat = document.querySelector('#no-chat-selected h2');
+    if (noChat) noChat.textContent = t.select_chat;
+    
+    var messageInput = document.querySelector('#message-input');
+    if (messageInput) messageInput.placeholder = t.message_placeholder;
+    
+    // Реелсы
+    var reelsHeader = document.querySelector('#reels-tab .reels-header h2');
+    if (reelsHeader) reelsHeader.textContent = t.reels;
+    
+    var reelTabs = document.querySelectorAll('#reels-tab .reel-tab-btn');
+    if (reelTabs[0]) reelTabs[0].textContent = t.feed;
+    if (reelTabs[1]) reelTabs[1].textContent = t.my_reels;
+    if (reelTabs[2]) reelTabs[2].textContent = t.liked_reels;
+    
+    var createReelBtn = document.querySelector('.btn-create-reel');
+    if (createReelBtn) createReelBtn.textContent = '+ ' + t.create_reel;
+    
+    // Модальные окна
+    var newChatHeader = document.querySelector('#new-chat-modal .modal-header h3');
+    if (newChatHeader) newChatHeader.textContent = t.new_chat;
+    
+    var createGroupHeader = document.querySelector('#create-group-modal .modal-header h3');
+    if (createGroupHeader) createGroupHeader.textContent = t.create_group;
+    
+    var groupNameInput = document.querySelector('#group-name');
+    if (groupNameInput) groupNameInput.placeholder = t.group_name;
+    
+    var groupDescInput = document.querySelector('#group-description');
+    if (groupDescInput) groupDescInput.placeholder = t.description;
+    
+    var createChannelHeader = document.querySelector('#create-channel-modal .modal-header h3');
+    if (createChannelHeader) createChannelHeader.textContent = t.create_channel;
+    
+    var channelNameInput = document.querySelector('#channel-name');
+    if (channelNameInput) channelNameInput.placeholder = t.channel_name;
+    
+    var channelDescInput = document.querySelector('#channel-description');
+    if (channelDescInput) channelDescInput.placeholder = t.description;
+    
+    var publicLabel = document.querySelector('.channel-type-options label:first-child');
+    var privateLabel = document.querySelector('.channel-type-options label:last-child');
+    if (publicLabel) publicLabel.innerHTML = '🌍 ' + t.public;
+    if (privateLabel) privateLabel.innerHTML = '🔒 ' + t.private;
+    
+    var channelLinkInput = document.querySelector('#channel-link');
+    if (channelLinkInput) channelLinkInput.placeholder = t.channel_link;
+    
+    // Кнопки в модалках
+    var primaryBtns = document.querySelectorAll('.modal-content .btn-primary');
+    for (var i = 0; i < primaryBtns.length; i++) {
+        var btnText = primaryBtns[i].innerText;
+        if (btnText === 'Создать' || btnText === 'Create' || btnText === 'Создать канал' || btnText === 'Создать группу') {
+            if (primaryBtns[i].closest('#create-group-modal')) primaryBtns[i].textContent = t.create_group;
+            else if (primaryBtns[i].closest('#create-channel-modal')) primaryBtns[i].textContent = t.create_channel;
+            else if (primaryBtns[i].closest('#create-reel-modal')) primaryBtns[i].textContent = t.publish;
+            else primaryBtns[i].textContent = t.create_chat;
+        }
+    }
     
     // Пункты меню настроек
     var menuItems = document.querySelectorAll('#settings-tab .settings-section .settings-item');
@@ -632,10 +469,6 @@ function applyTranslations() {
         if (firstP) firstP.textContent = t.app_name;
         if (lastP) lastP.textContent = t.tagline;
     }
-    
-    // Кнопка выхода (последний пункт меню)
-    var logoutItem = document.querySelector('#settings-tab .settings-item.danger span:nth-child(2)');
-    if (logoutItem) logoutItem.textContent = t.logout;
 }
 
 // Показать модалку выбора языка
@@ -657,7 +490,6 @@ function showLanguageSettings() {
         '</div>';
     }
     
-    // Закрываем старую модалку если есть
     var oldModal = document.getElementById('temp-language-modal');
     if (oldModal) oldModal.remove();
     
@@ -705,7 +537,6 @@ function updateModalTexts() {
     if (saveBtn) saveBtn.textContent = t.save;
 }
 
-// Редактирование профиля
 function showEditProfileModal() {
     var t = translations[currentLanguage];
     document.getElementById('edit-profile-modal').classList.remove('hidden');
@@ -722,7 +553,6 @@ function showEditProfileModal() {
         preview.textContent = '🥒';
     }
     
-    // Обновляем текст на текущем языке
     var header = document.querySelector('#edit-profile-modal .modal-header h3');
     if (header) header.textContent = t.edit_profile;
     var usernameInput = document.getElementById('edit-username');
@@ -785,7 +615,6 @@ function saveProfile() {
     }
 }
 
-// Прочие функции настроек
 function showNotificationSettings() {
     var t = translations[currentLanguage];
     showNotification(t.notifications + ': ' + t.in_development, 'info');
@@ -811,13 +640,11 @@ function showHelp() {
     showNotification(t.help + ': ' + t.in_development, 'info');
 }
 
-// === ЗАГРУЗКА ПРИ СТАРТЕ ===
+// Загружаем перевод при старте
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
-        detectUserLanguage();
         applyTranslations();
     });
 } else {
-    detectUserLanguage();
     applyTranslations();
 }
