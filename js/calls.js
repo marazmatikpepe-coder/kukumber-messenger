@@ -1,38 +1,47 @@
-// KUKUMBER MESSENGER - WEBRTC CALLS (через Firebase сигналинг)
-// Полностью заменяет старый calls.js, ничего менять в index.html не нужно
+// KUKUMBER MESSENGER - CALLS (через Trystero + Firebase)
+
+import { joinRoom } from 'trystero';
 
 let localStream = null;
-let currentPeerConnection = null;
+let currentCall = null;
+let remoteStream = null;
 let callTimerInterval = null;
 let callSecondsCount = 0;
+let room = null;
 
-// Конфигурация ICE (STUN/TURN) - бесплатные серверы
+// Конфигурация ICE (для соединения через NAT)
 const iceServers = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun2.l.google.com:19302' },
         { urls: 'stun:stun3.l.google.com:19302' },
-        { urls: 'stun:stun4.l.google.com:19302' },
-        {
-            urls: 'turn:openrelay.metered.ca:80',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
-        },
-        {
-            urls: 'turn:openrelay.metered.ca:443',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
-        }
+        { urls: 'stun:stun4.l.google.com:19302' }
     ]
 };
 
-// === Инициализация (заглушка для совместимости со старым кодом) ===
+// Инициализация (нужно вызвать после входа)
 function initializePeer() {
-    console.log('WebRTC звонки готовы (через Firebase сигналинг)');
+    if (!currentUser) return;
+    console.log('Trystero готов к звонкам');
 }
 
-// === Исходящие звонки ===
+// Создаём или подключаемся к комнате звонка
+function getCallRoom(chatId) {
+    if (room) {
+        try { room.leave(); } catch(e) {}
+    }
+    
+    // Используем Firebase как стратегию для сигналинга
+    room = joinRoom({ 
+        appId: firebaseConfig.databaseURL,  // ваш URL Firebase
+        strategy: 'firebase' 
+    }, `call_${chatId}`);
+    
+    return room;
+}
+
+// === Исходящий звонок ===
 function startVoiceCall() { startCall(false); }
 function startVideoCall() { startCall(true); }
 
@@ -45,186 +54,64 @@ function startCall(withVideo) {
         showNotification('Звонки только в личных чатах', 'info');
         return;
     }
-
-    const otherUserId = currentChatUser.otherUserId;
-    if (!otherUserId) {
-        showNotification('Не удалось определить собеседника', 'error');
-        return;
-    }
-
-    // Очищаем предыдущие слушатели
-    cleanupCallListeners(currentChatId);
-
+    
+    const room = getCallRoom(currentChatId);
+    
     navigator.mediaDevices.getUserMedia({ video: withVideo, audio: true })
         .then(stream => {
             localStream = stream;
             showCallModal(withVideo);
             const localVideo = document.getElementById('local-video');
             if (localVideo) localVideo.srcObject = localStream;
+            if (withVideo) document.getElementById('call-avatar').classList.add('hidden');
+            else document.getElementById('call-avatar').classList.remove('hidden');
+            
+            const otherUserName = currentChatUser.otherUser?.username || 'Пользователь';
+            document.getElementById('call-username').textContent = otherUserName;
             document.getElementById('call-status').textContent = 'Соединение...';
-            document.getElementById('call-username').textContent = currentChatUser.otherUser?.username || 'Пользователь';
-
-            currentPeerConnection = new RTCPeerConnection(iceServers);
-            localStream.getTracks().forEach(track => {
-                currentPeerConnection.addTrack(track, localStream);
-            });
-
-            currentPeerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    saveIceCandidateToFirebase(currentChatId, otherUserId, event.candidate);
-                }
-            };
-
-            currentPeerConnection.ontrack = (event) => {
+            
+            // Добавляем свой поток в комнату
+            room.addStream(localStream);
+            
+            // Слушаем поток от другого участника
+            room.onPeerStream((stream, peerId) => {
+                console.log('Получен поток от:', peerId);
+                remoteStream = stream;
                 const remoteVideo = document.getElementById('remote-video');
-                if (remoteVideo) remoteVideo.srcObject = event.streams[0];
+                if (remoteVideo) remoteVideo.srcObject = remoteStream;
                 document.getElementById('call-status').textContent = 'Подключено';
                 startCallTimer();
-            };
-
-            currentPeerConnection.createOffer()
-                .then(offer => currentPeerConnection.setLocalDescription(offer))
-                .then(() => {
-                    saveOfferToFirebase(currentChatId, otherUserId, currentPeerConnection.localDescription);
-                })
-                .catch(err => {
-                    console.error('Ошибка создания offer:', err);
-                    endCall();
-                });
-
-            setupCallSignaling(currentChatId, otherUserId, true);
+            });
+            
+            // Слушаем уход участника
+            room.onPeerLeave(peerId => {
+                console.log('Участник покинул:', peerId);
+                endCall();
+            });
         })
         .catch(err => {
-            console.error('Ошибка getUserMedia:', err);
-            showNotification('Не удалось получить доступ к камере/микрофону', 'error');
+            console.error(err);
+            showNotification('Нет доступа к камере/микрофону', 'error');
             endCall();
         });
 }
 
-// === Сигналинг через Firebase ===
-function saveOfferToFirebase(chatId, toUserId, offer) {
-    database.ref(`calls/${chatId}/offer`).set({
-        from: currentUser.uid,
-        to: toUserId,
-        sdp: offer,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
-}
-
-function saveAnswerToFirebase(chatId, fromUserId, answer) {
-    database.ref(`calls/${chatId}/answer`).set({
-        from: fromUserId,
-        sdp: answer,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
-}
-
-function saveIceCandidateToFirebase(chatId, toUserId, candidate) {
-    database.ref(`calls/${chatId}/candidates`).push({
-        to: toUserId,
-        candidate: candidate,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
-}
-
-function setupCallSignaling(chatId, otherUserId, isInitiator) {
-    // Слушаем offer (если мы не инициатор)
-    if (!isInitiator) {
-        database.ref(`calls/${chatId}/offer`).on('value', snapshot => {
-            const data = snapshot.val();
-            if (data && data.from === otherUserId && !currentPeerConnection) {
-                handleIncomingOffer(chatId, otherUserId, data.sdp);
-            }
-        });
-    }
-
-    // Слушаем answer (если мы инициатор)
-    database.ref(`calls/${chatId}/answer`).on('value', snapshot => {
-        const data = snapshot.val();
-        if (data && data.from === otherUserId && currentPeerConnection && currentPeerConnection.signalingState === 'have-local-offer') {
-            const answer = new RTCSessionDescription(data.sdp);
-            currentPeerConnection.setRemoteDescription(answer).catch(err => console.error(err));
-        }
-    });
-
-    // Слушаем ICE кандидаты
-    database.ref(`calls/${chatId}/candidates`).on('child_added', snapshot => {
-        const data = snapshot.val();
-        if (data && data.to === currentUser.uid && currentPeerConnection) {
-            const candidate = new RTCIceCandidate(data.candidate);
-            currentPeerConnection.addIceCandidate(candidate).catch(err => console.error(err));
-        }
-    });
-}
-
-function handleIncomingOffer(chatId, fromUserId, offerSdp) {
-    window.pendingCallData = {
-        chatId: chatId,
-        from: fromUserId,
-        offer: offerSdp
-    };
-    document.getElementById('incoming-call-modal').classList.remove('hidden');
-    document.getElementById('incoming-call-username').textContent = currentChatUser?.otherUser?.username || 'Пользователь';
-    document.getElementById('incoming-call-type').textContent = offerSdp.sdp.includes('video') ? 'Видеозвонок' : 'Аудиозвонок';
-    playRingtone();
+// Входящий звонок (обрабатывается автоматически через Trystero)
+function handleIncomingCall(call) {
+    // Trystero сам обрабатывает входящие, но для совместимости оставим заглушку
+    console.log('Входящий звонок через Trystero');
 }
 
 function acceptCall() {
-    if (!window.pendingCallData) return;
-
-    const { chatId, from, offer } = window.pendingCallData;
-    window.pendingCallData = null;
+    // Trystero автоматически принимает, когда добавляется поток
+    // Эта функция нужна для совместимости со старым интерфейсом
+    console.log('Звонок принят');
     document.getElementById('incoming-call-modal').classList.add('hidden');
     stopRingtone();
-
-    const isVideo = offer.sdp.includes('video');
-    navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true })
-        .then(stream => {
-            localStream = stream;
-            showCallModal(isVideo);
-            const localVideo = document.getElementById('local-video');
-            if (localVideo) localVideo.srcObject = localStream;
-            document.getElementById('call-username').textContent = currentChatUser.otherUser?.username || 'Пользователь';
-            document.getElementById('call-status').textContent = 'Соединение...';
-
-            currentPeerConnection = new RTCPeerConnection(iceServers);
-            localStream.getTracks().forEach(track => {
-                currentPeerConnection.addTrack(track, localStream);
-            });
-
-            currentPeerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    saveIceCandidateToFirebase(chatId, from, event.candidate);
-                }
-            };
-
-            currentPeerConnection.ontrack = (event) => {
-                const remoteVideo = document.getElementById('remote-video');
-                if (remoteVideo) remoteVideo.srcObject = event.streams[0];
-                document.getElementById('call-status').textContent = 'Подключено';
-                startCallTimer();
-            };
-
-            currentPeerConnection.setRemoteDescription(new RTCSessionDescription(offer))
-                .then(() => currentPeerConnection.createAnswer())
-                .then(answer => currentPeerConnection.setLocalDescription(answer))
-                .then(() => {
-                    saveAnswerToFirebase(chatId, currentUser.uid, currentPeerConnection.localDescription);
-                })
-                .catch(err => console.error(err));
-
-            setupCallSignaling(chatId, from, false);
-        })
-        .catch(err => {
-            console.error(err);
-            rejectCall();
-        });
 }
 
 function rejectCall() {
-    if (window.pendingCallData) {
-        window.pendingCallData = null;
-    }
+    if (room) room.leave();
     document.getElementById('incoming-call-modal').classList.add('hidden');
     stopRingtone();
     endCall();
@@ -261,23 +148,23 @@ function toggleVideo() {
 
 function endCall() {
     stopCallTimer();
-    if (currentPeerConnection) {
-        currentPeerConnection.close();
-        currentPeerConnection = null;
+    if (room) {
+        try { room.leave(); } catch(e) {}
+        room = null;
     }
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
     }
-    if (currentChatId) {
-        database.ref(`calls/${currentChatId}`).remove();
-        cleanupCallListeners(currentChatId);
+    if (remoteStream) {
+        remoteStream.getTracks().forEach(track => track.stop());
+        remoteStream = null;
     }
-    document.getElementById('call-modal').classList.add('hidden');
-    const remoteVideo = document.getElementById('remote-video');
-    if (remoteVideo) remoteVideo.srcObject = null;
     const localVideo = document.getElementById('local-video');
+    const remoteVideo = document.getElementById('remote-video');
     if (localVideo) localVideo.srcObject = null;
+    if (remoteVideo) remoteVideo.srcObject = null;
+    document.getElementById('call-modal').classList.add('hidden');
 }
 
 // === Таймер ===
@@ -308,16 +195,9 @@ function showCallModal(isVideo) {
     if (videoBtn) videoBtn.style.display = isVideo ? '' : 'none';
     const localVideo = document.getElementById('local-video');
     if (localVideo) localVideo.style.display = isVideo ? '' : 'none';
-    document.getElementById('call-avatar').classList.toggle('hidden', isVideo);
 }
 
-function cleanupCallListeners(chatId) {
-    database.ref(`calls/${chatId}/offer`).off();
-    database.ref(`calls/${chatId}/answer`).off();
-    database.ref(`calls/${chatId}/candidates`).off();
-}
-
-// === Звук звонка ===
+// Звук звонка
 let ringtoneInterval = null;
 function playRingtone() {
     if (ringtoneInterval) return;
