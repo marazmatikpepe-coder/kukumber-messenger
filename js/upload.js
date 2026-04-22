@@ -1,8 +1,12 @@
-// UPLOAD - ImgBB для фото + Catbox для файлов
+// UPLOAD - ImgBB для фото + AssemblyAI для голосовых (транскрипция)
+
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
-// === ЗАГРУЗКА НА CATBOX (для любых файлов) ===
+// Ваш ключ AssemblyAI (уже вставлен)
+const ASSEMBLYAI_API_KEY = 'eb495c28360c4a7fb5d186809484dbbc';
+
+// === ЗАГРУЗКА НА CATBOX (для файлов) ===
 async function uploadToCatbox(file) {
     const formData = new FormData();
     formData.append('reqtype', 'fileupload');
@@ -18,6 +22,58 @@ async function uploadToCatbox(file) {
         return url;
     } else {
         throw new Error('Ошибка загрузки на Catbox');
+    }
+}
+
+// === ТРАНСКРИПЦИЯ АУДИО ЧЕРЕЗ ASSEMBLYAI ===
+async function transcribeAudio(audioBlob) {
+    try {
+        // 1. Загружаем аудио в AssemblyAI
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'voice.webm');
+        
+        const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
+            method: 'POST',
+            headers: { 'authorization': ASSEMBLYAI_API_KEY },
+            body: formData
+        });
+        
+        const uploadData = await uploadResponse.json();
+        const audioUrl = uploadData.upload_url;
+        
+        if (!audioUrl) throw new Error('Ошибка загрузки аудио');
+        
+        // 2. Запускаем транскрипцию
+        const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
+            method: 'POST',
+            headers: {
+                'authorization': ASSEMBLYAI_API_KEY,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({ audio_url: audioUrl })
+        });
+        
+        const transcriptData = await transcriptResponse.json();
+        const transcriptId = transcriptData.id;
+        
+        // 3. Ждём завершения транскрипции (до 10 секунд)
+        let result = null;
+        for (let i = 0; i < 20; i++) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const pollingResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
+                headers: { 'authorization': ASSEMBLYAI_API_KEY }
+            });
+            result = await pollingResponse.json();
+            
+            if (result.status === 'completed') break;
+            if (result.status === 'error') throw new Error('Ошибка транскрипции');
+        }
+        
+        return result.text || '🎤 Голосовое сообщение';
+    } catch (error) {
+        console.error('Ошибка AssemblyAI:', error);
+        return null;
     }
 }
 
@@ -109,7 +165,8 @@ async function sendAnyFile(file) {
         await database.ref('messages/' + currentChatId).push(message);
         
         var lastMsg = '';
-        if (file.type.startsWith('audio/')) lastMsg = '🎵 ' + file.name;
+        if (file.type.startsWith('audio/')) lastMsg = '🎤 Голосовое сообщение';
+        else if (file.type.startsWith('video/')) lastMsg = '🎬 ' + file.name;
         else lastMsg = '📎 ' + file.name;
         if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
         
@@ -121,6 +178,89 @@ async function sendAnyFile(file) {
     } catch (error) {
         console.error(error);
         showNotification('Ошибка загрузки файла', 'error');
+    }
+}
+
+// === ГОЛОСОВЫЕ СООБЩЕНИЯ С ТРАНСКРИПЦИЕЙ ===
+var mediaRecorder, audioChunks, isRecording = false;
+
+function startRecording() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                var blob = new Blob(audioChunks, { type: 'audio/webm' });
+                sendAudioMessage(blob);
+                stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            var btn = document.getElementById('voice-record-btn');
+            if (btn) btn.classList.add('recording');
+        })
+        .catch(err => showNotification('Нет доступа к микрофону', 'error'));
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        var btn = document.getElementById('voice-record-btn');
+        if (btn) btn.classList.remove('recording');
+    }
+}
+
+async function sendAudioMessage(blob) {
+    if (!currentChatId) {
+        showNotification('Ошибка: чат не выбран', 'error');
+        return;
+    }
+    
+    showNotification('Распознавание речи...', 'info');
+    
+    try {
+        // Транскрибируем аудио в текст через AssemblyAI
+        const transcribedText = await transcribeAudio(blob);
+        
+        if (transcribedText && transcribedText !== '🎤 Голосовое сообщение') {
+            // Отправляем как текстовое сообщение
+            var message = {
+                type: 'text',
+                text: '🎤 ' + transcribedText,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            await database.ref('messages/' + currentChatId).push(message);
+            
+            var lastMsg = transcribedText.length > 50 ? transcribedText.substring(0, 47) + '...' : transcribedText;
+            await database.ref('chats/' + currentChatId).update({
+                lastMessage: '🎤 ' + lastMsg,
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+            showNotification('Голосовое отправлено как текст!', 'success');
+        } else {
+            // Если транскрипция не удалась, отправляем аудиофайл
+            showNotification('Отправка голосового сообщения...', 'info');
+            const url = await uploadToCatbox(new File([blob], 'voice_' + Date.now() + '.webm', { type: 'audio/webm' }));
+            
+            var message = {
+                type: 'audio',
+                audioUrl: url,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            await database.ref('messages/' + currentChatId).push(message);
+            await database.ref('chats/' + currentChatId).update({
+                lastMessage: '🎤 Голосовое сообщение',
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+            showNotification('Голосовое отправлено!', 'success');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('Ошибка отправки', 'error');
     }
 }
 
@@ -177,56 +317,6 @@ function confirmImageSend() {
             console.error(err);
         });
     pendingImageFile = null;
-}
-
-// === ГОЛОСОВЫЕ ===
-var mediaRecorder, audioChunks, isRecording = false;
-
-function startRecording() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                var blob = new Blob(audioChunks, { type: 'audio/webm' });
-                sendAudioMessage(blob);
-                stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            var btn = document.getElementById('voice-record-btn');
-            if (btn) btn.classList.add('recording');
-        })
-        .catch(err => showNotification('Нет доступа к микрофону', 'error'));
-}
-
-function stopRecording() {
-    if (mediaRecorder && isRecording) {
-        mediaRecorder.stop();
-        isRecording = false;
-        var btn = document.getElementById('voice-record-btn');
-        if (btn) btn.classList.remove('recording');
-    }
-}
-
-function sendAudioMessage(blob) {
-    if (!currentChatId) return;
-    var file = new File([blob], 'audio_' + Date.now() + '.webm', { type: 'audio/webm' });
-    uploadToCatbox(file).then(url => {
-        var message = {
-            type: 'audio',
-            audioUrl: url,
-            senderId: currentUser.uid,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
-        database.ref('messages/' + currentChatId).push(message).then(() => {
-            database.ref('chats/' + currentChatId).update({
-                lastMessage: '🎤 Голосовое сообщение',
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-        });
-    }).catch(err => showNotification('Ошибка загрузки аудио', 'error'));
 }
 
 // === АВАТАРКИ ===
