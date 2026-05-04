@@ -1,17 +1,15 @@
-// UPLOAD - ImgBB для фото + Catbox для файлов + круговой прогресс
+// UPLOAD - ImgBB для фото + Catbox для файлов
 
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
-var pendingImageFile = null;
+var pendingImages = []; // массив файлов для отправки
+var currentCaption = '';
 
 // === КРУГОВОЙ ПРОГРЕСС ===
-var currentUploadXhr = null;
 var progressModal = null;
+var currentUploadXhr = null;
 
-function showProgressModal(fileSize) {
-    // Закрываем старую модалку если есть
+function showProgressModalForImages(totalImages) {
     if (progressModal) progressModal.remove();
-    
-    var totalMB = (fileSize / (1024 * 1024)).toFixed(1);
     
     progressModal = document.createElement('div');
     progressModal.className = 'modal';
@@ -25,17 +23,17 @@ function showProgressModal(fileSize) {
                     <circle class="progress-fill" cx="50" cy="50" r="45" fill="none" stroke="#32CD32" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="283" stroke-linecap="round"/>
                 </svg>
                 <div class="progress-text">
-                    <span class="progress-loaded">0.0</span>
+                    <span class="progress-current">1</span>
                     <span> / </span>
-                    <span class="progress-total">${totalMB}</span>
-                    <span> MB</span>
+                    <span class="progress-total">${totalImages}</span>
+                    <span> фото</span>
                 </div>
             </div>
+            <div class="progress-subtext">Загрузка...</div>
             <button id="cancel-upload-btn" class="progress-cancel-btn">Отменить</button>
         </div>
     `;
     
-    // Стили добавляем динамически
     var style = document.createElement('style');
     style.textContent = `
         .progress-container {
@@ -65,13 +63,15 @@ function showProgressModal(fileSize) {
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #333;
-            white-space: nowrap;
         }
-        .progress-text span {
-            font-size: 16px;
+        .progress-subtext {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
         }
         .progress-cancel-btn {
             background: #dc3545;
@@ -88,6 +88,102 @@ function showProgressModal(fileSize) {
         .progress-cancel-btn:hover {
             background: #c82333;
             transform: scale(1.02);
+        }
+        .fullscreen-preview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-close {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-image-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .preview-image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .preview-footer {
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .preview-caption-input {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 24px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+        .preview-caption-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        .preview-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+        .preview-add-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .preview-send-btn {
+            background: #228B22;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 24px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .photo-counter {
+            background: rgba(0,0,0,0.6);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 14px;
+            color: white;
+            position: absolute;
+            top: 20px;
+            right: 20px;
         }
     `;
     document.head.appendChild(style);
@@ -106,19 +202,15 @@ function showProgressModal(fileSize) {
     }
 }
 
-function updateProgress(loaded, total) {
-    var percent = total > 0 ? (loaded / total) : 0;
-    var loadedMB = (loaded / (1024 * 1024)).toFixed(1);
-    var totalMB = (total / (1024 * 1024)).toFixed(1);
-    
-    var textSpan = document.querySelector('#upload-progress-modal .progress-loaded');
-    if (textSpan) textSpan.textContent = loadedMB;
+function updateProgressForImages(current, total, progressPercent) {
+    var currentSpan = document.querySelector('#upload-progress-modal .progress-current');
+    if (currentSpan) currentSpan.textContent = current;
     
     var circle = document.querySelector('#upload-progress-modal .progress-fill');
     if (circle) {
         var radius = 45;
         var circumference = 2 * Math.PI * radius;
-        var offset = circumference * (1 - percent);
+        var offset = circumference * (1 - (progressPercent / 100));
         circle.style.strokeDashoffset = offset;
     }
 }
@@ -131,52 +223,127 @@ function closeProgressModal() {
     currentUploadXhr = null;
 }
 
-// === ЗАГРУЗКА НА CATBOX (для файлов) ===
-async function uploadToCatbox(file, onProgress) {
-    return new Promise((resolve, reject) => {
-        var formData = new FormData();
-        formData.append('reqtype', 'fileupload');
-        formData.append('fileToUpload', file);
-        
-        var xhr = new XMLHttpRequest();
-        currentUploadXhr = xhr;
-        
-        xhr.upload.onprogress = function(event) {
-            if (event.lengthComputable && onProgress) {
-                onProgress(event.loaded, event.total);
-            }
+// === ПОЛНОЭКРАННЫЙ ПРЕДПРОСМОТР ===
+function showFullscreenPreview(files, startIndex) {
+    var currentIndex = startIndex || 0;
+    pendingImages = files;
+    
+    var modal = document.createElement('div');
+    modal.className = 'fullscreen-preview';
+    modal.innerHTML = `
+        <button class="preview-close">✕</button>
+        <div class="photo-counter"><span id="photo-counter-current">${currentIndex + 1}</span> / <span id="photo-counter-total">${files.length}</span></div>
+        <div class="preview-image-container">
+            <img id="preview-main-image" src="">
+        </div>
+        <div class="preview-footer">
+            <input type="text" class="preview-caption-input" id="preview-caption" placeholder="Добавить подпись...">
+            <div class="preview-actions">
+                <button class="preview-add-btn" id="preview-add-photo-btn">📷 Добавить фото</button>
+                <button class="preview-send-btn" id="preview-send-btn">Отправить (${files.length})</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    function loadImage(index) {
+        var file = files[index];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-main-image').src = e.target.result;
+            document.getElementById('photo-counter-current').textContent = index + 1;
         };
-        
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                var url = xhr.responseText;
-                if (url.startsWith('https://')) {
-                    resolve(url);
-                } else {
-                    reject(new Error('Ошибка загрузки на Catbox'));
+        reader.readAsDataURL(file);
+    }
+    
+    loadImage(currentIndex);
+    
+    // Крестик
+    modal.querySelector('.preview-close').onclick = function() {
+        modal.remove();
+        pendingImages = [];
+    };
+    
+    // Добавить фото
+    modal.querySelector('#preview-add-photo-btn').onclick = function() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = true;
+        input.onchange = function(e) {
+            var newFiles = Array.from(e.target.files);
+            pendingImages = [...pendingImages, ...newFiles];
+            document.getElementById('photo-counter-total').textContent = pendingImages.length;
+            document.getElementById('preview-send-btn').textContent = `Отправить (${pendingImages.length})`;
+            loadImage(pendingImages.length - 1);
+        };
+        input.click();
+    };
+    
+    // Отправить
+    modal.querySelector('#preview-send-btn').onclick = function() {
+        var caption = document.getElementById('preview-caption').value;
+        currentCaption = caption;
+        modal.remove();
+        sendMultipleImages(pendingImages, caption);
+    };
+}
+
+function sendMultipleImages(files, caption) {
+    if (!currentChatId) {
+        showNotification('Ошибка: чат не выбран', 'error');
+        return;
+    }
+    
+    showProgressModalForImages(files.length);
+    
+    var completed = 0;
+    var failed = false;
+    
+    files.forEach(function(file, index) {
+        uploadImageToImgBB(file, function(loaded, total) {
+            var percent = (loaded / total) * 100;
+            updateProgressForImages(completed + 1, files.length, percent);
+        })
+            .then(function(data) {
+                if (failed) return;
+                var message = {
+                    type: 'image',
+                    imageUrl: data.url,
+                    caption: index === 0 ? caption : '',
+                    senderId: currentUser.uid,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+                return database.ref('messages/' + currentChatId).push(message);
+            })
+            .then(function() {
+                completed++;
+                updateProgressForImages(completed, files.length, 100);
+                
+                if (completed === files.length) {
+                    closeProgressModal();
+                    var lastMsg = caption ? '📷 ' + caption : '📷 Фото';
+                    if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
+                    database.ref('chats/' + currentChatId).update({
+                        lastMessage: lastMsg,
+                        lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    showNotification('Фото отправлены!', 'success');
+                    pendingImages = [];
+                    currentCaption = '';
                 }
-            } else {
-                reject(new Error('Ошибка загрузки'));
-            }
-            currentUploadXhr = null;
-        };
-        
-        xhr.onerror = function() {
-            reject(new Error('Сетевая ошибка'));
-            currentUploadXhr = null;
-        };
-        
-        xhr.onabort = function() {
-            reject(new Error('Загрузка отменена'));
-            currentUploadXhr = null;
-        };
-        
-        xhr.open('POST', 'https://catbox.moe/user/api.php', true);
-        xhr.send(formData);
+            })
+            .catch(function(err) {
+                if (!failed) {
+                    failed = true;
+                    closeProgressModal();
+                    showNotification('Ошибка отправки фото: ' + (err.message || 'Неизвестная ошибка'), 'error');
+                }
+            });
     });
 }
 
-// === ЗАГРУЗКА НА IMGBB (с прогрессом) ===
+// === ЗАГРУЗКА НА IMGBB ===
 function uploadImageToImgBB(file, onProgress) {
     return new Promise((resolve, reject) => {
         if (!file.type.startsWith('image/')) {
@@ -234,15 +401,54 @@ function uploadImageToImgBB(file, onProgress) {
     });
 }
 
+// === ЗАГРУЗКА НА CATBOX (для файлов) ===
+async function uploadToCatbox(file, onProgress) {
+    return new Promise((resolve, reject) => {
+        var formData = new FormData();
+        formData.append('reqtype', 'fileupload');
+        formData.append('fileToUpload', file);
+        
+        var xhr = new XMLHttpRequest();
+        
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable && onProgress) {
+                onProgress(event.loaded, event.total);
+            }
+        };
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var url = xhr.responseText;
+                if (url.startsWith('https://')) {
+                    resolve(url);
+                } else {
+                    reject(new Error('Ошибка загрузки на Catbox'));
+                }
+            } else {
+                reject(new Error('Ошибка загрузки'));
+            }
+        };
+        
+        xhr.onerror = function() {
+            reject(new Error('Сетевая ошибка'));
+        };
+        
+        xhr.open('POST', 'https://catbox.moe/user/api.php', true);
+        xhr.send(formData);
+    });
+}
+
 // === ОБРАБОТКА ВЫБОРА ФАЙЛА ===
 function handleFileSelect(event) {
-    var file = event.target.files[0];
-    if (!file) return;
+    var files = Array.from(event.target.files);
+    if (files.length === 0) return;
     
-    if (file.type.startsWith('image/')) {
-        showImagePreview(file);
+    var validFiles = files.filter(f => f.type.startsWith('image/'));
+    if (validFiles.length === 0) {
+        // Не фото — отправляем как обычный файл
+        sendAnyFile(files[0]);
     } else {
-        sendAnyFile(file);
+        showFullscreenPreview(validFiles, 0);
     }
     event.target.value = '';
 }
@@ -296,69 +502,6 @@ async function sendAnyFile(file) {
         console.error(error);
         showNotification('Ошибка загрузки файла', 'error');
     }
-}
-
-// === ФОТО С ПРОГРЕССОМ ===
-function showImagePreview(file) {
-    pendingImageFile = file;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('preview-image').src = e.target.result;
-        document.getElementById('image-caption').value = '';
-        document.getElementById('image-preview-modal').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
-function closeImagePreview() {
-    document.getElementById('image-preview-modal').classList.add('hidden');
-    pendingImageFile = null;
-}
-
-function confirmImageSend() {
-    if (!pendingImageFile || !currentChatId) {
-        showNotification('Ошибка отправки', 'error');
-        return;
-    }
-    var caption = document.getElementById('image-caption').value.trim();
-    var file = pendingImageFile;
-    var totalSize = file.size;
-    
-    // Показываем модалку прогресса
-    showProgressModal(totalSize);
-    
-    uploadImageToImgBB(file, function(loaded, total) {
-        updateProgress(loaded, total);
-    })
-        .then(data => {
-            closeProgressModal();
-            var message = {
-                type: 'image',
-                imageUrl: data.url,
-                caption: caption,
-                senderId: currentUser.uid,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-            return database.ref('messages/' + currentChatId).push(message);
-        })
-        .then(() => {
-            var lastMsg = caption ? '📷 ' + caption : '📷 Фото';
-            if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
-            return database.ref('chats/' + currentChatId).update({
-                lastMessage: lastMsg,
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-        })
-        .then(() => {
-            showNotification('Фото отправлено!', 'success');
-            closeImagePreview();
-        })
-        .catch(err => {
-            closeProgressModal();
-            showNotification('Ошибка отправки фото: ' + (err.message || 'Неизвестная ошибка'), 'error');
-            console.error(err);
-        });
-    pendingImageFile = null;
 }
 
 // === ГОЛОСОВЫЕ ===
