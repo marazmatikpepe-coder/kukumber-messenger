@@ -1680,3 +1680,50 @@ html, body {
         height: 40px;
     }
 }
+/* Круговой прогресс */
+#upload-progress-modal .progress-container {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    min-width: 200px;
+}
+#upload-progress-modal .progress-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+}
+#upload-progress-modal .progress-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+#upload-progress-modal .progress-circle circle {
+    transition: stroke-dashoffset 0.2s;
+}
+#upload-progress-modal .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+#upload-progress-modal .progress-subtext {
+    text-align: center;
+    margin-top: 12px;
+    color: #666;
+    font-size: 13px;
+}
+#upload-progress-modal .cancel-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 8px 25px;
+    margin-top: 15px;
+    cursor: pointer;
+    font-size: 14px;
+}
