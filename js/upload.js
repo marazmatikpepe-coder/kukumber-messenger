@@ -1,7 +1,7 @@
-// UPLOAD - ImgBB для фото + Catbox для файлов
+// UPLOAD - ImgBB для фото + Catbox для файлов + полноэкранный предпросмотр
 
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
-var pendingImages = []; // массив файлов для отправки
+var pendingImages = [];
 var currentCaption = '';
 
 // === КРУГОВОЙ ПРОГРЕСС ===
@@ -34,159 +34,163 @@ function showProgressModalForImages(totalImages) {
         </div>
     `;
     
-    var style = document.createElement('style');
-    style.textContent = `
-        .progress-container {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            min-width: 280px;
-        }
-        .progress-circle {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            margin: 0 auto;
-        }
-        .progress-circle svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-        .progress-fill {
-            transition: stroke-dashoffset 0.2s ease;
-        }
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-        .progress-subtext {
-            text-align: center;
-            margin-top: 15px;
-            color: #666;
-            font-size: 14px;
-        }
-        .progress-cancel-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 40px;
-            padding: 10px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.2s;
-        }
-        .progress-cancel-btn:hover {
-            background: #c82333;
-            transform: scale(1.02);
-        }
-        .fullscreen-preview {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #000;
-            z-index: 10001;
-            display: flex;
-            flex-direction: column;
-        }
-        .preview-close {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 44px;
-            height: 44px;
-            background: rgba(0,0,0,0.6);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .preview-image-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .preview-image-container img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .preview-footer {
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .preview-caption-input {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            border-radius: 24px;
-            padding: 12px 16px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-        }
-        .preview-caption-input::placeholder {
-            color: rgba(255,255,255,0.5);
-        }
-        .preview-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: space-between;
-        }
-        .preview-add-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            border-radius: 30px;
-            padding: 10px 20px;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .preview-send-btn {
-            background: #228B22;
-            border: none;
-            border-radius: 30px;
-            padding: 10px 24px;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .photo-counter {
-            background: rgba(0,0,0,0.6);
-            border-radius: 20px;
-            padding: 5px 12px;
-            font-size: 14px;
-            color: white;
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-    `;
-    document.head.appendChild(style);
+    var style = document.getElementById('progress-styles');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'progress-styles';
+        style.textContent = `
+            .progress-container {
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                text-align: center;
+                min-width: 280px;
+            }
+            .progress-circle {
+                position: relative;
+                width: 180px;
+                height: 180px;
+                margin: 0 auto;
+            }
+            .progress-circle svg {
+                width: 100%;
+                height: 100%;
+                transform: rotate(-90deg);
+            }
+            .progress-fill {
+                transition: stroke-dashoffset 0.2s ease;
+            }
+            .progress-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
+                color: #333;
+            }
+            .progress-subtext {
+                text-align: center;
+                margin-top: 15px;
+                color: #666;
+                font-size: 14px;
+            }
+            .progress-cancel-btn {
+                background: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 40px;
+                padding: 10px 30px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                margin-top: 20px;
+                transition: all 0.2s;
+            }
+            .progress-cancel-btn:hover {
+                background: #c82333;
+                transform: scale(1.02);
+            }
+            .fullscreen-preview {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: #000;
+                z-index: 10001;
+                display: flex;
+                flex-direction: column;
+            }
+            .preview-close {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                width: 44px;
+                height: 44px;
+                background: rgba(0,0,0,0.6);
+                border: none;
+                border-radius: 50%;
+                color: white;
+                font-size: 24px;
+                cursor: pointer;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .preview-image-container {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+            .preview-image-container img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+            .preview-footer {
+                background: rgba(0,0,0,0.8);
+                padding: 15px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .preview-caption-input {
+                background: rgba(255,255,255,0.1);
+                border: none;
+                border-radius: 24px;
+                padding: 12px 16px;
+                color: white;
+                font-size: 16px;
+                outline: none;
+            }
+            .preview-caption-input::placeholder {
+                color: rgba(255,255,255,0.5);
+            }
+            .preview-actions {
+                display: flex;
+                gap: 12px;
+                justify-content: space-between;
+            }
+            .preview-add-btn {
+                background: rgba(255,255,255,0.2);
+                border: none;
+                border-radius: 30px;
+                padding: 10px 20px;
+                color: white;
+                font-size: 14px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .preview-send-btn {
+                background: #228B22;
+                border: none;
+                border-radius: 30px;
+                padding: 10px 24px;
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+            .photo-counter {
+                background: rgba(0,0,0,0.6);
+                border-radius: 20px;
+                padding: 5px 12px;
+                font-size: 14px;
+                color: white;
+                position: absolute;
+                top: 20px;
+                right: 20px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
     
     document.body.appendChild(progressModal);
     
@@ -295,10 +299,13 @@ function sendMultipleImages(files, caption) {
         return;
     }
     
+    if (files.length === 0) return;
+    
     showProgressModalForImages(files.length);
     
     var completed = 0;
     var failed = false;
+    var sentMessages = [];
     
     files.forEach(function(file, index) {
         uploadImageToImgBB(file, function(loaded, total) {
@@ -362,11 +369,13 @@ function uploadImageToImgBB(file, onProgress) {
         var xhr = new XMLHttpRequest();
         currentUploadXhr = xhr;
         
-        xhr.upload.onprogress = function(event) {
-            if (event.lengthComputable && onProgress) {
-                onProgress(event.loaded, event.total);
-            }
-        };
+        if (onProgress) {
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    onProgress(event.loaded, event.total);
+                }
+            };
+        }
         
         xhr.onload = function() {
             if (xhr.status === 200) {
@@ -410,11 +419,13 @@ async function uploadToCatbox(file, onProgress) {
         
         var xhr = new XMLHttpRequest();
         
-        xhr.upload.onprogress = function(event) {
-            if (event.lengthComputable && onProgress) {
-                onProgress(event.loaded, event.total);
-            }
-        };
+        if (onProgress) {
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    onProgress(event.loaded, event.total);
+                }
+            };
+        }
         
         xhr.onload = function() {
             if (xhr.status === 200) {
@@ -610,4 +621,17 @@ function previewEditAvatar(event) {
         reader.readAsDataURL(file);
         window.pendingAvatarFile = file;
     }
+}
+
+// Совместимость со старым кодом (если где-то вызывается)
+function showImagePreview(file) {
+    // Перенаправляем на новый функционал
+    handleFileSelect({ target: { files: [file] } });
+}
+
+function closeImagePreview() {
+    // Закрываем полноэкранный предпросмотр если он открыт
+    var preview = document.querySelector('.fullscreen-preview');
+    if (preview) preview.remove();
+    pendingImages = [];
 }
