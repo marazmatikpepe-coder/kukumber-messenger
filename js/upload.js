@@ -1,6 +1,115 @@
 // UPLOAD - ImgBB для фото
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
+var currentUploadXhr = null;
+
+// Показываем круговой прогресс
+function showCircularProgress() {
+    var modal = document.getElementById('upload-progress-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'upload-progress-modal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+        
+        var style = document.createElement('style');
+        style.textContent = `
+            #upload-progress-modal .progress-container {
+                background: white;
+                border-radius: 20px;
+                padding: 25px;
+                text-align: center;
+                min-width: 200px;
+            }
+            #upload-progress-modal .progress-circle {
+                position: relative;
+                width: 120px;
+                height: 120px;
+                margin: 0 auto;
+            }
+            #upload-progress-modal .progress-circle svg {
+                width: 100%;
+                height: 100%;
+                transform: rotate(-90deg);
+            }
+            #upload-progress-modal .progress-circle circle {
+                transition: stroke-dashoffset 0.2s;
+            }
+            #upload-progress-modal .progress-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 18px;
+                font-weight: bold;
+                color: #333;
+            }
+            #upload-progress-modal .progress-subtext {
+                text-align: center;
+                margin-top: 12px;
+                color: #666;
+                font-size: 13px;
+            }
+            #upload-progress-modal .cancel-btn {
+                background: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 30px;
+                padding: 8px 25px;
+                margin-top: 15px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    var radius = 50;
+    var circumference = 2 * Math.PI * radius;
+    
+    modal.innerHTML = `
+        <div class="progress-container">
+            <div class="progress-circle">
+                <svg viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="#ddd" stroke-width="6"/>
+                    <circle class="progress-fill" cx="60" cy="60" r="50" fill="none" stroke="#32CD32" stroke-width="6" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}" stroke-linecap="round"/>
+                </svg>
+                <div class="progress-text">0%</div>
+            </div>
+            <div class="progress-subtext">Загрузка фото...</div>
+            <button class="cancel-btn" id="cancel-upload">Отменить</button>
+        </div>
+    `;
+    modal.style.display = 'flex';
+    
+    document.getElementById('cancel-upload').onclick = function() {
+        if (currentUploadXhr) {
+            currentUploadXhr.abort();
+            closeCircularProgress();
+            showNotification('Загрузка отменена', 'info');
+        }
+    };
+    
+    return { modal, circumference };
+}
+
+function updateCircularProgressPercent(percent) {
+    var circle = document.querySelector('#upload-progress-modal .progress-fill');
+    var text = document.querySelector('#upload-progress-modal .progress-text');
+    if (circle && text) {
+        var radius = 50;
+        var circumference = 2 * Math.PI * radius;
+        var offset = circumference * (1 - percent / 100);
+        circle.style.strokeDashoffset = offset;
+        text.textContent = Math.round(percent) + '%';
+    }
+}
+
+function closeCircularProgress() {
+    var modal = document.getElementById('upload-progress-modal');
+    if (modal) modal.style.display = 'none';
+    currentUploadXhr = null;
+}
 
 // Открыть предпросмотр фото
 function handleFileSelect(event) {
@@ -8,7 +117,6 @@ function handleFileSelect(event) {
     if (!file) return;
     
     if (!file.type.startsWith('image/')) {
-        // Не фото — отправляем как файл
         sendAnyFile(file);
         event.target.value = '';
         return;
@@ -25,7 +133,6 @@ function handleFileSelect(event) {
     event.target.value = '';
 }
 
-// Закрыть предпросмотр
 function closeImagePreview() {
     document.getElementById('image-preview-modal').classList.add('hidden');
     pendingImageFile = null;
@@ -42,42 +149,73 @@ function confirmImageSend() {
     var caption = document.getElementById('image-caption').value.trim();
     var file = pendingImageFile;
     
-    showNotification('Загрузка фото...', 'info');
+    closeImagePreview();
+    
+    // Показываем круговой прогресс
+    showCircularProgress();
     
     var formData = new FormData();
     formData.append('image', file);
     formData.append('key', IMGBB_API_KEY);
     
-    fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) throw new Error('Ошибка ImgBB');
-            
-            var message = {
-                type: 'image',
-                imageUrl: data.data.url,
-                caption: caption,
-                senderId: currentUser.uid,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-            return database.ref('messages/' + currentChatId).push(message);
-        })
-        .then(() => {
-            var lastMsg = caption ? '📷 ' + caption.substring(0, 47) : '📷 Фото';
-            return database.ref('chats/' + currentChatId).update({
-                lastMessage: lastMsg,
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-        })
-        .then(() => {
-            showNotification('Фото отправлено!', 'success');
-            closeImagePreview();
-        })
-        .catch(err => {
-            console.error(err);
-            showNotification('Ошибка отправки фото', 'error');
-            closeImagePreview();
-        });
+    var xhr = new XMLHttpRequest();
+    currentUploadXhr = xhr;
+    
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            var percent = (e.loaded / e.total) * 100;
+            updateCircularProgressPercent(percent);
+        }
+    };
+    
+    xhr.onload = function() {
+        closeCircularProgress();
+        if (xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data.success) {
+                    var message = {
+                        type: 'image',
+                        imageUrl: data.data.url,
+                        caption: caption,
+                        senderId: currentUser.uid,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    };
+                    database.ref('messages/' + currentChatId).push(message)
+                        .then(function() {
+                            var lastMsg = caption ? '📷 ' + caption.substring(0, 47) : '📷 Фото';
+                            return database.ref('chats/' + currentChatId).update({
+                                lastMessage: lastMsg,
+                                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        })
+                        .then(function() {
+                            showNotification('Фото отправлено!', 'success');
+                        })
+                        .catch(function(err) {
+                            console.error('Firebase error:', err);
+                            showNotification('Ошибка сохранения', 'error');
+                        });
+                } else {
+                    showNotification('Ошибка ImgBB: ' + JSON.stringify(data), 'error');
+                }
+            } catch(e) {
+                showNotification('Ошибка ответа сервера', 'error');
+            }
+        } else {
+            showNotification('Ошибка загрузки (статус ' + xhr.status + ')', 'error');
+        }
+        currentUploadXhr = null;
+    };
+    
+    xhr.onerror = function() {
+        closeCircularProgress();
+        showNotification('Ошибка сети', 'error');
+        currentUploadXhr = null;
+    };
+    
+    xhr.open('POST', 'https://api.imgbb.com/1/upload', true);
+    xhr.send(formData);
 }
 
 // Отправка любых файлов (не фото)
@@ -192,3 +330,15 @@ function previewEditAvatar(e) {
         window.pendingAvatarFile = file;
     }
 }
+
+// Функция для отладки (можно вызвать в консоли)
+window.testImgBB = function() {
+    var testFile = new File(['test'], 'test.txt', { type: 'text/plain' });
+    var formData = new FormData();
+    formData.append('image', testFile);
+    formData.append('key', IMGBB_API_KEY);
+    fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => console.log('ImgBB тест:', data))
+        .catch(err => console.error('ImgBB ошибка:', err));
+};
