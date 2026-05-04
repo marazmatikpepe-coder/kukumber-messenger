@@ -1645,3 +1645,38 @@ html, body {
     z-index: 200;
     width: 280px;
 }
+/* Кнопка прикрепления файла */
+.attach-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.attach-btn img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.attach-btn:hover {
+    background: var(--background);
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .attach-btn {
+        width: 50px;
+        height: 50px;
+    }
+    .attach-btn img {
+        width: 40px;
+        height: 40px;
+    }
+}
