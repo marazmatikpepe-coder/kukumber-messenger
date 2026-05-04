@@ -1614,3 +1614,34 @@ html, body {
     background: var(--sage);
     border-radius: 3px;
 }
+/* ЭМОДЗИ */
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+}
+
+.emoji-grid span {
+    font-size: 26px;
+    cursor: pointer;
+    padding: 8px;
+    text-align: center;
+    border-radius: 10px;
+    transition: background 0.1s;
+}
+
+.emoji-grid span:hover {
+    background: var(--background);
+}
+
+#emoji-picker {
+    position: absolute;
+    bottom: 80px;
+    right: 15px;
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    z-index: 200;
+    width: 280px;
+}
