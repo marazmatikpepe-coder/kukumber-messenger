@@ -1,119 +1,237 @@
-// UPLOAD - ImgBB для фото + AssemblyAI для голосовых (транскрипция)
+// UPLOAD - ImgBB для фото + Catbox для файлов + круговой прогресс
 
 var IMGBB_API_KEY = 'd8a9dad272290e9bd78173da55a97d77';
 var pendingImageFile = null;
 
-// Ваш ключ AssemblyAI (уже вставлен)
-const ASSEMBLYAI_API_KEY = 'eb495c28360c4a7fb5d186809484dbbc';
+// === КРУГОВОЙ ПРОГРЕСС ===
+var currentUploadXhr = null;
+var progressModal = null;
+
+function showProgressModal(fileSize) {
+    // Закрываем старую модалку если есть
+    if (progressModal) progressModal.remove();
+    
+    var totalMB = (fileSize / (1024 * 1024)).toFixed(1);
+    
+    progressModal = document.createElement('div');
+    progressModal.className = 'modal';
+    progressModal.id = 'upload-progress-modal';
+    progressModal.style.display = 'flex';
+    progressModal.innerHTML = `
+        <div class="progress-container">
+            <div class="progress-circle">
+                <svg viewBox="0 0 100 100">
+                    <circle class="progress-bg" cx="50" cy="50" r="45" fill="none" stroke="#ddd" stroke-width="8"/>
+                    <circle class="progress-fill" cx="50" cy="50" r="45" fill="none" stroke="#32CD32" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="283" stroke-linecap="round"/>
+                </svg>
+                <div class="progress-text">
+                    <span class="progress-loaded">0.0</span>
+                    <span> / </span>
+                    <span class="progress-total">${totalMB}</span>
+                    <span> MB</span>
+                </div>
+            </div>
+            <button id="cancel-upload-btn" class="progress-cancel-btn">Отменить</button>
+        </div>
+    `;
+    
+    // Стили добавляем динамически
+    var style = document.createElement('style');
+    style.textContent = `
+        .progress-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            min-width: 280px;
+        }
+        .progress-circle {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto;
+        }
+        .progress-circle svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .progress-fill {
+            transition: stroke-dashoffset 0.2s ease;
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+        }
+        .progress-text span {
+            font-size: 16px;
+        }
+        .progress-cancel-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .progress-cancel-btn:hover {
+            background: #c82333;
+            transform: scale(1.02);
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(progressModal);
+    
+    var cancelBtn = document.getElementById('cancel-upload-btn');
+    if (cancelBtn) {
+        cancelBtn.onclick = function() {
+            if (currentUploadXhr) {
+                currentUploadXhr.abort();
+                showNotification('Загрузка отменена', 'info');
+            }
+            closeProgressModal();
+        };
+    }
+}
+
+function updateProgress(loaded, total) {
+    var percent = total > 0 ? (loaded / total) : 0;
+    var loadedMB = (loaded / (1024 * 1024)).toFixed(1);
+    var totalMB = (total / (1024 * 1024)).toFixed(1);
+    
+    var textSpan = document.querySelector('#upload-progress-modal .progress-loaded');
+    if (textSpan) textSpan.textContent = loadedMB;
+    
+    var circle = document.querySelector('#upload-progress-modal .progress-fill');
+    if (circle) {
+        var radius = 45;
+        var circumference = 2 * Math.PI * radius;
+        var offset = circumference * (1 - percent);
+        circle.style.strokeDashoffset = offset;
+    }
+}
+
+function closeProgressModal() {
+    if (progressModal) {
+        progressModal.remove();
+        progressModal = null;
+    }
+    currentUploadXhr = null;
+}
 
 // === ЗАГРУЗКА НА CATBOX (для файлов) ===
-async function uploadToCatbox(file) {
-    const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('fileToUpload', file);
-    
-    const response = await fetch('https://catbox.moe/user/api.php', {
-        method: 'POST',
-        body: formData
+async function uploadToCatbox(file, onProgress) {
+    return new Promise((resolve, reject) => {
+        var formData = new FormData();
+        formData.append('reqtype', 'fileupload');
+        formData.append('fileToUpload', file);
+        
+        var xhr = new XMLHttpRequest();
+        currentUploadXhr = xhr;
+        
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable && onProgress) {
+                onProgress(event.loaded, event.total);
+            }
+        };
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var url = xhr.responseText;
+                if (url.startsWith('https://')) {
+                    resolve(url);
+                } else {
+                    reject(new Error('Ошибка загрузки на Catbox'));
+                }
+            } else {
+                reject(new Error('Ошибка загрузки'));
+            }
+            currentUploadXhr = null;
+        };
+        
+        xhr.onerror = function() {
+            reject(new Error('Сетевая ошибка'));
+            currentUploadXhr = null;
+        };
+        
+        xhr.onabort = function() {
+            reject(new Error('Загрузка отменена'));
+            currentUploadXhr = null;
+        };
+        
+        xhr.open('POST', 'https://catbox.moe/user/api.php', true);
+        xhr.send(formData);
     });
-    
-    const url = await response.text();
-    if (url.startsWith('https://')) {
-        return url;
-    } else {
-        throw new Error('Ошибка загрузки на Catbox');
-    }
 }
 
-// === ТРАНСКРИПЦИЯ АУДИО ЧЕРЕЗ ASSEMBLYAI ===
-async function transcribeAudio(audioBlob) {
-    try {
-        // 1. Загружаем аудио в AssemblyAI
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'voice.webm');
-        
-        const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
-            method: 'POST',
-            headers: { 'authorization': ASSEMBLYAI_API_KEY },
-            body: formData
-        });
-        
-        const uploadData = await uploadResponse.json();
-        const audioUrl = uploadData.upload_url;
-        
-        if (!audioUrl) throw new Error('Ошибка загрузки аудио');
-        
-        // 2. Запускаем транскрипцию
-        const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
-            method: 'POST',
-            headers: {
-                'authorization': ASSEMBLYAI_API_KEY,
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify({ audio_url: audioUrl })
-        });
-        
-        const transcriptData = await transcriptResponse.json();
-        const transcriptId = transcriptData.id;
-        
-        // 3. Ждём завершения транскрипции (до 10 секунд)
-        let result = null;
-        for (let i = 0; i < 20; i++) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            const pollingResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
-                headers: { 'authorization': ASSEMBLYAI_API_KEY }
-            });
-            result = await pollingResponse.json();
-            
-            if (result.status === 'completed') break;
-            if (result.status === 'error') throw new Error('Ошибка транскрипции');
+// === ЗАГРУЗКА НА IMGBB (с прогрессом) ===
+function uploadImageToImgBB(file, onProgress) {
+    return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) {
+            reject(new Error('Не изображение'));
+            return;
+        }
+        if (file.size > 32 * 1024 * 1024) {
+            reject(new Error('Файл >32 МБ'));
+            return;
         }
         
-        return result.text || '🎤 Голосовое сообщение';
-    } catch (error) {
-        console.error('Ошибка AssemblyAI:', error);
-        return null;
-    }
-}
-
-// === ЗАГРУЗКА НА IMGBB ===
-function uploadImageToImgBB(file) {
-    return new Promise((resolve, reject) => {
-        if (!file) { reject(new Error('Нет файла')); return; }
-        if (!file.type.startsWith('image/')) { reject(new Error('Не изображение')); return; }
-        if (file.size > 32 * 1024 * 1024) { reject(new Error('Файл >32 МБ')); return; }
-        
-        showUploadProgress(true);
         var formData = new FormData();
         formData.append('image', file);
         formData.append('key', IMGBB_API_KEY);
         
-        fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
-            .then(response => response.json())
-            .then(data => {
-                showUploadProgress(false);
-                if (data.success) resolve({ url: data.data.url });
-                else reject('Ошибка ImgBB');
-            })
-            .catch(error => {
-                showUploadProgress(false);
-                reject(error);
-            });
+        var xhr = new XMLHttpRequest();
+        currentUploadXhr = xhr;
+        
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable && onProgress) {
+                onProgress(event.loaded, event.total);
+            }
+        };
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.success) {
+                        resolve({ url: data.data.url });
+                    } else {
+                        reject(new Error('Ошибка ImgBB'));
+                    }
+                } catch(e) {
+                    reject(new Error('Ошибка обработки ответа'));
+                }
+            } else {
+                reject(new Error('Ошибка загрузки'));
+            }
+            currentUploadXhr = null;
+        };
+        
+        xhr.onerror = function() {
+            reject(new Error('Сетевая ошибка'));
+            currentUploadXhr = null;
+        };
+        
+        xhr.onabort = function() {
+            reject(new Error('Загрузка отменена'));
+            currentUploadXhr = null;
+        };
+        
+        xhr.open('POST', 'https://api.imgbb.com/1/upload', true);
+        xhr.send(formData);
     });
-}
-
-function showUploadProgress(show) {
-    var div = document.getElementById('upload-progress');
-    if (show && !div) {
-        div = document.createElement('div');
-        div.id = 'upload-progress';
-        div.className = 'upload-progress';
-        div.innerHTML = '<div class="upload-progress-content"><div class="spinner"></div><p>Загрузка...</p></div>';
-        document.body.appendChild(div);
-    } else if (!show && div) {
-        div.remove();
-    }
 }
 
 // === ОБРАБОТКА ВЫБОРА ФАЙЛА ===
@@ -138,7 +256,7 @@ async function sendAnyFile(file) {
     showNotification('Загрузка файла...', 'info');
     
     try {
-        const url = await uploadToCatbox(file);
+        const url = await uploadToCatbox(file, null);
         
         var message = {};
         if (file.type.startsWith('audio/')) {
@@ -166,7 +284,6 @@ async function sendAnyFile(file) {
         
         var lastMsg = '';
         if (file.type.startsWith('audio/')) lastMsg = '🎤 Голосовое сообщение';
-        else if (file.type.startsWith('video/')) lastMsg = '🎬 ' + file.name;
         else lastMsg = '📎 ' + file.name;
         if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
         
@@ -181,7 +298,70 @@ async function sendAnyFile(file) {
     }
 }
 
-// === ГОЛОСОВЫЕ СООБЩЕНИЯ С ТРАНСКРИПЦИЕЙ ===
+// === ФОТО С ПРОГРЕССОМ ===
+function showImagePreview(file) {
+    pendingImageFile = file;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('preview-image').src = e.target.result;
+        document.getElementById('image-caption').value = '';
+        document.getElementById('image-preview-modal').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+function closeImagePreview() {
+    document.getElementById('image-preview-modal').classList.add('hidden');
+    pendingImageFile = null;
+}
+
+function confirmImageSend() {
+    if (!pendingImageFile || !currentChatId) {
+        showNotification('Ошибка отправки', 'error');
+        return;
+    }
+    var caption = document.getElementById('image-caption').value.trim();
+    var file = pendingImageFile;
+    var totalSize = file.size;
+    
+    // Показываем модалку прогресса
+    showProgressModal(totalSize);
+    
+    uploadImageToImgBB(file, function(loaded, total) {
+        updateProgress(loaded, total);
+    })
+        .then(data => {
+            closeProgressModal();
+            var message = {
+                type: 'image',
+                imageUrl: data.url,
+                caption: caption,
+                senderId: currentUser.uid,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            return database.ref('messages/' + currentChatId).push(message);
+        })
+        .then(() => {
+            var lastMsg = caption ? '📷 ' + caption : '📷 Фото';
+            if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
+            return database.ref('chats/' + currentChatId).update({
+                lastMessage: lastMsg,
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+        })
+        .then(() => {
+            showNotification('Фото отправлено!', 'success');
+            closeImagePreview();
+        })
+        .catch(err => {
+            closeProgressModal();
+            showNotification('Ошибка отправки фото: ' + (err.message || 'Неизвестная ошибка'), 'error');
+            console.error(err);
+        });
+    pendingImageFile = null;
+}
+
+// === ГОЛОСОВЫЕ ===
 var mediaRecorder, audioChunks, isRecording = false;
 
 function startRecording() {
@@ -218,105 +398,29 @@ async function sendAudioMessage(blob) {
         return;
     }
     
-    showNotification('Распознавание речи...', 'info');
+    showNotification('Отправка голосового сообщения...', 'info');
+    var file = new File([blob], 'voice_' + Date.now() + '.webm', { type: 'audio/webm' });
     
     try {
-        // Транскрибируем аудио в текст через AssemblyAI
-        const transcribedText = await transcribeAudio(blob);
+        const url = await uploadToCatbox(file, null);
         
-        if (transcribedText && transcribedText !== '🎤 Голосовое сообщение') {
-            // Отправляем как текстовое сообщение
-            var message = {
-                type: 'text',
-                text: '🎤 ' + transcribedText,
-                senderId: currentUser.uid,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-            await database.ref('messages/' + currentChatId).push(message);
-            
-            var lastMsg = transcribedText.length > 50 ? transcribedText.substring(0, 47) + '...' : transcribedText;
-            await database.ref('chats/' + currentChatId).update({
-                lastMessage: '🎤 ' + lastMsg,
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-            showNotification('Голосовое отправлено как текст!', 'success');
-        } else {
-            // Если транскрипция не удалась, отправляем аудиофайл
-            showNotification('Отправка голосового сообщения...', 'info');
-            const url = await uploadToCatbox(new File([blob], 'voice_' + Date.now() + '.webm', { type: 'audio/webm' }));
-            
-            var message = {
-                type: 'audio',
-                audioUrl: url,
-                senderId: currentUser.uid,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-            await database.ref('messages/' + currentChatId).push(message);
-            await database.ref('chats/' + currentChatId).update({
-                lastMessage: '🎤 Голосовое сообщение',
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-            showNotification('Голосовое отправлено!', 'success');
-        }
+        var message = {
+            type: 'audio',
+            audioUrl: url,
+            senderId: currentUser.uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        await database.ref('messages/' + currentChatId).push(message);
+        await database.ref('chats/' + currentChatId).update({
+            lastMessage: '🎤 Голосовое сообщение',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        showNotification('Голосовое сообщение отправлено!', 'success');
     } catch (error) {
         console.error(error);
-        showNotification('Ошибка отправки', 'error');
+        showNotification('Ошибка отправки голосового сообщения', 'error');
     }
-}
-
-// === ФОТО ===
-function showImagePreview(file) {
-    pendingImageFile = file;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('preview-image').src = e.target.result;
-        document.getElementById('image-caption').value = '';
-        document.getElementById('image-preview-modal').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
-function closeImagePreview() {
-    document.getElementById('image-preview-modal').classList.add('hidden');
-    pendingImageFile = null;
-}
-
-function confirmImageSend() {
-    if (!pendingImageFile || !currentChatId) {
-        showNotification('Ошибка отправки', 'error');
-        return;
-    }
-    var caption = document.getElementById('image-caption').value.trim();
-    var file = pendingImageFile;
-    closeImagePreview();
-    
-    uploadImageToImgBB(file)
-        .then(data => {
-            var message = {
-                type: 'image',
-                imageUrl: data.url,
-                caption: caption,
-                senderId: currentUser.uid,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-            return database.ref('messages/' + currentChatId).push(message);
-        })
-        .then(() => {
-            var lastMsg = caption ? '📷 ' + caption : '📷 Фото';
-            if (lastMsg.length > 50) lastMsg = lastMsg.substring(0, 47) + '...';
-            return database.ref('chats/' + currentChatId).update({
-                lastMessage: lastMsg,
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            });
-        })
-        .then(() => {
-            showNotification('Фото отправлено!', 'success');
-        })
-        .catch(err => {
-            showNotification('Ошибка отправки фото', 'error');
-            console.error(err);
-        });
-    pendingImageFile = null;
 }
 
 // === АВАТАРКИ ===
