@@ -1,310 +1,272 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Video Player | ScreenApp Embed</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
-            font-family: system-ui, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 24px;
-        }
-
-        /* main glass container */
-        .site-container {
-            max-width: 1280px;
-            width: 100%;
-            margin: 0 auto;
-            background: rgba(18, 25, 45, 0.65);
-            backdrop-filter: blur(3px);
-            border-radius: 48px;
-            padding: 24px 28px 40px 28px;
-            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
-            transition: all 0.2s ease;
-        }
-
-        /* header styling */
-        .hero {
-            text-align: center;
-            margin-bottom: 36px;
-            padding: 12px 0 8px 0;
-        }
-
-        .hero h1 {
-            font-size: 2.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFFFFF 0%, #c0d4ff 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.01em;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .hero .tagline {
-            color: #9aa9c7;
-            margin-top: 12px;
-            font-size: 1.1rem;
-            font-weight: 500;
-            border-bottom: 1px dashed rgba(100, 130, 200, 0.3);
-            display: inline-block;
-            padding-bottom: 6px;
-        }
-
-        /* card with embed */
-        .video-card {
-            background: #0b0f1a;
-            border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s;
-            border: 1px solid rgba(70, 110, 180, 0.25);
-        }
-
-        .video-card:hover {
-            transform: scale(1.01);
-            box-shadow: 0 28px 40px -16px black;
-            border-color: rgba(100, 150, 255, 0.4);
-        }
-
-        /* iframe wrapper - ensures responsive aspect ratio but keeps exact height from embed */
-        .embed-wrapper {
-            position: relative;
-            width: 100%;
-            background: #000000;
-        }
-
-        /* ensure iframe takes full available width and respects given height */
-        .responsive-iframe {
-            display: block;
-            width: 100%;
-            height: auto;
-            min-height: 540px;
-            border: none;
-        }
-
-        /* specifically target iframe to keep height 960px on desktop, but allow scaling on mobile */
-        .screenapp-frame {
-            width: 100%;
-            height: 960px;
-            border: none;
-            display: block;
-            background: #010101;
-        }
-
-        /* for smaller screens reduce embed height to avoid overflow but keep view */
-        @media (max-width: 780px) {
-            .screenapp-frame {
-                height: 68vh;
-                min-height: 520px;
-            }
-            .site-container {
-                padding: 16px 18px 32px 18px;
-            }
-            .hero h1 {
-                font-size: 2rem;
-            }
-        }
-
-        @media (max-width: 580px) {
-            .screenapp-frame {
-                height: 55vh;
-                min-height: 440px;
-            }
-        }
-
-        /* info panel below */
-        .info-panel {
-            margin-top: 32px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            background: rgba(10, 15, 27, 0.7);
-            backdrop-filter: blur(4px);
-            border-radius: 28px;
-            padding: 20px 24px;
-            border: 1px solid rgba(72, 108, 178, 0.3);
-        }
-
-        .description {
-            color: #dfe6ff;
-            font-weight: 450;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            max-width: 65%;
-        }
-
-        .description strong {
-            color: #8bb3ff;
-            font-weight: 600;
-        }
-
-        .badge-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            background: #111a2b;
-            padding: 8px 18px;
-            border-radius: 60px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #b9cdff;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(2px);
-            border: 0.5px solid rgba(72, 122, 255, 0.4);
-            transition: all 0.2s;
-        }
-
-        .badge i {
-            font-style: normal;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .badge:hover {
-            background: #1f2a44;
-            color: white;
-            border-color: #5f8eff;
-        }
-
-        .footer-note {
-            margin-top: 28px;
-            text-align: center;
-            font-size: 0.75rem;
-            color: #5b6e97;
-            letter-spacing: 0.3px;
-        }
-
-        a {
-            color: #93b4ff;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-
-        /* loading shimmer (optional but nice) */
-        .loading-fallback {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #0a0f1a;
-            width: 100%;
-            height: 100%;
-            min-height: 400px;
-            color: #a3c0ff;
-            font-family: monospace;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#228B22">
+    <title>Kukumber</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥒</text></svg>">
 </head>
 <body>
-<div class="site-container">
-    <div class="hero">
-        <h1>🎬 Video Player — ScreenApp</h1>
-        <div class="tagline">Fullscreen immersive experience · Seamless playback</div>
-    </div>
-
-    <div class="video-card">
-        <div class="embed-wrapper">
-            <!-- 
-                Embedded video from ScreenApp.io.
-                Original iframe code: 
-                <iframe src="https://embed.screenapp.io/app/v/jEqXKYyETi?embed=true" width="100%" height="960" frameborder="0" allowfullscreen></iframe>
-                Added additional attributes: allow="autoplay; fullscreen; encrypted-media" and improved compatibility.
-            -->
-            <iframe 
-                src="https://embed.screenapp.io/app/v/jEqXKYyETi?embed=true" 
-                class="screenapp-frame"
-                width="100%" 
-                height="960" 
-                frameborder="0" 
-                allowfullscreen 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                loading="lazy"
-                title="ScreenApp embedded video player"
-                referrerpolicy="strict-origin-when-cross-origin">
-            </iframe>
+    <!-- ЗАГРУЗКА -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="logo-container">
+            <div class="cucumber-logo">🥒</div>
+            <h1>Kukumber</h1>
+            <p class="loading-text">Свежее общение...</p>
+            <div class="loading-dots"><span></span><span></span><span></span></div>
         </div>
     </div>
 
-    <div class="info-panel">
-        <div class="description">
-            <strong>✨ Embedded video from ScreenApp</strong> — high quality, responsive design and fullscreen support. <br>
-            The original video ID: <code style="background:#0a0e1a; padding:3px 8px; border-radius:20px; font-family:monospace;">jEqXKYyETi</code> 
-            • Click fullscreen icon for best viewing experience.
-        </div>
-        <div class="badge-group">
-            <div class="badge">📺 4K ready</div>
-            <div class="badge">⚡ Low latency</div>
-            <div class="badge">🔒 Secure embed</div>
+    <!-- АВТОРИЗАЦИЯ -->
+    <div id="auth-screen" class="auth-screen hidden">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <div class="cucumber-icon">🥒</div>
+                <h1>Kukumber</h1>
+                <p class="tagline">Свежее общение каждый день</p>
+            </div>
+            <div id="login-form" class="auth-form">
+                <h2>Вход</h2>
+                <input type="email" id="login-email" placeholder="Email">
+                <input type="password" id="login-password" placeholder="Пароль">
+                <button onclick="login()" class="btn-primary">Войти</button>
+                <p class="switch-form">Нет аккаунта? <a onclick="showRegister()">Регистрация</a></p>
+            </div>
+            <div id="register-form" class="auth-form hidden">
+                <h2>Регистрация</h2>
+                <input type="text" id="reg-username" placeholder="Имя пользователя">
+                <input type="email" id="reg-email" placeholder="Email">
+                <input type="tel" id="reg-phone" placeholder="Телефон (необязательно)">
+                <input type="password" id="reg-password" placeholder="Пароль (мин. 6 символов)">
+                <input type="password" id="reg-password-confirm" placeholder="Подтвердите пароль">
+                <button onclick="register()" class="btn-primary">Создать аккаунт</button>
+                <p class="switch-form">Есть аккаунт? <a onclick="showLogin()">Войти</a></p>
+            </div>
         </div>
     </div>
-    <div class="footer-note">
-        🎥 Direct embed from ScreenApp · optimized for both desktop & mobile · <a href="#" id="refreshLink">⟳ reload video</a> if needed
-    </div>
-</div>
 
-<!-- simple script to provide "reload video" without refreshing whole page -->
-<script>
-    (function() {
-        // find the iframe element
-        const iframeEl = document.querySelector('.screenapp-frame');
-        const refreshLink = document.getElementById('refreshLink');
+    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <div id="main-screen" class="main-screen hidden">
         
-        if (refreshLink && iframeEl) {
-            refreshLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                // store current src, then re-set to force iframe reload while preserving original URL
-                const currentSrc = iframeEl.src;
-                // break reference and restore to reload embed cleanly (without taking the video out)
-                // but if we just set .src = currentSrc, browser may not reload because it's identical.
-                // Workaround: set to empty then back to original after microtask
-                iframeEl.src = '';
-                setTimeout(() => {
-                    iframeEl.src = currentSrc;
-                }, 50);
-                // Optional: subtle feedback style
-                refreshLink.style.opacity = '0.6';
-                setTimeout(() => {
-                    refreshLink.style.opacity = '1';
-                }, 300);
-            });
-        }
+        <!-- ВКЛАДКА ЧАТЫ -->
+        <div id="chats-tab" class="tab-content">
+            <div class="app-container">
+                <!-- Боковая панель -->
+                <aside class="sidebar" id="sidebar">
+                    <div class="sidebar-header">
+                        <div class="user-info" onclick="switchToTab('settings')">
+                            <div class="avatar" id="user-avatar">🥒</div>
+                            <div class="user-details">
+                                <h3 id="current-username">Пользователь</h3>
+                                <span class="status online">В сети</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" id="search-chats" placeholder="🔍 Поиск по чатам..." oninput="searchChats()">
+                    </div>
+                    <div class="create-buttons">
+                        <button onclick="showNewChatDialog()" class="btn-create"><span>💬</span><span>Чат</span></button>
+                        <button onclick="showCreateGroupDialog()" class="btn-create"><span>👥</span><span>Группа</span></button>
+                        <button onclick="showCreateChannelDialog()" class="btn-create"><span>📢</span><span>Канал</span></button>
+                        <button onclick="showGlobalSearch()" class="btn-create"><span>🔍</span><span>Найти</span></button>
+                    </div>
+                    <div class="chats-list" id="chats-list">
+                        <div class="empty-chats"><p>Нет чатов</p></div>
+                    </div>
+                </aside>
 
-        // small console note: embed uses ScreenApp platform, we maintain aspect ratio
-        console.log('Video embed active — ScreenApp iframe integrated');
-        
-        // optional: for better aspect ratio on window resize? Keep height as defined in CSS respects 960px but within containers.
-        // Also ensure iframe responds to fullscreen API properly (already allowfullscreen)
-        // Handle dynamic height for window if needed - but keep original spec
-        function setIframeHeightBasedOnWidth() {
-            // not strictly needed, but ensures on ultra-wide we don't lose height perception, we keep 960px default for desktop
-            // but on smaller devices, media queries override height (vh)
-            if (window.innerWidth <= 780 && iframeEl) {
-                // media query already handles, we just maintain
-            }
-        }
-        window.addEventListener('resize', setIframeHeightBasedOnWidth);
-        setIframeHeightBasedOnWidth();
-    })();
-</script>
+                <!-- Область чата -->
+                <main class="chat-area" id="chat-area">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                    
+                    <div id="no-chat-selected" class="no-chat">
+                        <div class="cucumber-large">🥒</div>
+                        <h2>Выберите чат</h2>
+                    </div>
+                    
+                    <div id="active-chat" class="active-chat hidden">
+                        <div class="chat-header">
+                            <button class="back-btn" onclick="closeChat()">←</button>
+                            <div class="chat-user-info" onclick="showChatInfo()">
+                                <div class="avatar" id="chat-avatar">👤</div>
+                                <div>
+                                    <h3 id="chat-username">Пользователь</h3>
+                                    <span id="chat-status">был(а) недавно</span>
+                                </div>
+                            </div>
+                            <div class="chat-actions">
+                                <button onclick="startVoiceCall()" class="call-btn">📞</button>
+                                <button onclick="startVideoCall()" class="call-btn">📹</button>
+                            </div>
+                        </div>
+                        
+                        <div class="messages-container" id="messages-container"></div>
+                        
+                        <div class="message-input-area" id="message-input-area">
+                            <!-- Кнопка прикрепления файла 60x60 для ПК -->
+                            <label for="file-input" class="attach-btn" id="attach-file-btn">
+                                <img src="https://i.ibb.co/TDFN8s1J/Picsart-26-04-10-15-45-03-668.png" alt="Файл">
+                            </label>
+                            <input type="file" id="file-input" accept="image/*,video/*,audio/*" multiple style="display:none;">
+                            
+                            <button id="voice-record-btn" class="voice-btn" ontouchstart="startRecording()" ontouchend="stopRecording()" onmousedown="startRecording()" onmouseup="stopRecording()">🎤</button>
+                            
+                            <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="handleMessageKeyPress(event)" oninput="onTyping()">
+                            
+                            <button onclick="toggleEmojiPicker()" class="emoji-btn">😊</button>
+                            <button onclick="sendMessage()" class="send-btn">➤</button>
+                        </div>
+                        
+                        <div class="channel-footer hidden" id="channel-footer">
+                            <p>Только админы могут писать</p>
+                        </div>
+                        
+                        <div id="emoji-picker" class="emoji-picker hidden">
+                            <div class="emoji-grid"></div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА РЕЕЛСЫ -->
+        <div id="reels-tab" class="tab-content hidden">
+            <div class="reels-container">
+                <div class="reels-header">
+                    <h2>🎬 Реелсы</h2>
+                    <button onclick="showCreateReelModal()" class="btn-create-reel">+ Создать</button>
+                </div>
+                <div class="reels-tabs">
+                    <button class="reel-tab-btn active" onclick="switchReelsTab('feed')">Лента</button>
+                    <button class="reel-tab-btn" onclick="switchReelsTab('my')">Мои</button>
+                    <button class="reel-tab-btn" onclick="switchReelsTab('liked')">Понравилось</button>
+                </div>
+                <div id="reels-feed" class="reels-feed"></div>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА НАСТРОЙКИ -->
+        <div id="settings-tab" class="tab-content hidden">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h2>⚙️ Настройки</h2>
+                </div>
+                
+                <div class="settings-profile" onclick="showEditProfileModal()">
+                    <div class="settings-avatar" id="settings-avatar">🥒</div>
+                    <div class="settings-profile-info">
+                        <h3 id="settings-username">Пользователь</h3>
+                        <p id="settings-phone"></p>
+                    </div>
+                    <span class="arrow">›</span>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item" onclick="showNotificationSettings()">
+                        <span class="settings-icon">🔔</span>
+                        <span>Уведомления</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showPrivacySettings()">
+                        <span class="settings-icon">🔒</span>
+                        <span>Конфиденциальность</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showThemeSettings()">
+                        <span class="settings-icon">🎨</span>
+                        <span>Оформление</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showLanguageSettings()">
+                        <span class="settings-icon">🌍</span>
+                        <span>Язык</span>
+                        <span class="settings-value">Русский</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showStorageSettings()">
+                        <span class="settings-icon">💾</span>
+                        <span>Данные и память</span>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item" onclick="showAbout()">
+                        <span class="settings-icon">ℹ️</span>
+                        <span>О приложении</span>
+                        <span class="settings-value">v1.0</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showHelp()">
+                        <span class="settings-icon">❓</span>
+                        <span>Помощь</span>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item danger" onclick="logout()">
+                        <span class="settings-icon">🚪</span>
+                        <span>Выйти из аккаунта</span>
+                    </div>
+                </div>
+
+                <div class="settings-footer">
+                    <p>Kukumber Messenger</p>
+                    <p>Свежее общение каждый день 🥒</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- НИЖНЯЯ НАВИГАЦИЯ -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <button onclick="switchToTab('chats')" class="nav-item active" id="nav-chats">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">Чаты</span>
+            </button>
+            <button onclick="switchToTab('reels')" class="nav-item" id="nav-reels">
+                <span class="nav-icon">🎬</span>
+                <span class="nav-label">Реелсы</span>
+            </button>
+            <button onclick="switchToTab('settings')" class="nav-item" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Настройки</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- МОДАЛЬНЫЕ ОКНА (все остальные такие же, не меняю) -->
+    <div id="global-search-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3>🔍 Поиск пользователей</h3><button onclick="closeGlobalSearch()" class="btn-close">×</button></div><input type="text" id="global-search-input" placeholder="Имя" oninput="searchGlobalUsers()"><div id="global-users-list" class="users-list"></div></div></div>
+    <div id="new-chat-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3>💬 Новый чат (из контактов)</h3><button onclick="closeNewChatDialog()" class="btn-close">×</button></div><input type="text" id="new-chat-search" placeholder="Поиск среди контактов..." oninput="searchContacts()"><div id="users-list" class="users-list"></div></div></div>
+    <div id="create-group-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3>👥 Группа</h3><button onclick="closeCreateGroupDialog()" class="btn-close">×</button></div><div id="group-step-1"><div class="avatar-upload"><div class="avatar-preview" id="group-avatar-preview">👥</div><label>Загрузить фото<input type="file" accept="image/*" onchange="previewGroupAvatar(event)" style="display:none;"></label></div><input type="text" id="group-name" placeholder="Название группы"><textarea id="group-description" placeholder="Описание"></textarea><button onclick="goToGroupStep2()" class="btn-primary">Далее</button></div><div id="group-step-2" class="hidden"><p>Добавьте участников (из контактов):</p><input type="text" id="group-members-search" placeholder="Поиск..." oninput="searchGroupMembers()"><div id="selected-members" class="selected-members"></div><div id="group-members-list" class="users-list"></div><div class="modal-buttons"><button onclick="goToGroupStep1()" class="btn-secondary">Назад</button><button onclick="createGroup()" class="btn-primary">Создать</button></div></div></div></div>
+    <div id="create-channel-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3>📢 Канал</h3><button onclick="closeCreateChannelDialog()" class="btn-close">×</button></div><div class="avatar-upload"><div class="avatar-preview" id="channel-avatar-preview">📢</div><label>Загрузить фото<input type="file" accept="image/*" onchange="previewChannelAvatar(event)" style="display:none;"></label></div><input type="text" id="channel-name" placeholder="Название канала"><textarea id="channel-description" placeholder="Описание"></textarea><div class="channel-type-options"><label><input type="radio" name="channel-type" value="public" checked> 🌍 Публичный</label><label><input type="radio" name="channel-type" value="private"> 🔒 Приватный</label></div><input type="text" id="channel-link" placeholder="Ссылка (например: mychannel)" oninput="validateChannelLink()"><p id="channel-link-hint" class="hint"></p><button onclick="createChannel()" class="btn-primary">Создать</button></div></div>
+    <div id="chat-info-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3 id="info-title">Информация</h3><button onclick="closeChatInfo()" class="btn-close">×</button></div><div class="chat-info-body"><div class="info-avatar" id="info-avatar">👤</div><h2 id="info-name">Имя</h2><p id="info-status"></p><p id="info-description"></p><div id="channel-stats" class="hidden"><span id="subscribers-count">0</span> подписчиков</div><div id="group-members-section" class="hidden"><h4>Участники (<span id="members-count">0</span>)</h4><button onclick="showAddMembersDialog()" id="add-member-btn" class="btn-small">+ Добавить</button><div id="info-members-list"></div></div><div class="info-actions"><button id="leave-btn" onclick="leaveChat()" class="btn-danger hidden">Покинуть</button><button id="subscribe-btn" onclick="subscribeToChannel()" class="btn-primary hidden">Подписаться</button><button id="unsubscribe-btn" onclick="unsubscribeFromChannel()" class="btn-secondary hidden">Отписаться</button><button id="delete-btn" onclick="deleteChat()" class="btn-danger hidden">Удалить</button></div></div></div></div>
+    <div id="add-members-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3>Добавить участников</h3><button onclick="closeAddMembersDialog()" class="btn-close">×</button></div><input type="text" id="add-members-search" placeholder="Поиск..." oninput="searchAddMembers()"><div id="add-members-list" class="users-list"></div></div></div>
+    <div id="create-reel-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3>🎬 Новый реелс</h3><button onclick="closeCreateReelModal()" class="btn-close">×</button></div><div class="reel-upload-area" id="reel-upload-area" onclick="document.getElementById('reel-file-input').click()"><span>📹</span><p>Нажмите чтобы выбрать фото</p><input type="file" id="reel-file-input" accept="image/*" onchange="previewReelMedia(event)" style="display:none;"></div><div id="reel-preview" class="reel-preview hidden"></div><textarea id="reel-caption" placeholder="Описание..." maxlength="500"></textarea><div class="reel-options"><label><input type="checkbox" id="reel-comments-enabled" checked> Разрешить комментарии</label></div><button onclick="publishReel()" class="btn-primary">Опубликовать</button></div></div>
+    <div id="edit-profile-modal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h3>Редактировать профиль</h3><button onclick="closeEditProfileModal()" class="btn-close">×</button></div><div class="avatar-upload"><div class="avatar-preview" id="edit-avatar-preview">🥒</div><label>Изменить фото<input type="file" id="edit-avatar-input" accept="image/*" onchange="previewEditAvatar(event)" style="display:none;"></label></div><input type="text" id="edit-username" placeholder="Имя пользователя"><input type="text" id="edit-bio" placeholder="О себе"><button onclick="saveProfile()" class="btn-primary">Сохранить</button></div></div>
+    <div id="view-reel-modal" class="modal hidden"><div class="reel-viewer"><button class="reel-close-btn" onclick="closeViewReelModal()">×</button><div class="reel-media" id="reel-media-container"></div><div class="reel-info"><div class="reel-author"><div class="avatar" id="reel-author-avatar">👤</div><span id="reel-author-name">Автор</span></div><p id="reel-caption-view"></p></div><div class="reel-actions-bar"><button onclick="likeReel()" class="reel-action" id="like-reel-btn">❤️ <span id="reel-likes-count">0</span></button><button onclick="showReelComments()" class="reel-action">💬 <span id="reel-comments-count">0</span></button><button onclick="shareReel()" class="reel-action">↗️</button><button id="delete-reel-btn" onclick="deleteCurrentReel()" class="reel-action" style="display:none;">🗑️</button></div></div></div>
+    <div id="call-modal" class="modal hidden"><div class="call-container"><div class="call-header"><h3 id="call-username">Звонок</h3><span id="call-status">Соединение...</span><span id="call-timer">00:00</span></div><div class="video-container"><video id="remote-video" autoplay playsinline></video><video id="local-video" autoplay playsinline muted></video><div id="call-avatar" class="call-avatar"><div class="avatar-large">👤</div></div></div><div class="call-controls"><button onclick="toggleMute()" class="btn-call" id="mute-btn">🎤</button><button onclick="toggleVideo()" class="btn-call" id="video-btn">📹</button><button onclick="endCall()" class="btn-call btn-end-call">📵</button></div></div></div>
+    <div id="incoming-call-modal" class="modal hidden"><div class="incoming-call-container"><div class="incoming-call-avatar">👤</div><h3 id="incoming-call-username">Входящий звонок</h3><p id="incoming-call-type">Аудиозвонок</p><div class="incoming-call-actions"><button onclick="rejectCall()" class="btn-call btn-reject">❌</button><button onclick="acceptCall()" class="btn-call btn-accept">✅</button></div></div></div>
+    <div id="image-preview-modal" class="modal hidden"><div class="image-preview-container"><div class="modal-header"><h3>Отправить</h3><button onclick="closeImagePreview()" class="btn-close">×</button></div><img id="preview-image" src=""><input type="text" id="image-caption" placeholder="Подпись..."><button onclick="confirmImageSend()" class="btn-primary">Отправить</button></div></div>
+    <div id="image-lightbox" class="image-lightbox hidden" onclick="closeLightbox()"><img id="lightbox-image" src=""></div>
+    <div id="notifications-container" class="notifications-container"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Скрипты -->
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/calls.js"></script>
+    <script src="js/upload.js"></script>
+    <script src="js/reels.js"></script>
+    <script src="js/settings.js"></script>
 </body>
 </html>
