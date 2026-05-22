@@ -3906,3 +3906,223 @@ body.night-mode .messages-input {
 body.night-mode .messages-input::placeholder {
     color: #888 !important;
 }
+/* ===== ИСПРАВЛЕНИЕ - ВКЛАДКА ПЕРЕПИСКИ НА ВЕСЬ ЭКРАН ===== */
+
+/* Вкладка Переписки - на весь экран */
+#messages-tab {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 50 !important;
+    background: var(--background, #f5f7f5) !important;
+}
+
+/* Контейнер вкладки */
+#messages-tab .messages-layout {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow: hidden !important;
+}
+
+/* Левая панель (список чатов) */
+#messages-tab .messages-sidebar {
+    width: 320px !important;
+    min-width: 320px !important;
+    height: 100% !important;
+    background: white !important;
+    border-right: 1px solid var(--border, #d4e4d4) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Правая панель (область чата) */
+#messages-tab .messages-chat-area {
+    flex: 1 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: var(--background, #f5f7f5) !important;
+}
+
+/* Активный чат - на всю высоту */
+#messages-tab .messages-active-chat {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Шапка чата */
+#messages-tab .messages-chat-header {
+    flex-shrink: 0 !important;
+    background: white !important;
+    border-bottom: 1px solid var(--border, #d4e4d4) !important;
+    padding: 12px 20px !important;
+}
+
+/* Контейнер сообщений - растягивается */
+#messages-tab .messages-container {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 15px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+}
+
+/* Строка ввода - прижата к низу */
+#messages-tab .messages-input-area {
+    flex-shrink: 0 !important;
+    background: white !important;
+    border-top: 1px solid var(--border, #d4e4d4) !important;
+    padding: 12px 15px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+/* ===== МОБИЛЬНАЯ ВЕРСИЯ (до 768px) ===== */
+@media (max-width: 768px) {
+    /* Левая панель - выдвижная */
+    #messages-tab .messages-sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 85% !important;
+        max-width: 320px !important;
+        z-index: 1000 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+        box-shadow: 5px 0 20px rgba(0,0,0,0.3) !important;
+    }
+    
+    #messages-tab .messages-sidebar.open {
+        transform: translateX(0) !important;
+    }
+    
+    /* Правая панель - на всю ширину */
+    #messages-tab .messages-chat-area {
+        width: 100% !important;
+        flex: 1 !important;
+    }
+    
+    /* Кнопка меню для мобильных */
+    #messages-tab .mobile-menu-btn-messages {
+        display: flex !important;
+        position: fixed !important;
+        top: 12px !important;
+        left: 12px !important;
+        z-index: 101 !important;
+        width: 44px !important;
+        height: 44px !important;
+        background: var(--forest, #228B22) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-size: 24px !important;
+        cursor: pointer !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Сообщения на мобильных */
+    #messages-tab .messages-message {
+        max-width: 85% !important;
+    }
+    
+    /* Строка ввода на мобильных */
+    #messages-tab .messages-input-area {
+        padding: 8px 12px !important;
+        gap: 6px !important;
+    }
+    
+    #messages-tab .messages-attach-btn,
+    #messages-tab .messages-emoji-btn,
+    #messages-tab .messages-send-btn {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 18px !important;
+    }
+    
+    #messages-tab .messages-input {
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* ===== ДЛЯ ПК (шире 768px) ===== */
+@media (min-width: 769px) {
+    #messages-tab .messages-sidebar {
+        position: relative !important;
+        transform: none !important;
+    }
+    
+    /* Скрываем мобильную кнопку на ПК */
+    #messages-tab .mobile-menu-btn-messages {
+        display: none !important;
+    }
+}
+
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.night-mode #messages-tab .messages-sidebar {
+    background: #1e1e1e !important;
+    border-right-color: #3a3a3a !important;
+}
+
+body.night-mode #messages-tab .messages-header h2 {
+    color: white !important;
+}
+
+body.night-mode #messages-tab .messages-search input {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+    color: white !important;
+}
+
+body.night-mode #messages-tab .messages-chat-item {
+    border-bottom-color: #3a3a3a !important;
+}
+
+body.night-mode #messages-tab .messages-chat-item:hover {
+    background: #2a2a2a !important;
+}
+
+body.night-mode #messages-tab .messages-chat-name {
+    color: white !important;
+}
+
+body.night-mode #messages-tab .messages-chat-header {
+    background: #1e1e1e !important;
+    border-bottom-color: #3a3a3a !important;
+}
+
+body.night-mode #messages-tab .messages-chat-details h3 {
+    color: white !important;
+}
+
+body.night-mode #messages-tab .messages-message.received {
+    background: #2a2a2a !important;
+    color: white !important;
+}
+
+body.night-mode #messages-tab .messages-input-area {
+    background: #1e1e1e !important;
+    border-top-color: #3a3a3a !important;
+}
+
+body.night-mode #messages-tab .messages-input {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+    color: white !important;
+}
