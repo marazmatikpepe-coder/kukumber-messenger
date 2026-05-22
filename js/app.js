@@ -1195,33 +1195,13 @@ window.closeMessagesSidebar = function() {
         sidebar.classList.remove('open');
     }
 };
-// ========== ВКЛАДКА "ПЕРЕПИСКИ" - ПОЛНЫЙ ФУНКЦИОНАЛ ==========
+// ========== ПРОСТАЯ И НАДЁЖНАЯ ВКЛАДКА "ПЕРЕПИСКИ" ==========
 (function() {
-    console.log('Переписки: инициализация');
+    console.log('🔥 Переписки: простая версия загружается');
     
-    let currentMessagesChatId = null;
-    let currentMessagesChatData = null;
-    let messagesListener = null;
-    let messagesLoadedIds = new Set();
-    let messagesUserCache = {};
-
-    // Получение данных пользователя
-    async function getMessagesUserData(userId) {
-        if (messagesUserCache[userId]) return messagesUserCache[userId];
-        try {
-            const snapshot = await database.ref('users/' + userId).once('value');
-            const data = snapshot.val();
-            if (data) {
-                messagesUserCache[userId] = {
-                    username: data.username || 'Пользователь',
-                    avatar: data.avatar || '',
-                    status: data.status || { online: false }
-                };
-                return messagesUserCache[userId];
-            }
-        } catch(e) {}
-        return { username: 'Пользователь', avatar: '', status: { online: false } };
-    }
+    let currentChat = null;
+    let msgListener = null;
+    let loadedMsgIds = new Set();
 
     // Загрузка списка чатов
     window.loadMessagesChats = async function() {
@@ -1231,307 +1211,354 @@ window.closeMessagesSidebar = function() {
             container.innerHTML = '<div class="messages-empty">🔐 Войдите в аккаунт</div>';
             return;
         }
-        container.innerHTML = '<div class="messages-empty">🔄 Загрузка...</div>';
+        
+        container.innerHTML = '<div class="messages-empty">🔄 Загрузка чатов...</div>';
+        
         try {
+            // Получаем чаты пользователя
             const userChatsSnap = await database.ref('userChats/' + currentUser.uid).once('value');
             const userChats = userChatsSnap.val();
+            
             if (!userChats || Object.keys(userChats).length === 0) {
-                container.innerHTML = '<div class="messages-empty">💬 Нет чатов. Начните диалог!</div>';
+                container.innerHTML = '<div class="messages-empty">💬 Нет чатов</div>';
                 return;
             }
+            
             const chatIds = Object.keys(userChats);
-            const chatsArray = [];
+            const chats = [];
+            
             for (const chatId of chatIds) {
                 const chatSnap = await database.ref('chats/' + chatId).once('value');
                 const chat = chatSnap.val();
-                if (chat) chatsArray.push({ id: chatId, data: chat });
+                if (chat) {
+                    chats.push({ id: chatId, data: chat });
+                }
             }
-            chatsArray.sort((a, b) => (b.data.lastMessageTime || 0) - (a.data.lastMessageTime || 0));
+            
+            // Сортируем по времени последнего сообщения
+            chats.sort((a, b) => (b.data.lastMessageTime || 0) - (a.data.lastMessageTime || 0));
+            
             container.innerHTML = '';
-            for (const chat of chatsArray) {
-                const chatElement = await createMessagesChatItem(chat.id, chat.data);
-                container.appendChild(chatElement);
+            
+            for (const chat of chats) {
+                const item = document.createElement('div');
+                item.className = 'messages-chat-item';
+                item.setAttribute('data-chat-id', chat.id);
+                
+                let name = 'Чат';
+                let avatarHtml = '💬';
+                let preview = chat.data.lastMessage || 'Нет сообщений';
+                let time = '';
+                
+                if (chat.data.lastMessageTime) {
+                    const d = new Date(chat.data.lastMessageTime);
+                    time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                }
+                
+                if (preview.length > 40) preview = preview.substring(0, 37) + '...';
+                
+                // Определяем тип чата
+                if (chat.data.type === 'group') {
+                    name = chat.data.name || 'Группа';
+                    avatarHtml = '👥';
+                } 
+                else if (chat.data.type === 'channel') {
+                    name = chat.data.name || 'Канал';
+                    avatarHtml = '📢';
+                }
+                else {
+                    // Личный чат - ищем имя собеседника
+                    let otherId = null;
+                    if (chat.data.participants) {
+                        for (const uid of chat.data.participants) {
+                            if (uid !== currentUser.uid) {
+                                otherId = uid;
+                                break;
+                            }
+                        }
+                    }
+                    if (otherId) {
+                        const userSnap = await database.ref('users/' + otherId + '/username').once('value');
+                        name = userSnap.val() || 'Пользователь';
+                        avatarHtml = '👤';
+                    }
+                }
+                
+                item.innerHTML = `
+                    <div class="messages-chat-avatar-small">${avatarHtml}</div>
+                    <div class="messages-chat-info">
+                        <div class="messages-chat-name">${escapeHtml2(name)}</div>
+                        <div class="messages-chat-preview">${escapeHtml2(preview)}</div>
+                    </div>
+                    <div class="messages-chat-time">${time}</div>
+                `;
+                
+                item.onclick = (function(id, data) {
+                    return function() { openMessageChat(id, data); };
+                })(chat.id, chat.data);
+                
+                container.appendChild(item);
             }
+            
         } catch (err) {
-            console.error('Ошибка загрузки чатов:', err);
+            console.error('Ошибка:', err);
             container.innerHTML = '<div class="messages-empty">❌ Ошибка загрузки</div>';
         }
     };
-
-    // Создание элемента чата в списке
-    async function createMessagesChatItem(chatId, chatData) {
-        const div = document.createElement('div');
-        div.className = 'messages-chat-item';
-        div.setAttribute('data-chat-id', chatId);
-        let name = '', avatarContent = '👤', avatarStyle = '';
-        let preview = chatData.lastMessage || 'Нет сообщений';
-        let time = chatData.lastMessageTime ? new Date(chatData.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-        if (preview.length > 50) preview = preview.substring(0, 47) + '...';
-        if (chatData.type === 'group') {
-            name = chatData.name || 'Группа';
-            avatarContent = '👥';
-            if (chatData.avatar) avatarStyle = `background-image: url(${chatData.avatar}); background-size: cover;`;
-        } else if (chatData.type === 'channel') {
-            name = chatData.name || 'Канал';
-            avatarContent = '📢';
-            if (chatData.avatar) avatarStyle = `background-image: url(${chatData.avatar}); background-size: cover;`;
-        } else {
-            let otherUserId = null;
-            if (chatData.participants) {
-                for (const uid of chatData.participants) {
-                    if (uid !== currentUser.uid) { otherUserId = uid; break; }
-                }
-            }
-            if (otherUserId) {
-                const userData = await getMessagesUserData(otherUserId);
-                name = userData.username;
-                if (userData.avatar) {
-                    avatarStyle = `background-image: url(${userData.avatar}); background-size: cover;`;
-                    avatarContent = '';
-                }
-            } else { name = 'Пользователь'; }
-        }
-        div.innerHTML = `
-            <div class="messages-chat-avatar-small" style="${avatarStyle}">${avatarContent}</div>
-            <div class="messages-chat-info">
-                <div class="messages-chat-name">${escapeHtml(name)}</div>
-                <div class="messages-chat-preview">${escapeHtml(preview)}</div>
-            </div>
-            <div class="messages-chat-time">${time}</div>
-        `;
-        div.onclick = () => openMessagesChat(chatId, chatData);
-        return div;
-    }
-
+    
     // Открытие чата
-    window.openMessagesChat = async function(chatId, chatData) {
-        console.log('Открытие чата:', chatId);
-        currentMessagesChatId = chatId;
-        currentMessagesChatData = chatData;
-        currentMessagesChatData.chatId = chatId;
-        if (chatData.type === 'private' && chatData.participants) {
-            for (const uid of chatData.participants) {
-                if (uid !== currentUser.uid) { currentMessagesChatData.otherUserId = uid; break; }
+    window.openMessageChat = async function(chatId, chatData) {
+        console.log('Открываем чат:', chatId, chatData.type);
+        
+        currentChat = { id: chatId, data: chatData };
+        
+        // Обновляем активный класс
+        document.querySelectorAll('.messages-chat-item').forEach(el => {
+            el.classList.remove('active');
+            if (el.getAttribute('data-chat-id') === chatId) {
+                el.classList.add('active');
             }
-        }
-        document.querySelectorAll('.messages-chat-item').forEach(item => item.classList.remove('active'));
-        const activeItem = document.querySelector(`.messages-chat-item[data-chat-id="${chatId}"]`);
-        if (activeItem) activeItem.classList.add('active');
+        });
+        
+        // Показываем область чата
         const noChat = document.getElementById('messages-no-chat');
         const activeChat = document.getElementById('messages-active-chat');
         if (noChat) noChat.style.display = 'none';
         if (activeChat) activeChat.style.display = 'flex';
-        await updateMessagesHeader(chatId, chatData);
-        loadMessagesChat(chatId);
+        
+        // Обновляем шапку
+        await updateChatHeader2(chatId, chatData);
+        
+        // Загружаем сообщения
+        loadMessages2(chatId);
+        
+        // Закрываем sidebar на мобильных
         if (window.innerWidth <= 768) {
             const sidebar = document.getElementById('messages-sidebar');
             if (sidebar) sidebar.classList.remove('open');
         }
     };
-
-    // Обновление шапки чата
-    async function updateMessagesHeader(chatId, chatData) {
+    
+    // Обновление шапки
+    async function updateChatHeader2(chatId, chatData) {
         const nameEl = document.getElementById('messages-chat-name');
         const statusEl = document.getElementById('messages-chat-status');
         const avatarEl = document.getElementById('messages-chat-avatar');
+        
         if (!nameEl) return;
-        avatarEl.style.backgroundImage = '';
-        avatarEl.textContent = '';
+        
         if (chatData.type === 'group') {
             nameEl.textContent = chatData.name || 'Группа';
-            statusEl.textContent = chatData.members ? Object.keys(chatData.members).length + ' участников' : 'группа';
-            if (chatData.avatar) {
-                avatarEl.style.backgroundImage = `url(${chatData.avatar})`;
-                avatarEl.style.backgroundSize = 'cover';
-            } else { avatarEl.textContent = '👥'; }
-        } else if (chatData.type === 'channel') {
+            statusEl.textContent = 'группа';
+            avatarEl.textContent = '👥';
+        } 
+        else if (chatData.type === 'channel') {
             nameEl.textContent = chatData.name || 'Канал';
-            statusEl.textContent = chatData.subscribers ? Object.keys(chatData.subscribers).length + ' подписчиков' : 'канал';
-            if (chatData.avatar) {
-                avatarEl.style.backgroundImage = `url(${chatData.avatar})`;
-                avatarEl.style.backgroundSize = 'cover';
-            } else { avatarEl.textContent = '📢'; }
-        } else {
-            const otherUserId = currentMessagesChatData.otherUserId;
-            if (otherUserId) {
-                const userData = await getMessagesUserData(otherUserId);
-                nameEl.textContent = userData.username;
-                statusEl.textContent = userData.status.online ? 'в сети' : 'не в сети';
-                if (userData.avatar) {
+            statusEl.textContent = 'канал';
+            avatarEl.textContent = '📢';
+        }
+        else {
+            // Личный чат
+            let otherId = null;
+            if (chatData.participants) {
+                for (const uid of chatData.participants) {
+                    if (uid !== currentUser.uid) {
+                        otherId = uid;
+                        break;
+                    }
+                }
+            }
+            if (otherId) {
+                const userSnap = await database.ref('users/' + otherId).once('value');
+                const userData = userSnap.val();
+                nameEl.textContent = userData?.username || 'Пользователь';
+                statusEl.textContent = userData?.status?.online ? 'в сети' : 'не в сети';
+                avatarEl.textContent = '👤';
+                if (userData?.avatar) {
                     avatarEl.style.backgroundImage = `url(${userData.avatar})`;
                     avatarEl.style.backgroundSize = 'cover';
-                } else { avatarEl.textContent = '👤'; }
+                    avatarEl.textContent = '';
+                }
             }
         }
+        
+        // Клик по шапке
         const userInfo = document.getElementById('messages-chat-user-info');
         if (userInfo) {
             userInfo.onclick = () => {
-                if (currentMessagesChatData.type === 'private' && currentMessagesChatData.otherUserId) {
-                    if (typeof window.openUserProfile === 'function') window.openUserProfile(currentMessagesChatData.otherUserId);
-                } else if (currentMessagesChatData.type === 'group') {
-                    if (typeof window.openGroupProfile === 'function') window.openGroupProfile(currentMessagesChatId);
+                if (chatData.type === 'private' && currentChat?.data?.otherUserId) {
+                    if (typeof window.openUserProfile === 'function') {
+                        window.openUserProfile(currentChat.data.otherUserId);
+                    }
                 }
             };
         }
     }
-
+    
     // Загрузка сообщений
-    function loadMessagesChat(chatId) {
+    function loadMessages2(chatId) {
         const container = document.getElementById('messages-container');
         if (!container) return;
+        
         container.innerHTML = '';
-        messagesLoadedIds.clear();
-        if (messagesListener) messagesListener.off();
-        messagesListener = database.ref('messages/' + chatId).orderByChild('timestamp').limitToLast(50);
-        messagesListener.on('child_added', (snapshot) => {
-            const message = snapshot.val();
-            const messageId = snapshot.key;
-            if (messagesLoadedIds.has(messageId)) return;
-            messagesLoadedIds.add(messageId);
-            message.id = messageId;
-            appendMessagesMessage(message);
-        });
-        messagesListener.on('child_removed', (snapshot) => {
-            const msgElement = document.querySelector(`.messages-message[data-message-id="${snapshot.key}"]`);
-            if (msgElement) msgElement.remove();
-            messagesLoadedIds.delete(snapshot.key);
+        loadedMsgIds.clear();
+        
+        if (msgListener) msgListener.off();
+        
+        msgListener = database.ref('messages/' + chatId)
+            .orderByChild('timestamp')
+            .limitToLast(50);
+        
+        msgListener.on('child_added', (snapshot) => {
+            const msg = snapshot.val();
+            const msgId = snapshot.key;
+            
+            if (loadedMsgIds.has(msgId)) return;
+            loadedMsgIds.add(msgId);
+            
+            msg.id = msgId;
+            appendMessage2(msg);
         });
     }
-
-    // Добавление сообщения в контейнер
-    function appendMessagesMessage(message) {
+    
+    // Добавление сообщения
+    function appendMessage2(msg) {
         const container = document.getElementById('messages-container');
         if (!container) return;
-        const isSent = message.senderId === currentUser.uid;
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `messages-message ${isSent ? 'sent' : 'received'}`;
-        messageDiv.setAttribute('data-message-id', message.id);
+        
+        const isSent = msg.senderId === currentUser?.uid;
+        const div = document.createElement('div');
+        div.className = `messages-message ${isSent ? 'sent' : 'received'}`;
+        
         let content = '';
-        if (message.type === 'image') {
-            content = `<img src="${message.imageUrl}" style="max-width:200px; max-height:200px; border-radius:12px;">`;
-            if (message.caption) content += `<div class="messages-message-text" style="margin-top:5px;">${escapeHtml(message.caption)}</div>`;
-        } else if (message.type === 'gif') {
-            content = `<img src="${message.gifUrl}" style="max-width:200px; border-radius:12px;"><span style="font-size:10px;">GIF</span>`;
+        if (msg.type === 'text' || !msg.type) {
+            content = `<div class="messages-message-text">${escapeHtml2(msg.text || '')}</div>`;
+        } else if (msg.type === 'image') {
+            content = `<img src="${msg.imageUrl}" style="max-width:200px; border-radius:12px;">`;
+        } else if (msg.type === 'gif') {
+            content = `<img src="${msg.gifUrl}" style="max-width:200px; border-radius:12px;"><span style="font-size:10px;">GIF</span>`;
         } else {
-            content = `<div class="messages-message-text">${escapeHtml(message.text || '')}</div>`;
+            content = `<div class="messages-message-text">📎 ${msg.type}</div>`;
         }
-        const time = message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-        messageDiv.innerHTML = `${content}<div class="messages-message-time">${time}</div>`;
-        container.appendChild(messageDiv);
+        
+        const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+        
+        div.innerHTML = `${content}<div class="messages-message-time">${time}</div>`;
+        container.appendChild(div);
         container.scrollTop = container.scrollHeight;
     }
-
+    
     // Отправка сообщения
     window.sendMessagesMessage = async function() {
         const input = document.getElementById('messages-input');
         if (!input) return;
+        
         const text = input.value.trim();
-        if (!text || !currentMessagesChatId) return;
-        const message = {
-            type: 'text', text: text, senderId: currentUser.uid,
+        if (!text || !currentChat) return;
+        
+        const msg = {
+            type: 'text',
+            text: text,
+            senderId: currentUser.uid,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         };
+        
         input.value = '';
+        
         try {
-            await database.ref('messages/' + currentMessagesChatId).push(message);
+            await database.ref('messages/' + currentChat.id).push(msg);
+            
             const shortText = text.length > 50 ? text.substring(0, 47) + '...' : text;
-            await database.ref('chats/' + currentMessagesChatId).update({
-                lastMessage: shortText, lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            await database.ref('chats/' + currentChat.id).update({
+                lastMessage: shortText,
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
             });
+            
+            // Обновляем список чатов
             window.loadMessagesChats();
+            
         } catch (err) {
-            console.error('Ошибка отправки:', err);
-            showNotification('Ошибка отправки', 'error');
+            console.error('Ошибка:', err);
+            showNotification2('Ошибка отправки', 'error');
             input.value = text;
         }
     };
-
+    
     // Поиск
-    let searchTimeout = null;
-    function setupMessagesSearch() {
-        const searchInput = document.getElementById('messages-search-input');
-        if (!searchInput) return;
-        searchInput.oninput = function() {
+    let searchTimeout2 = null;
+    function setupSearch2() {
+        const input = document.getElementById('messages-search-input');
+        if (!input) return;
+        input.oninput = async function() {
             const query = this.value.trim().toLowerCase();
-            if (searchTimeout) clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => filterMessagesChats(query), 300);
+            if (searchTimeout2) clearTimeout(searchTimeout2);
+            searchTimeout2 = setTimeout(async () => {
+                const items = document.querySelectorAll('.messages-chat-item');
+                if (!query || query.length < 2) {
+                    items.forEach(i => i.style.display = 'flex');
+                    return;
+                }
+                for (const item of items) {
+                    const nameEl = item.querySelector('.messages-chat-name');
+                    const name = nameEl?.textContent?.toLowerCase() || '';
+                    item.style.display = name.includes(query) ? 'flex' : 'none';
+                }
+            }, 300);
         };
     }
-    async function filterMessagesChats(query) {
-        const items = document.querySelectorAll('.messages-chat-item');
-        if (!query || query.length < 2) {
-            items.forEach(item => item.style.display = 'flex');
-            return;
-        }
-        for (const item of items) {
-            const chatId = item.getAttribute('data-chat-id');
-            const chatSnap = await database.ref('chats/' + chatId).once('value');
-            const chat = chatSnap.val();
-            let match = false;
-            if (chat.type === 'group') {
-                match = chat.name?.toLowerCase().includes(query);
-            } else if (chat.type === 'channel') {
-                match = chat.name?.toLowerCase().includes(query) || (chat.kname && chat.kname.toLowerCase().includes(query.replace('@', '')));
-            } else {
-                let otherUserId = null;
-                if (chat.participants) {
-                    for (const uid of chat.participants) {
-                        if (uid !== currentUser.uid) { otherUserId = uid; break; }
-                    }
-                }
-                if (otherUserId) {
-                    const userData = await getMessagesUserData(otherUserId);
-                    match = userData.username?.toLowerCase().includes(query);
-                }
-            }
-            item.style.display = match ? 'flex' : 'none';
-        }
-    }
-
-    function escapeHtml(text) {
+    
+    function escapeHtml2(text) {
         if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
-
-    function showNotification(message, type) {
+    
+    function showNotification2(msg, type) {
         const container = document.getElementById('notifications-container');
         if (!container) return;
         const notif = document.createElement('div');
         notif.className = 'notification ' + type;
-        notif.textContent = message;
+        notif.textContent = msg;
         container.appendChild(notif);
         setTimeout(() => notif.remove(), 3000);
     }
-
+    
     // Инициализация
-    function initMessagesTab() {
-        console.log('Инициализация вкладки Переписки');
+    function initMessages2() {
+        console.log('Инициализация Переписок');
         const sendBtn = document.getElementById('messages-send-btn');
-        const messageInput = document.getElementById('messages-input');
+        const msgInput = document.getElementById('messages-input');
+        
         if (sendBtn) sendBtn.onclick = () => window.sendMessagesMessage();
-        if (messageInput) {
-            messageInput.onkeypress = (e) => {
+        if (msgInput) {
+            msgInput.onkeypress = (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     window.sendMessagesMessage();
                 }
             };
         }
-        setupMessagesSearch();
-        setTimeout(() => window.loadMessagesChats(), 500);
+        
+        setupSearch2();
+        window.loadMessagesChats();
     }
-
+    
     // Перехват переключения вкладки
-    const originalSwitchToTab = window.switchToTab;
+    const origSwitch = window.switchToTab;
     window.switchToTab = function(tabName) {
-        if (tabName === 'messages') setTimeout(() => initMessagesTab(), 100);
-        if (originalSwitchToTab) originalSwitchToTab(tabName);
+        if (tabName === 'messages') {
+            setTimeout(() => initMessages2(), 100);
+        }
+        if (origSwitch) origSwitch(tabName);
     };
+    
+    // Если уже на вкладке
     setTimeout(() => {
-        const messagesTab = document.getElementById('messages-tab');
-        if (messagesTab && !messagesTab.classList.contains('hidden') && currentUser) initMessagesTab();
+        const tab = document.getElementById('messages-tab');
+        if (tab && !tab.classList.contains('hidden') && currentUser) {
+            initMessages2();
+        }
     }, 1500);
 })();
 
@@ -1540,13 +1567,3 @@ window.toggleMessagesSidebar = function() {
     const sidebar = document.getElementById('messages-sidebar');
     if (sidebar) sidebar.classList.toggle('open');
 };
-window.closeMessagesSidebar = function() {
-    const sidebar = document.getElementById('messages-sidebar');
-    if (sidebar && window.innerWidth <= 768) sidebar.classList.remove('open');
-};
-function checkMessagesMobileMenu() {
-    const menuBtn = document.querySelector('.mobile-menu-btn-messages');
-    if (menuBtn) menuBtn.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
-}
-window.addEventListener('resize', checkMessagesMobileMenu);
-checkMessagesMobileMenu();
