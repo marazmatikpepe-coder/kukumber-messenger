@@ -644,3 +644,543 @@ async function sendPushNotification(recipientId, title, body, chatId) {
         console.error('Ошибка отправки push:', err);
     }
 }
+// ========== НОВАЯ ВКЛАДКА "ПЕРЕПИСКИ" ==========
+(function() {
+    console.log('Переписки: инициализация');
+    
+    // Переменные
+    let currentMessagesChatId = null;
+    let currentMessagesChatData = null;
+    let messagesListener = null;
+    let messagesLoadedIds = new Set();
+    
+    // Кэш пользователей
+    let messagesUserCache = {};
+    
+    // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========
+    async function getMessagesUserData(userId) {
+        if (messagesUserCache[userId]) return messagesUserCache[userId];
+        
+        try {
+            const snapshot = await database.ref('users/' + userId).once('value');
+            const data = snapshot.val();
+            if (data) {
+                messagesUserCache[userId] = {
+                    username: data.username || 'Пользователь',
+                    avatar: data.avatar || '',
+                    status: data.status || { online: false }
+                };
+                return messagesUserCache[userId];
+            }
+        } catch(e) {}
+        return { username: 'Пользователь', avatar: '', status: { online: false } };
+    }
+    
+    // ========== ЗАГРУЗКА СПИСКА ЧАТОВ ==========
+    async function loadMessagesChats() {
+        const container = document.getElementById('messages-chats-list');
+        if (!container) return;
+        
+        if (!currentUser || !currentUser.uid) {
+            container.innerHTML = '<div class="messages-empty">🔐 Войдите в аккаунт</div>';
+            return;
+        }
+        
+        container.innerHTML = '<div class="messages-empty">🔄 Загрузка...</div>';
+        
+        try {
+            const userChatsSnap = await database.ref('userChats/' + currentUser.uid).once('value');
+            const userChats = userChatsSnap.val();
+            
+            if (!userChats || Object.keys(userChats).length === 0) {
+                container.innerHTML = '<div class="messages-empty">💬 Нет чатов. Начните диалог!</div>';
+                return;
+            }
+            
+            const chatIds = Object.keys(userChats);
+            const chatsArray = [];
+            
+            for (const chatId of chatIds) {
+                const chatSnap = await database.ref('chats/' + chatId).once('value');
+                const chat = chatSnap.val();
+                if (chat) {
+                    chatsArray.push({ id: chatId, data: chat });
+                }
+            }
+            
+            // Сортировка по времени последнего сообщения
+            chatsArray.sort((a, b) => (b.data.lastMessageTime || 0) - (a.data.lastMessageTime || 0));
+            
+            container.innerHTML = '';
+            
+            for (const chat of chatsArray) {
+                const chatElement = await createMessagesChatItem(chat.id, chat.data);
+                container.appendChild(chatElement);
+            }
+            
+        } catch (err) {
+            console.error('Ошибка загрузки чатов:', err);
+            container.innerHTML = '<div class="messages-empty">❌ Ошибка загрузки</div>';
+        }
+    }
+    
+    // ========== СОЗДАНИЕ ЭЛЕМЕНТА ЧАТА ==========
+    async function createMessagesChatItem(chatId, chatData) {
+        const div = document.createElement('div');
+        div.className = 'messages-chat-item';
+        div.setAttribute('data-chat-id', chatId);
+        
+        let name = '';
+        let avatarContent = '👤';
+        let avatarStyle = '';
+        let preview = chatData.lastMessage || 'Нет сообщений';
+        let time = chatData.lastMessageTime ? formatMessageTime(chatData.lastMessageTime) : '';
+        
+        if (preview && preview.length > 50) preview = preview.substring(0, 47) + '...';
+        
+        if (chatData.type === 'group') {
+            name = chatData.name || 'Группа';
+            avatarContent = '👥';
+            if (chatData.avatar) avatarStyle = `background-image: url(${chatData.avatar}); background-size: cover;`;
+        } 
+        else if (chatData.type === 'channel') {
+            name = chatData.name || 'Канал';
+            avatarContent = '📢';
+            if (chatData.avatar) avatarStyle = `background-image: url(${chatData.avatar}); background-size: cover;`;
+        }
+        else {
+            // Личный чат
+            let otherUserId = null;
+            if (chatData.participants) {
+                for (const uid of chatData.participants) {
+                    if (uid !== currentUser.uid) {
+                        otherUserId = uid;
+                        break;
+                    }
+                }
+            }
+            
+            if (otherUserId) {
+                const userData = await getMessagesUserData(otherUserId);
+                name = userData.username;
+                if (userData.avatar) {
+                    avatarStyle = `background-image: url(${userData.avatar}); background-size: cover;`;
+                    avatarContent = '';
+                }
+            } else {
+                name = 'Пользователь';
+            }
+        }
+        
+        div.innerHTML = `
+            <div class="messages-chat-avatar-small" style="${avatarStyle}">${avatarContent}</div>
+            <div class="messages-chat-info">
+                <div class="messages-chat-name">${escapeHtml(name)}</div>
+                <div class="messages-chat-preview">${escapeHtml(preview)}</div>
+            </div>
+            <div class="messages-chat-time">${time}</div>
+        `;
+        
+        div.onclick = () => openMessagesChat(chatId, chatData);
+        
+        return div;
+    }
+    
+    // ========== ОТКРЫТИЕ ЧАТА ==========
+    async function openMessagesChat(chatId, chatData) {
+        console.log('Открытие чата:', chatId);
+        
+        currentMessagesChatId = chatId;
+        currentMessagesChatData = chatData;
+        currentMessagesChatData.chatId = chatId;
+        
+        // Устанавливаем otherUserId для личных чатов
+        if (chatData.type === 'private' && chatData.participants) {
+            for (const uid of chatData.participants) {
+                if (uid !== currentUser.uid) {
+                    currentMessagesChatData.otherUserId = uid;
+                    break;
+                }
+            }
+        }
+        
+        // Обновляем активный класс в списке
+        document.querySelectorAll('.messages-chat-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-chat-id') === chatId) {
+                item.classList.add('active');
+            }
+        });
+        
+        // Показываем область чата
+        const noChat = document.getElementById('messages-no-chat');
+        const activeChat = document.getElementById('messages-active-chat');
+        
+        if (noChat) noChat.style.display = 'none';
+        if (activeChat) activeChat.style.display = 'flex';
+        
+        // Обновляем шапку
+        await updateMessagesHeader(chatId, chatData);
+        
+        // Загружаем сообщения
+        loadMessagesChat(chatId);
+        
+        // На мобильных закрываем боковую панель
+        if (window.innerWidth <= 768) {
+            const sidebar = document.querySelector('.messages-sidebar');
+            if (sidebar) sidebar.classList.remove('open');
+        }
+    }
+    
+    // ========== ОБНОВЛЕНИЕ ШАПКИ ==========
+    async function updateMessagesHeader(chatId, chatData) {
+        const nameEl = document.getElementById('messages-chat-name');
+        const statusEl = document.getElementById('messages-chat-status');
+        const avatarEl = document.getElementById('messages-chat-avatar');
+        
+        if (!nameEl) return;
+        
+        // Сбрасываем
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = '';
+        avatarEl.classList.remove('default-avatar-user', 'default-avatar-group', 'default-avatar-channel');
+        
+        if (chatData.type === 'group') {
+            nameEl.textContent = chatData.name || 'Группа';
+            statusEl.textContent = chatData.members ? Object.keys(chatData.members).length + ' участников' : 'группа';
+            if (chatData.avatar) {
+                avatarEl.style.backgroundImage = `url(${chatData.avatar})`;
+                avatarEl.style.backgroundSize = 'cover';
+            } else {
+                avatarEl.textContent = '👥';
+                avatarEl.classList.add('default-avatar-group');
+            }
+        } 
+        else if (chatData.type === 'channel') {
+            nameEl.textContent = chatData.name || 'Канал';
+            statusEl.textContent = chatData.subscribers ? Object.keys(chatData.subscribers).length + ' подписчиков' : 'канал';
+            if (chatData.avatar) {
+                avatarEl.style.backgroundImage = `url(${chatData.avatar})`;
+                avatarEl.style.backgroundSize = 'cover';
+            } else {
+                avatarEl.textContent = '📢';
+                avatarEl.classList.add('default-avatar-channel');
+            }
+        }
+        else {
+            // Личный чат
+            const otherUserId = currentMessagesChatData.otherUserId;
+            if (otherUserId) {
+                const userData = await getMessagesUserData(otherUserId);
+                nameEl.textContent = userData.username;
+                if (userData.status.online) {
+                    statusEl.textContent = 'в сети';
+                } else {
+                    statusEl.textContent = formatMessageLastSeen(userData.status.lastSeen);
+                }
+                if (userData.avatar) {
+                    avatarEl.style.backgroundImage = `url(${userData.avatar})`;
+                    avatarEl.style.backgroundSize = 'cover';
+                } else {
+                    avatarEl.textContent = '👤';
+                    avatarEl.classList.add('default-avatar-user');
+                }
+            }
+        }
+        
+        // Настраиваем клик по шапке
+        const userInfo = document.getElementById('messages-chat-user-info');
+        if (userInfo) {
+            userInfo.onclick = () => openMessagesProfile();
+        }
+    }
+    
+    // ========== ОТКРЫТИЕ ПРОФИЛЯ ==========
+    function openMessagesProfile() {
+        if (!currentMessagesChatData) return;
+        
+        if (currentMessagesChatData.type === 'private' && currentMessagesChatData.otherUserId) {
+            if (typeof window.openUserProfile === 'function') {
+                window.openUserProfile(currentMessagesChatData.otherUserId);
+            }
+        } else if (currentMessagesChatData.type === 'group') {
+            if (typeof window.openGroupProfile === 'function') {
+                window.openGroupProfile(currentMessagesChatId);
+            }
+        } else if (currentMessagesChatData.type === 'channel') {
+            if (typeof window.openChannelProfile === 'function') {
+                window.openChannelProfile(currentMessagesChatId);
+            }
+        }
+    }
+    
+    // ========== ЗАГРУЗКА СООБЩЕНИЙ ==========
+    function loadMessagesChat(chatId) {
+        const container = document.getElementById('messages-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        messagesLoadedIds.clear();
+        
+        if (messagesListener) {
+            messagesListener.off();
+        }
+        
+        messagesListener = database.ref('messages/' + chatId)
+            .orderByChild('timestamp')
+            .limitToLast(50);
+        
+        messagesListener.on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            const messageId = snapshot.key;
+            
+            if (messagesLoadedIds.has(messageId)) return;
+            messagesLoadedIds.add(messageId);
+            
+            message.id = messageId;
+            appendMessagesMessage(message);
+        });
+        
+        messagesListener.on('child_removed', (snapshot) => {
+            const msgElement = document.querySelector(`.messages-message[data-message-id="${snapshot.key}"]`);
+            if (msgElement) msgElement.remove();
+            messagesLoadedIds.delete(snapshot.key);
+        });
+    }
+    
+    // ========== ДОБАВЛЕНИЕ СООБЩЕНИЯ ==========
+    function appendMessagesMessage(message) {
+        const container = document.getElementById('messages-container');
+        if (!container) return;
+        
+        const isSent = message.senderId === currentUser.uid;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `messages-message ${isSent ? 'sent' : 'received'}`;
+        messageDiv.setAttribute('data-message-id', message.id);
+        
+        let content = '';
+        
+        if (message.type === 'image') {
+            content = `<img src="${message.imageUrl}" style="max-width: 200px; max-height: 200px; border-radius: 12px;">`;
+            if (message.caption) content += `<div class="messages-message-text" style="margin-top: 5px;">${escapeHtml(message.caption)}</div>`;
+        } 
+        else if (message.type === 'gif') {
+            content = `<img src="${message.gifUrl}" style="max-width: 200px; border-radius: 12px;"><span style="font-size: 10px; margin-left: 5px;">GIF</span>`;
+        }
+        else if (message.type === 'audio') {
+            content = `<div>🎤 Голосовое сообщение ${message.duration ? '(' + message.duration + ' сек)' : ''}</div>`;
+        }
+        else if (message.type === 'file') {
+            content = `<div>📎 <a href="${message.fileUrl}" target="_blank" style="color: inherit;">${escapeHtml(message.fileName)}</a></div>`;
+        }
+        else {
+            content = `<div class="messages-message-text">${escapeHtml(message.text || '')}</div>`;
+        }
+        
+        const time = message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+        
+        messageDiv.innerHTML = `
+            ${content}
+            <div class="messages-message-time">${time}</div>
+        `;
+        
+        container.appendChild(messageDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    // ========== ОТПРАВКА СООБЩЕНИЯ ==========
+    async function sendMessagesMessage() {
+        const input = document.getElementById('messages-input');
+        if (!input) return;
+        
+        const text = input.value.trim();
+        if (!text || !currentMessagesChatId) return;
+        
+        const message = {
+            type: 'text',
+            text: text,
+            senderId: currentUser.uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        input.value = '';
+        
+        try {
+            await database.ref('messages/' + currentMessagesChatId).push(message);
+            
+            const shortText = text.length > 50 ? text.substring(0, 47) + '...' : text;
+            await database.ref('chats/' + currentMessagesChatId).update({
+                lastMessage: shortText,
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Обновляем список чатов
+            loadMessagesChats();
+            
+        } catch (err) {
+            console.error('Ошибка отправки:', err);
+            showNotification('Ошибка отправки', 'error');
+            input.value = text;
+        }
+    }
+    
+    // ========== ПОИСК ==========
+    let searchTimeout = null;
+    
+    function setupMessagesSearch() {
+        const searchInput = document.getElementById('messages-search-input');
+        if (!searchInput) return;
+        
+        searchInput.oninput = function() {
+            const query = this.value.trim().toLowerCase();
+            
+            if (searchTimeout) clearTimeout(searchTimeout);
+            
+            searchTimeout = setTimeout(() => {
+                filterMessagesChats(query);
+            }, 300);
+        };
+    }
+    
+    async function filterMessagesChats(query) {
+        const items = document.querySelectorAll('.messages-chat-item');
+        
+        if (!query || query.length < 2) {
+            items.forEach(item => item.style.display = 'flex');
+            return;
+        }
+        
+        // Поиск по всем чатам
+        for (const item of items) {
+            const chatId = item.getAttribute('data-chat-id');
+            const chatSnap = await database.ref('chats/' + chatId).once('value');
+            const chat = chatSnap.val();
+            
+            let match = false;
+            
+            if (chat.type === 'group') {
+                match = chat.name?.toLowerCase().includes(query);
+            } 
+            else if (chat.type === 'channel') {
+                match = chat.name?.toLowerCase().includes(query) || 
+                        (chat.kname && chat.kname.toLowerCase().includes(query.replace('@', '')));
+            }
+            else {
+                // Личный чат - ищем по username или userTag
+                let otherUserId = null;
+                if (chat.participants) {
+                    for (const uid of chat.participants) {
+                        if (uid !== currentUser.uid) {
+                            otherUserId = uid;
+                            break;
+                        }
+                    }
+                }
+                if (otherUserId) {
+                    const userData = await getMessagesUserData(otherUserId);
+                    match = userData.username?.toLowerCase().includes(query) ||
+                            (userData.userTag && userData.userTag.toLowerCase().includes(query.replace('@', '')));
+                }
+            }
+            
+            item.style.display = match ? 'flex' : 'none';
+        }
+    }
+    
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    function formatMessageTime(timestamp) {
+        if (!timestamp) return '';
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+        if (diff < 60000) return 'сейчас';
+        if (diff < 3600000) return Math.floor(diff / 60000) + ' мин';
+        if (date.toDateString() === now.toDateString()) {
+            return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+        return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+    }
+    
+    function formatMessageLastSeen(timestamp) {
+        if (!timestamp) return 'неизвестно';
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+        if (diff < 60) return 'только что';
+        if (diff < 3600) return Math.floor(diff / 60) + ' минут назад';
+        if (diff < 86400) return 'сегодня в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleDateString('ru-RU') + ' в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function showNotification(message, type) {
+        const container = document.getElementById('notifications-container');
+        if (!container) return;
+        const notif = document.createElement('div');
+        notif.className = 'notification ' + type;
+        notif.textContent = message;
+        container.appendChild(notif);
+        setTimeout(() => notif.remove(), 3000);
+    }
+    
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    function initMessagesTab() {
+        console.log('Инициализация вкладки Переписки');
+        
+        // Привязываем обработчики
+        const sendBtn = document.getElementById('messages-send-btn');
+        const messageInput = document.getElementById('messages-input');
+        const attachBtn = document.getElementById('messages-attach-btn');
+        
+        if (sendBtn) sendBtn.onclick = sendMessagesMessage;
+        if (messageInput) messageInput.onkeypress = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessagesMessage();
+            }
+        };
+        if (attachBtn) {
+            attachBtn.onclick = () => {
+                showNotification('Прикрепление файлов скоро будет доступно', 'info');
+            };
+        }
+        
+        setupMessagesSearch();
+        
+        // Загружаем чаты
+        setTimeout(() => {
+            loadMessagesChats();
+        }, 500);
+    }
+    
+    // Перехватываем переключение на вкладку
+    const originalSwitchToTab = window.switchToTab;
+    window.switchToTab = function(tabName) {
+        if (tabName === 'messages') {
+            setTimeout(() => {
+                initMessagesTab();
+            }, 100);
+        }
+        if (originalSwitchToTab) originalSwitchToTab(tabName);
+    };
+    
+    // Если уже на вкладке при загрузке
+    setTimeout(() => {
+        const messagesTab = document.getElementById('messages-tab');
+        if (messagesTab && !messagesTab.classList.contains('hidden') && currentUser) {
+            initMessagesTab();
+        }
+    }, 1500);
+    
+    // Экспортируем функции
+    window.loadMessagesChats = loadMessagesChats;
+    window.openMessagesChat = openMessagesChat;
+    
+    console.log('Переписки: готово');
+})();
