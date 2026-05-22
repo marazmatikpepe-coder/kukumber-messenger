@@ -158,28 +158,24 @@ function switchToTab(tabName) {
     currentTab = tabName;
     
     document.getElementById('chats-tab').classList.add('hidden');
+    document.getElementById('messages-tab').classList.add('hidden');  // ДОБАВИТЬ
     document.getElementById('reels-tab').classList.add('hidden');
     document.getElementById('settings-tab').classList.add('hidden');
     
     document.getElementById('nav-chats').classList.remove('active');
+    document.getElementById('nav-messages').classList.remove('active');  // ДОБАВИТЬ
     document.getElementById('nav-reels').classList.remove('active');
     document.getElementById('nav-settings').classList.remove('active');
     
     document.getElementById(tabName + '-tab').classList.remove('hidden');
     document.getElementById('nav-' + tabName).classList.add('active');
     
-    if (tabName === 'reels' && typeof loadSlices === 'function') {
-        loadSlices();
+    if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
+    if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
+    if (tabName === 'messages' && typeof window.loadMessagesChats === 'function') {  // ДОБАВИТЬ
+        setTimeout(() => window.loadMessagesChats(), 100);
     }
-    if (tabName === 'chats' && typeof loadChats === 'function') {
-        console.log('Переключение на чаты, загрузка...');
-        loadChats();
-    }
-    if (tabName === 'settings' && typeof updateUserDisplay === 'function') {
-        updateUserDisplay();
-        // Обновляем язык в настройках
-        if (typeof applyTranslations === 'function') applyTranslations();
-    }
+    if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
     
     closeSidebar();
 }
