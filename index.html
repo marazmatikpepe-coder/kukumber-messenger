@@ -174,7 +174,77 @@
                 </main>
             </div>
         </div>
+<!-- ВКЛАДКА ЧАТЫ -->
+<div id="chats-tab" class="tab-content">
+    ... много кода ...
+</div>
 
+<!-- ===== НОВАЯ ВКЛАДКА ПЕРЕПИСКИ ===== -->
+<div id="messages-tab" class="tab-content hidden">
+    <div class="messages-layout">
+        <!-- Левая панель: список чатов -->
+        <div class="messages-sidebar">
+            <div class="messages-header">
+                <h2>Переписки</h2>
+            </div>
+            
+            <!-- Поиск -->
+            <div class="messages-search">
+                <input type="text" id="messages-search-input" placeholder="🔍 Поиск по @username, @K-name или имени...">
+            </div>
+            
+            <!-- Список чатов -->
+            <div class="messages-chats-list" id="messages-chats-list">
+                <div class="messages-empty">💬 Нет чатов</div>
+            </div>
+        </div>
+        
+        <!-- Правая панель: активный чат -->
+        <div class="messages-chat-area">
+            <!-- Состояние: чат не выбран -->
+            <div id="messages-no-chat" class="messages-no-chat">
+                <div class="messages-no-chat-icon">💬</div>
+                <h3>Выберите чат</h3>
+                <p>Нажмите на чат слева, чтобы начать общение</p>
+            </div>
+            
+            <!-- Состояние: активный чат -->
+            <div id="messages-active-chat" class="messages-active-chat" style="display: none;">
+                <!-- Шапка чата (кликабельна) -->
+                <div class="messages-chat-header">
+                    <div class="messages-chat-user-info" id="messages-chat-user-info" style="cursor: pointer;">
+                        <div class="messages-chat-avatar" id="messages-chat-avatar">👤</div>
+                        <div class="messages-chat-details">
+                            <h3 id="messages-chat-name">Пользователь</h3>
+                            <span id="messages-chat-status">онлайн</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Поле переписки -->
+                <div class="messages-container" id="messages-container"></div>
+                
+                <!-- Строка печати -->
+                <div class="messages-input-area">
+                    <button id="messages-attach-btn" class="messages-attach-btn">📎</button>
+                    <input type="text" id="messages-input" placeholder="Сообщение..." class="messages-input">
+                    <button id="messages-emoji-btn" class="messages-emoji-btn">😊</button>
+                    <button id="messages-send-btn" class="messages-send-btn">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ВКЛАДКА SLICES -->
+<div id="reels-tab" class="tab-content hidden">
+    ... много кода ...
+</div>
+
+<!-- ВКЛАДКА НАСТРОЙКИ -->
+<div id="settings-tab" class="tab-content hidden">
+    ... много кода ...
+</div>
         <!-- ВКЛАДКА SLICES -->
         <div id="reels-tab" class="tab-content hidden">
             <div class="slices-container">
@@ -280,25 +350,30 @@
     </div>
 </div>
 
-        <!-- НИЖНЯЯ НАВИГАЦИЯ -->
-        <nav class="bottom-nav">
-            <button onclick="switchToTab('chats')" class="nav-item active" id="nav-chats">
-                <span class="nav-icon">💬</span>
-                <span class="nav-label">Чаты</span>
-            </button>
-            <button onclick="switchToTab('reels')" class="nav-item" id="nav-reels">
-                <span class="nav-icon" style="display: flex; align-items: center; justify-content: center;">
-                    <img src="https://i.ibb.co/jkGTZrYN/image.png" alt="Slices" style="width: 28px; height: 28px; object-fit: contain;">
-                </span>
-                <span class="nav-label">Slices</span>
-            </button>
-            <button onclick="switchToTab('settings')" class="nav-item" id="nav-settings">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-label">Настройки</span>
-            </button>
-        </nav>
-    </div>
-
+       <!-- НИЖНЯЯ НАВИГАЦИЯ -->
+<nav class="bottom-nav">
+    <button onclick="switchToTab('chats')" class="nav-item" id="nav-chats">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">Чаты</span>
+    </button>
+    
+    <!-- НОВАЯ ВКЛАДКА ПЕРЕПИСКИ -->
+    <button onclick="switchToTab('messages')" class="nav-item" id="nav-messages">
+        <span class="nav-icon">✉️</span>
+        <span class="nav-label">Переписки</span>
+    </button>
+    
+    <button onclick="switchToTab('reels')" class="nav-item" id="nav-reels">
+        <span class="nav-icon" style="display: flex; align-items: center; justify-content: center;">
+            <img src="https://i.ibb.co/jkGTZrYN/image.png" alt="Slices" style="width: 28px; height: 28px; object-fit: contain;">
+        </span>
+        <span class="nav-label">Slices</span>
+    </button>
+    <button onclick="switchToTab('settings')" class="nav-item" id="nav-settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Настройки</span>
+    </button>
+</nav>
     <!-- МОДАЛЬНЫЕ ОКНА -->
     
     <!-- Модальное окно создания чата -->
