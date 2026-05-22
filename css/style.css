@@ -4126,3 +4126,42 @@ body.night-mode #messages-tab .messages-input {
     border-color: #3a3a3a !important;
     color: white !important;
 }
+/* ===== ИСПРАВЛЕНИЕ: нижняя навигация поверх вкладки Переписки ===== */
+
+/* Убираем fixed у вкладки, чтобы не перекрывала навигацию */
+#messages-tab {
+    position: relative !important;
+    height: calc(100% - 60px) !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+}
+
+/* Главный экран - правильная высота */
+.main-screen {
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Все вкладки занимают оставшееся место */
+.tab-content {
+    flex: 1 !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+/* Вкладка Переписки внутри tab-content */
+#messages-tab .messages-layout {
+    height: 100% !important;
+}
+
+/* Нижняя навигация всегда видна */
+.bottom-nav {
+    flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 100 !important;
+    background: white !important;
+}
