@@ -4152,3 +4152,82 @@ body.night-mode #messages-tab .messages-input {
     z-index: 100 !important;
     background: white !important;
 }
+/* ===== ВКЛАДКА ПЕРЕПИСКИ - РАБОЧАЯ ВЕРСИЯ ===== */
+#messages-tab {
+    display: none !important;
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: var(--background) !important;
+}
+
+#messages-tab:not(.hidden) {
+    display: block !important;
+}
+
+#messages-tab .messages-layout {
+    display: flex !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#messages-tab .messages-sidebar {
+    width: 320px !important;
+    min-width: 320px !important;
+    height: 100% !important;
+    background: white !important;
+    border-right: 1px solid var(--border) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#messages-tab .messages-chat-area {
+    flex: 1 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--background) !important;
+}
+
+#messages-tab .messages-active-chat {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+#messages-tab .messages-container {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 15px !important;
+}
+
+#messages-tab .messages-input-area {
+    flex-shrink: 0 !important;
+    background: white !important;
+    border-top: 1px solid var(--border) !important;
+    padding: 12px 15px !important;
+    display: flex !important;
+    gap: 8px !important;
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+    #messages-tab .messages-sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 85% !important;
+        z-index: 1000 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    #messages-tab .messages-sidebar.open {
+        transform: translateX(0) !important;
+    }
+    
+    #messages-tab .messages-chat-area {
+        width: 100% !important;
+    }
+}
