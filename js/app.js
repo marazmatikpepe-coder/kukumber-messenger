@@ -1577,3 +1577,71 @@ window.toggleMessagesSidebar = function() {
     const sidebar = document.getElementById('messages-sidebar');
     if (sidebar) sidebar.classList.toggle('open');
 };
+// ===== ЖЕСТКИЙ ФИКС: ПРИНУДИТЕЛЬНОЕ СКРЫТИЕ ВКЛАДКИ ПЕРЕПИСКИ =====
+(function() {
+    // Сохраняем оригинальную функцию
+    const originalSwitchToTab = window.switchToTab;
+    
+    // Переопределяем функцию переключения вкладок
+    window.switchToTab = function(tabName) {
+        console.log('Переключение на вкладку:', tabName);
+        
+        // СКРЫВАЕМ ВСЕ ВКЛАДКИ ПРИНУДИТЕЛЬНО
+        const allTabs = ['chats-tab', 'messages-tab', 'reels-tab', 'settings-tab'];
+        for (let i = 0; i < allTabs.length; i++) {
+            const tab = document.getElementById(allTabs[i]);
+            if (tab) {
+                tab.style.display = 'none';
+                tab.classList.add('hidden');
+            }
+        }
+        
+        // ПОКАЗЫВАЕМ НУЖНУЮ ВКЛАДКУ
+        const activeTab = document.getElementById(tabName + '-tab');
+        if (activeTab) {
+            activeTab.style.display = '';
+            activeTab.classList.remove('hidden');
+        }
+        
+        // Обновляем активный класс в навигации
+        const navButtons = ['nav-chats', 'nav-messages', 'nav-reels', 'nav-settings'];
+        for (let i = 0; i < navButtons.length; i++) {
+            const btn = document.getElementById(navButtons[i]);
+            if (btn) btn.classList.remove('active');
+        }
+        const activeBtn = document.getElementById('nav-' + tabName);
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        // Загружаем данные
+        if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
+        if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
+        if (tabName === 'messages' && typeof window.loadMessagesChats === 'function') {
+            setTimeout(() => window.loadMessagesChats(), 100);
+        }
+        
+        // Закрываем боковую панель
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.remove('open');
+        
+        // ДОПОЛНИТЕЛЬНО: принудительно скрываем messages-sidebar если он открыт
+        const msgSidebar = document.getElementById('messages-sidebar');
+        if (msgSidebar) msgSidebar.classList.remove('open');
+    };
+    
+    // Также добавляем обработчик на все кнопки навигации для надежности
+    setTimeout(() => {
+        const btns = document.querySelectorAll('.bottom-nav .nav-item');
+        btns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // Небольшая задержка для гарантии
+                setTimeout(() => {
+                    const messagesTab = document.getElementById('messages-tab');
+                    if (messagesTab && window.currentTab !== 'messages') {
+                        messagesTab.style.display = 'none';
+                        messagesTab.classList.add('hidden');
+                    }
+                }, 10);
+            });
+        });
+    }, 1000);
+})();
