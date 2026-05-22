@@ -1180,3 +1180,18 @@ async function sendPushNotification(recipientId, title, body, chatId) {
     
     console.log('Переписки: готово');
 })();
+// Функция для открытия/закрытия боковой панели в Переписках на мобильных
+window.toggleMessagesSidebar = function() {
+    var sidebar = document.querySelector('#messages-tab .messages-sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+    }
+};
+
+// Закрывать панель при выборе чата на мобильных
+window.closeMessagesSidebar = function() {
+    var sidebar = document.querySelector('#messages-tab .messages-sidebar');
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.remove('open');
+    }
+};
