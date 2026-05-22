@@ -179,10 +179,14 @@
 </div>
 
 <!-- ===== НОВАЯ ВКЛАДКА ПЕРЕПИСКИ ===== -->
+<!-- ===== НОВАЯ ВКЛАДКА ПЕРЕПИСКИ ===== -->
 <div id="messages-tab" class="tab-content hidden">
+    <!-- КНОПКА МЕНЮ ДЛЯ МОБИЛЬНЫХ -->
+    <button class="mobile-menu-btn-messages" onclick="toggleMessagesSidebar()" style="display: none; position: fixed; top: 12px; left: 12px; z-index: 1001; width: 44px; height: 44px; background: #228B22; color: white; border: none; border-radius: 12px; font-size: 24px; cursor: pointer;">☰</button>
+    
     <div class="messages-layout">
         <!-- Левая панель: список чатов -->
-        <div class="messages-sidebar">
+        <div class="messages-sidebar" id="messages-sidebar">
             <div class="messages-header">
                 <h2>Переписки</h2>
             </div>
