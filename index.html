@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -151,12 +151,11 @@
                                     <span id="chat-status">был(а) недавно</span>
                                 </div>
                             </div>
-                           <!-- Кнопки звонков временно отключены
-<div class="chat-actions">
-    <button onclick="startVoiceCall()" class="call-btn">📞</button>
-    <button onclick="startVideoCall()" class="call-btn">📹</button>
-</div>
--->
+                            <div class="chat-actions">
+                                <button onclick="startVoiceCall()" class="call-btn">📞</button>
+                                <button onclick="startVideoCall()" class="call-btn">📹</button>
+                            </div>
+                        </div>
                         
                         <div class="messages-container" id="messages-container"></div>
                         
@@ -164,75 +163,17 @@
                             <button id="attach-file-btn" class="attach-btn">
                                 <img src="https://i.ibb.co/bRjHz7T5/Picsart-26-04-10-15-45-03-668.png" alt="Файл" style="width: 50px; height: 50px;">
                             </button>
-                            <input type="file" id="file-input" accept="image/*,image/gif" multiple style="display:none;">
+                            <input type="file" id="file-input" accept="image/*,image/gif,video/*" multiple style="display:none;">
                             <input type="text" id="message-input" placeholder="Сообщение..." onkeypress="handleMessageKeyPress(event)" oninput="onTyping()">
                             <button class="emoji-btn" onclick="toggleEmojiPicker()">😊</button>
-                         <!-- <button id="voice-record-btn" class="voice-btn">🎤</button> -->
+                            <button id="voice-record-btn" class="voice-btn">🎤</button>
                             <button class="send-btn" onclick="sendMessage()">➤</button>
                         </div>
                     </div>
                 </main>
             </div>
         </div>
-<!-- ===== НОВАЯ ВКЛАДКА ПЕРЕПИСКИ ===== -->
-<div id="messages-tab" class="tab-content hidden">
-    <!-- КНОПКА МЕНЮ ДЛЯ МОБИЛЬНЫХ -->
-    <button class="mobile-menu-btn-messages" onclick="toggleMessagesSidebar()" style="display: none; position: fixed; top: 12px; left: 12px; z-index: 1001; width: 44px; height: 44px; background: #228B22; color: white; border: none; border-radius: 12px; font-size: 24px; cursor: pointer;">☰</button>
-    
-    <div class="messages-layout">
-        <!-- Левая панель: список чатов -->
-        <div class="messages-sidebar" id="messages-sidebar">
-            <div class="messages-header">
-                <h2>Переписки</h2>
-            </div>
-            
-            <!-- Поиск -->
-            <div class="messages-search">
-                <input type="text" id="messages-search-input" placeholder="🔍 Поиск по @username, @K-name или имени...">
-            </div>
-            
-            <!-- Список чатов -->
-            <div class="messages-chats-list" id="messages-chats-list">
-                <div class="messages-empty">💬 Нет чатов</div>
-            </div>
-        </div>
-        
-        <!-- Правая панель: активный чат -->
-        <div class="messages-chat-area">
-            <!-- Состояние: чат не выбран -->
-            <div id="messages-no-chat" class="messages-no-chat">
-                <div class="messages-no-chat-icon">💬</div>
-                <h3>Выберите чат</h3>
-                <p>Нажмите на чат слева, чтобы начать общение</p>
-            </div>
-            
-            <!-- Состояние: активный чат -->
-            <div id="messages-active-chat" class="messages-active-chat" style="display: none;">
-                <!-- Шапка чата (кликабельна) -->
-                <div class="messages-chat-header">
-                    <div class="messages-chat-user-info" id="messages-chat-user-info" style="cursor: pointer;">
-                        <div class="messages-chat-avatar" id="messages-chat-avatar">👤</div>
-                        <div class="messages-chat-details">
-                            <h3 id="messages-chat-name">Пользователь</h3>
-                            <span id="messages-chat-status">онлайн</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Поле переписки -->
-                <div class="messages-container" id="messages-container"></div>
-                
-                <!-- Строка печати -->
-                <div class="messages-input-area">
-                    <button id="messages-attach-btn" class="messages-attach-btn">📎</button>
-                    <input type="text" id="messages-input" placeholder="Сообщение..." class="messages-input">
-                    <button id="messages-emoji-btn" class="messages-emoji-btn">😊</button>
-                    <button id="messages-send-btn" class="messages-send-btn">➤</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
         <!-- ВКЛАДКА SLICES -->
         <div id="reels-tab" class="tab-content hidden">
             <div class="slices-container">
@@ -259,109 +200,98 @@
             </div>
         </div>
 
-      <!-- ВКЛАДКА НАСТРОЙКИ -->
-<div id="settings-tab" class="tab-content hidden">
-    <div class="settings-container">
-        <!-- Шапка -->
-        <div class="settings-header">
-            <h2>Настройки</h2>
+        <!-- ВКЛАДКА НАСТРОЙКИ -->
+        <div id="settings-tab" class="tab-content hidden">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h2>Настройки</h2>
+                </div>
+                
+                <div class="settings-profile" onclick="showEditProfileModal()">
+                    <div class="settings-avatar" id="settings-avatar">🥒</div>
+                    <div class="settings-profile-info">
+                        <h3 id="settings-username">Пользователь</h3>
+                        <p id="settings-usertag" style="font-size: 12px; color: var(--text-muted);">@username</p>
+                    </div>
+                    <span class="arrow">›</span>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item" onclick="showNotificationSettings()">
+                        <span class="settings-icon">🔔</span>
+                        <span>Уведомления</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showPrivacySettings()">
+                        <span class="settings-icon">🔒</span>
+                        <span>Конфиденциальность</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showThemeSettings()">
+                        <span class="settings-icon">🎨</span>
+                        <span>Оформление</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showLanguageSettings()">
+                        <span class="settings-icon">🌍</span>
+                        <span>Язык</span>
+                        <span class="settings-value">Русский</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showStorageSettings()">
+                        <span class="settings-icon">💾</span>
+                        <span>Данные и память</span>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item" onclick="showAbout()">
+                        <span class="settings-icon">ℹ️</span>
+                        <span>О приложении</span>
+                        <span class="settings-value">v1.0</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="showHelp()">
+                        <span class="settings-icon">❓</span>
+                        <span>Помощь</span>
+                        <span class="arrow">›</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item danger" onclick="logout()">
+                        <span class="settings-icon">🚪</span>
+                        <span>Выйти из аккаунта</span>
+                    </div>
+                </div>
+
+                <div class="settings-footer">
+                    <p>K Messenger</p>
+                    <p>Свежее общение каждый день 🥒</p>
+                </div>
+            </div>
         </div>
 
-        <!-- Профиль -->
-        <div class="settings-profile" onclick="showEditProfileModal()">
-            <div class="settings-avatar" id="settings-avatar">🥒</div>
-            <div class="settings-profile-info">
-                <h3 id="settings-username">Пользователь</h3>
-                <p id="settings-usertag">@username</p>
-            </div>
-            <span class="arrow">›</span>
-        </div>
-
-        <!-- Секция 1 -->
-        <div class="settings-section">
-            <div class="settings-item" onclick="showNotificationSettings()">
-                <span class="settings-icon">🔔</span>
-                <span>Уведомления</span>
-                <span class="arrow">›</span>
-            </div>
-            <div class="settings-item" onclick="showPrivacySettings()">
-                <span class="settings-icon">🔒</span>
-                <span>Конфиденциальность</span>
-                <span class="arrow">›</span>
-            </div>
-            <div class="settings-item" onclick="showThemeSettings()">
-                <span class="settings-icon">🎨</span>
-                <span>Оформление</span>
-                <span class="arrow">›</span>
-            </div>
-            <div class="settings-item" onclick="showLanguageSettings()">
-                <span class="settings-icon">🌍</span>
-                <span>Язык</span>
-                <span class="settings-value" id="current-language-label">Русский</span>
-                <span class="arrow">›</span>
-            </div>
-            <div class="settings-item" onclick="showStorageSettings()">
-                <span class="settings-icon">💾</span>
-                <span>Данные и память</span>
-                <span class="arrow">›</span>
-            </div>
-        </div>
-
-        <!-- Секция 2 -->
-        <div class="settings-section">
-            <div class="settings-item" onclick="showAbout()">
-                <span class="settings-icon">ℹ️</span>
-                <span>О приложении</span>
-                <span class="settings-value">v1.0</span>
-                <span class="arrow">›</span>
-            </div>
-            <div class="settings-item" onclick="showHelp()">
-                <span class="settings-icon">❓</span>
-                <span>Помощь</span>
-                <span class="arrow">›</span>
-            </div>
-        </div>
-
-        <!-- Секция 3 - Выход -->
-        <div class="settings-section">
-            <div class="settings-item danger" onclick="logout()">
-                <span class="settings-icon">🚪</span>
-                <span>Выйти</span>
-            </div>
-        </div>
-
-        <!-- Футер -->
-        <div class="settings-footer">
-            <p>K Messenger</p>
-            <p>Свежее общение каждый день 🥒</p>
-        </div>
+        <!-- НИЖНЯЯ НАВИГАЦИЯ -->
+        <nav class="bottom-nav">
+            <button onclick="switchToTab('chats')" class="nav-item active" id="nav-chats">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">Чаты</span>
+            </button>
+            <button onclick="switchToTab('reels')" class="nav-item" id="nav-reels">
+                <span class="nav-icon" style="display: flex; align-items: center; justify-content: center;">
+                    <img src="https://i.ibb.co/jkGTZrYN/image.png" alt="Slices" style="width: 28px; height: 28px; object-fit: contain;">
+                </span>
+                <span class="nav-label">Slices</span>
+            </button>
+            <button onclick="switchToTab('settings')" class="nav-item" id="nav-settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Настройки</span>
+            </button>
+        </nav>
     </div>
-</div>
 
-       <!-- НИЖНЯЯ НАВИГАЦИЯ -->
-<nav class="bottom-nav">
-    <button onclick="switchToTab('chats')" class="nav-item" id="nav-chats">
-        <span class="nav-icon">💬</span>
-        <span class="nav-label">Чаты</span>
-    </button>
-    
-    <!-- НОВАЯ ВКЛАДКА ПЕРЕПИСКИ -->
-    <button onclick="switchToTab('messages')" class="nav-item" id="nav-messages">
-        <span class="nav-icon">✉️</span>
-        <span class="nav-label">Переписки</span>
-    </button>
-    
-    <button onclick="switchToTab('reels')" class="nav-item" id="nav-reels">
-        <span class="nav-icon" style="display: flex; align-items: center; justify-content: center;">
-            <img src="https://i.ibb.co/jkGTZrYN/image.png" alt="Slices" style="width: 28px; height: 28px; object-fit: contain;">
-        </span>
-        <span class="nav-label">Slices</span>
-    </button>
-    <button onclick="switchToTab('settings')" class="nav-item" id="nav-settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">Настройки</span>
-    </button>
-</nav>
     <!-- МОДАЛЬНЫЕ ОКНА -->
     
     <!-- Модальное окно создания чата -->
@@ -570,15 +500,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- Основные скрипты -->
- <script src="js/app.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/upload.js"></script>
-<script src="js/sounds.js"></script>
-<script src="js/chat.js"></script>
-<script src="js/chat-profile.js"></script>  <!-- ВАЖНО: после chat.js -->
-<script src="js/calls.js"></script>
-<script src="js/slices.js"></script>
-<script src="js/settings.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+ <script src="js/chat.js"></script>
+    <script src="js/calls.js"></script>
+    <script src="js/upload.js"></script>
+    <script src="js/slices.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/sounds.js"></script>
+    <script src="js/chat-profile.js"></script>
     
     <script>
         // ========== ЭМОДЗИ ПИКЕР ==========
@@ -753,5 +683,19 @@
         }
     </script>
 
+    <!-- Service Workers -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(function(reg) { console.log('SW PWA готов:', reg); })
+                .catch(function(err) { console.log('SW PWA ошибка:', err); });
+            
+            navigator.serviceWorker.register('./firebase-messaging-sw.js')
+                .then(function(reg) { console.log('SW FCM готов:', reg); })
+                .catch(function(err) { console.log('SW FCM ошибка:', err); });
+        }
+    </script>
 </body>
 </html>
+
+
