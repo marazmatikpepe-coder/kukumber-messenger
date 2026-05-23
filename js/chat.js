@@ -663,54 +663,54 @@ function initChat() {
 
 setTimeout(initChat, 1000);
 console.log('✅ chat.js исправлен и загружен');
-// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (ПОЛНАЯ ВЕРСИЯ) ==========
+// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (КРАСИВЫЙ, ПОЛНЫЙ) ==========
 window.openUserProfile = async function(userId) {
     console.log('openUserProfile:', userId);
-    
+
     if (!userId) {
         showNotification('ID пользователя не указан', 'error');
         return;
     }
-    
+
     try {
         const userSnap = await database.ref('users/' + userId).once('value');
         const userData = userSnap.val();
-        
+
         if (!userData) {
             showNotification('Пользователь не найден', 'error');
             return;
         }
-        
+
         const isOwnProfile = (userId === window.currentUser?.uid);
         const isAdmin = window.isSuperAdmin === true;
         const canEdit = isOwnProfile || isAdmin;
-        
+
         // Получаем статус
         const statusData = userData.status || {};
         const isOnline = statusData.online === true;
         const lastSeen = statusData.lastSeen;
-        
+
         // Подписчики
         const subsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
         const subscribersCount = subsSnap.val() ? Object.keys(subsSnap.val()).length : 0;
-        
-        // Проверяем подписку
+
+        // Проверяем подписку текущего пользователя
         let isSubscribed = false;
         let notificationsEnabled = false;
-        if (!isOwnProfile) {
+        if (!isOwnProfile && window.currentUser) {
             const subSnap = await database.ref('subscriptions/' + window.currentUser.uid + '/' + userId).once('value');
             isSubscribed = subSnap.exists();
             const notifSnap = await database.ref('subscriptionNotifications/' + window.currentUser.uid + '/' + userId).once('value');
             notificationsEnabled = notifSnap.val() === true;
         }
-        
+
         const userName = userData.username || 'Пользователь';
         const userTag = userData.userTag || '@' + userName.toLowerCase().replace(/\s/g, '');
         const userAvatar = userData.avatar || '';
         const userBio = userData.bio || 'Нет описания';
         const userBanner = userData.banner || null;
         const userVerified = userData.verified === true;
-        
+
         // Баннер
         let bannerStyle = '';
         if (userBanner) {
@@ -722,7 +722,7 @@ window.openUserProfile = async function(userId) {
         } else {
             bannerStyle = 'background: linear-gradient(135deg, #228B22, #556B2F);';
         }
-        
+
         // Статус текст
         let statusText = '';
         if (isOnline) {
@@ -738,33 +738,33 @@ window.openUserProfile = async function(userId) {
         } else {
             statusText = 'неизвестно';
         }
-        
+
         // Удаляем старое окно
         const oldModal = document.getElementById('user-profile-modal');
         if (oldModal) oldModal.remove();
-        
+
         // Создаём модальное окно
         const modal = document.createElement('div');
         modal.id = 'user-profile-modal';
         modal.className = 'modal';
         modal.style.zIndex = '10003';
         modal.innerHTML = `
-            <div class="profile-modal-content" style="max-width: 450px; border-radius: 24px; overflow: hidden; background: white; position: relative;">
-                <!-- Баннер -->
+            <div class="profile-modal-content" style="max-width: 450px; border-radius: 24px; overflow: hidden; background: white; position: relative; margin: auto;">
+                <!-- БАННЕР -->
                 <div class="profile-banner" id="profile-banner" style="height: 140px; position: relative; ${bannerStyle}">
-                    ${canEdit ? '<button id="edit-banner-btn" class="profile-banner-edit-btn" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px;">✏️</button>' : ''}
-                    <button class="profile-close-btn" onclick="closeUserProfileModal()" style="position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
+                    ${canEdit ? '<button id="edit-banner-btn" class="profile-banner-edit-btn" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; z-index: 5;">✏️</button>' : ''}
+                    <button class="profile-close-btn" onclick="closeUserProfileModal()" style="position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; font-size: 20px; cursor: pointer; z-index: 5;">×</button>
                 </div>
                 
-                <!-- Аватар (накрывает баннер) -->
-                <div style="display: flex; justify-content: center; margin-top: -50px; position: relative; z-index: 5;">
-                    <div class="profile-avatar" id="profile-avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; background: var(--sage); display: flex; align-items: center; justify-content: center; font-size: 45px; ${userAvatar ? 'background-image: url(' + userAvatar + '); background-size: cover; background-position: center;' : ''} cursor: pointer;">
+                <!-- АВАТАР (НАКРЫВАЕТ БАННЕР) -->
+                <div style="display: flex; justify-content: center; margin-top: -50px; position: relative; z-index: 10;">
+                    <div class="profile-avatar" id="profile-avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; background: var(--sage); display: flex; align-items: center; justify-content: center; font-size: 45px; ${userAvatar ? 'background-image: url(' + userAvatar + '); background-size: cover; background-position: center;' : ''} cursor: pointer; position: relative;">
                         ${userAvatar ? '' : '👤'}
-                        ${canEdit ? '<button id="edit-avatar-btn" class="profile-avatar-edit-btn" style="position: absolute; bottom: 0; right: 0; background: var(--forest); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px;">✏️</button>' : ''}
+                        ${canEdit ? '<button id="edit-avatar-btn" class="profile-avatar-edit-btn" style="position: absolute; bottom: 0; right: 0; background: var(--forest); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; z-index: 5;">✏️</button>' : ''}
                     </div>
                 </div>
                 
-                <!-- Информация -->
+                <!-- ИНФОРМАЦИЯ -->
                 <div style="text-align: center; padding: 15px 20px 20px;">
                     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
                         <h2 id="profile-name" style="margin: 0; cursor: ${canEdit ? 'pointer' : 'default'};">${escapeHtml(userName)}</h2>
@@ -793,13 +793,13 @@ window.openUserProfile = async function(userId) {
                     </div>
                 </div>
                 
-                <!-- Вкладки -->
+                <!-- ВКЛАДКИ -->
                 <div style="display: flex; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
                     <button id="profile-tab-posts" class="profile-tab-btn active" style="flex: 1; padding: 12px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--forest); border-bottom: 2px solid var(--forest);">📷 Посты</button>
                     <button id="profile-tab-reposts" class="profile-tab-btn" style="flex: 1; padding: 12px; background: none; border: none; cursor: pointer;">🔄 Репосты</button>
                 </div>
                 
-                <!-- Контент вкладок -->
+                <!-- КОНТЕНТ -->
                 <div id="profile-posts-container" style="padding: 15px; max-height: 400px; overflow-y: auto;">
                     <div class="profile-loading">Загрузка постов...</div>
                 </div>
@@ -808,21 +808,21 @@ window.openUserProfile = async function(userId) {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
         modal.classList.remove('hidden');
-        
+
         // Сохраняем ID для использования в других функциях
         window.viewingProfileUserId = userId;
         window.viewingProfileUserData = userData;
-        
+
         // Загружаем посты и репосты
         await loadUserPosts(userId);
         await loadUserReposts(userId);
-        
+
         // Привязываем обработчики
         bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit, isSubscribed, notificationsEnabled);
-        
+
     } catch (err) {
         console.error('Ошибка открытия профиля:', err);
         showNotification('Ошибка загрузки профиля', 'error');
@@ -833,17 +833,17 @@ window.openUserProfile = async function(userId) {
 async function loadUserPosts(userId) {
     const container = document.getElementById('profile-posts-container');
     if (!container) return;
-    
+
     container.innerHTML = '<div class="profile-loading">Загрузка постов...</div>';
-    
+
     const slicesSnap = await database.ref('slices').orderByChild('authorId').equalTo(userId).once('value');
     const slices = slicesSnap.val();
-    
+
     if (!slices) {
         container.innerHTML = '<div class="profile-empty">Нет постов</div>';
         return;
     }
-    
+
     let postsHtml = '';
     const slicesArray = [];
     for (let id in slices) {
@@ -853,11 +853,11 @@ async function loadUserPosts(userId) {
         }
     }
     slicesArray.sort((a, b) => (b.data.createdAt || 0) - (a.data.createdAt || 0));
-    
+
     for (const slice of slicesArray) {
         const mediaHtml = slice.data.mediaUrl ? 
             `<div class="slice-media" style="margin-bottom: 10px;"><img src="${slice.data.mediaUrl}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; cursor: pointer;" onclick="openSliceLightbox('${slice.data.mediaUrl}')"></div>` : '';
-        
+
         postsHtml += `
             <div class="profile-slice-card" style="background: var(--background); border-radius: 16px; margin-bottom: 15px; overflow: hidden;">
                 ${mediaHtml}
@@ -872,7 +872,7 @@ async function loadUserPosts(userId) {
             </div>
         `;
     }
-    
+
     container.innerHTML = postsHtml || '<div class="profile-empty">Нет постов</div>';
 }
 
@@ -880,36 +880,45 @@ async function loadUserPosts(userId) {
 async function loadUserReposts(userId) {
     const container = document.getElementById('profile-reposts-container');
     if (!container) return;
-    
+
     container.innerHTML = '<div class="profile-loading">Загрузка репостов...</div>';
+
+    // Получаем все репосты пользователя
+    const userRepostsSnap = await database.ref('userReposts/' + userId).once('value');
+    const userReposts = userRepostsSnap.val();
     
-    const slicesSnap = await database.ref('slices').orderByChild('authorId').equalTo(userId).once('value');
-    const slices = slicesSnap.val();
-    
-    if (!slices) {
+    if (!userReposts) {
         container.innerHTML = '<div class="profile-empty">Нет репостов</div>';
         return;
     }
-    
+
     let repostsHtml = '';
     const repostsArray = [];
-    for (let id in slices) {
-        const slice = slices[id];
-        if (slice.type === 'repost') {
-            repostsArray.push({ id: id, data: slice });
+    
+    for (let originalId in userReposts) {
+        // Получаем оригинальный пост
+        const originalSnap = await database.ref('slices/' + originalId).once('value');
+        const originalData = originalSnap.val();
+        if (originalData) {
+            repostsArray.push({ id: originalId, data: originalData });
         }
     }
-    repostsArray.sort((a, b) => (b.data.createdAt || 0) - (a.data.createdAt || 0));
     
+    repostsArray.sort((a, b) => (b.data.createdAt || 0) - (a.data.createdAt || 0));
+
     for (const repost of repostsArray) {
+        const mediaHtml = repost.data.mediaUrl ? 
+            `<div style="margin-bottom: 8px;"><img src="${repost.data.mediaUrl}" style="max-width: 100%; max-height: 150px; border-radius: 12px;"></div>` : '';
+        
         repostsHtml += `
             <div class="profile-slice-card" style="background: var(--background); border-radius: 16px; margin-bottom: 15px; overflow: hidden; padding: 12px;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span>🔄</span>
-                    <span style="font-size: 12px; color: var(--text-muted);">Репост от @${escapeHtml(repost.data.originalAuthorName || 'пользователя')}</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">Репост от @${escapeHtml(repost.data.authorName || 'пользователя')}</span>
                 </div>
-                <div style="font-size: 14px;">${escapeHtml(repost.data.originalText || '')}</div>
-                <button class="btn-small" style="margin-top: 8px; padding: 4px 12px;" onclick="deleteRepost('${repost.id}')">Удалить репост</button>
+                ${mediaHtml}
+                <div style="font-size: 14px; margin-top: 8px;">${escapeHtml(repost.data.text || '')}</div>
+                <button class="btn-small" style="margin-top: 10px; padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 20px; cursor: pointer;" onclick="removeRepost('${repost.id}')">🗑️ Удалить репост</button>
             </div>
         `;
     }
@@ -918,22 +927,28 @@ async function loadUserReposts(userId) {
 }
 
 // Удаление репоста
-window.deleteRepost = async function(repostId) {
-    if (!confirm('Удалить репост?')) return;
+window.removeRepost = async function(originalId) {
+    if (!confirm('Удалить этот репост?')) return;
     
-    const repostSnap = await database.ref('slices/' + repostId).once('value');
-    const repostData = repostSnap.val();
-    const originalId = repostData?.originalId;
+    const userId = window.currentUser?.uid;
+    if (!userId) return;
     
-    await database.ref('slices/' + repostId).remove();
-    await database.ref('userReposts/' + window.currentUser.uid + '/' + originalId).remove();
-    if (originalId) {
-        await database.ref('slices/' + originalId + '/repostsCount').transaction(c => Math.max((c || 1) - 1, 0));
-    }
+    // Удаляем запись о репосте
+    await database.ref('userReposts/' + userId + '/' + originalId).remove();
+    
+    // Обновляем счётчик репостов у оригинального поста
+    await database.ref('slices/' + originalId + '/repostsCount').transaction(c => Math.max((c || 1) - 1, 0));
     
     showNotification('Репост удалён', 'success');
+    
+    // Перезагружаем репосты в профиле
     if (window.viewingProfileUserId) {
         loadUserReposts(window.viewingProfileUserId);
+    }
+    
+    // Обновляем ленту слайсов
+    if (typeof loadSlices === 'function') {
+        loadSlices();
     }
 };
 
@@ -953,8 +968,8 @@ function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit,
             repostsTab.classList.remove('active');
             repostsTab.style.color = '';
             repostsTab.style.borderBottom = 'none';
-            postsContainer.style.display = 'block';
-            repostsContainer.style.display = 'none';
+            if (postsContainer) postsContainer.style.display = 'block';
+            if (repostsContainer) repostsContainer.style.display = 'none';
         };
     }
     
@@ -966,8 +981,8 @@ function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit,
             postsTab.classList.remove('active');
             postsTab.style.color = '';
             postsTab.style.borderBottom = 'none';
-            postsContainer.style.display = 'none';
-            repostsContainer.style.display = 'block';
+            if (postsContainer) postsContainer.style.display = 'none';
+            if (repostsContainer) repostsContainer.style.display = 'block';
         };
     }
     
@@ -981,12 +996,10 @@ function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit,
                 if (newName && newName.trim()) {
                     await database.ref('users/' + userId + '/username').set(newName.trim());
                     showNotification('Имя обновлено', 'success');
-                    nameElement.textContent = newName.trim();
+                    if (nameElement) nameElement.textContent = newName.trim();
+                    if (userId === window.currentUser?.uid && typeof updateUserDisplay === 'function') updateUserDisplay();
                 }
             };
-        }
-        if (nameElement) {
-            nameElement.ondblclick = () => editNameIcon?.onclick();
         }
     }
     
@@ -1000,7 +1013,7 @@ function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit,
                 if (newBio !== null) {
                     await database.ref('users/' + userId + '/bio').set(newBio.trim());
                     showNotification('Описание обновлено', 'success');
-                    bioText.textContent = newBio.trim() || 'Нет описания';
+                    if (bioText) bioText.textContent = newBio.trim() || 'Нет описания';
                 }
             };
         }
@@ -1028,6 +1041,7 @@ function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit,
                             avatarDiv.style.backgroundSize = 'cover';
                             avatarDiv.textContent = '';
                         }
+                        if (userId === window.currentUser?.uid && typeof updateUserDisplay === 'function') updateUserDisplay();
                     } catch (err) {
                         showNotification('Ошибка загрузки', 'error');
                     }
@@ -1079,13 +1093,14 @@ function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit,
             };
         }
         
-        // Уведомления
+        // Уведомления (колокольчик)
         const notifBtn = document.getElementById('profile-notify-btn');
         if (notifBtn) {
             notifBtn.onclick = async () => {
                 const notifRef = database.ref('subscriptionNotifications/' + window.currentUser.uid + '/' + userId);
                 const snap = await notifRef.once('value');
-                if (snap.val() === true) {
+                const currentState = snap.val() === true;
+                if (currentState) {
                     await notifRef.remove();
                     showNotification('Уведомления выключены', 'info');
                     notifBtn.style.opacity = '0.5';
@@ -1106,7 +1121,8 @@ function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit,
                 const newVerified = !userData.verified;
                 await database.ref('users/' + userId + '/verified').set(newVerified);
                 showNotification(newVerified ? 'Галочка выдана' : 'Галочка снята', 'success');
-                location.reload();
+                // Перезагружаем профиль
+                openUserProfile(userId);
             };
         }
     }
@@ -1193,6 +1209,53 @@ window.openSlicesProfile = function() {
     } else {
         showNotification('Авторизуйтесь', 'error');
     }
+};
+
+// Функция для начала чата из профиля
+window.startPrivateChatFromProfile = async function(userId) {
+    if (!window.currentUser || !window.currentUser.uid) {
+        showNotification('Авторизуйтесь', 'error');
+        return;
+    }
+    
+    const chatId = window.currentUser.uid < userId ? 
+        window.currentUser.uid + '_' + userId : 
+        userId + '_' + window.currentUser.uid;
+    
+    const chatSnapshot = await database.ref('chats/' + chatId).once('value');
+    
+    if (!chatSnapshot.exists()) {
+        await database.ref('chats/' + chatId).set({
+            type: 'private',
+            participants: [window.currentUser.uid, userId],
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastMessage: 'Чат создан',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        
+        await Promise.all([
+            database.ref('userChats/' + window.currentUser.uid + '/' + chatId).set(true),
+            database.ref('userChats/' + userId + '/' + chatId).set(true)
+        ]);
+    }
+    
+    // Закрываем профиль
+    closeUserProfileModal();
+    
+    // Переключаемся на вкладку чатов
+    if (typeof switchToTab === 'function') {
+        switchToTab('chats');
+    }
+    
+    // Открываем чат
+    setTimeout(async () => {
+        const chatData = (await database.ref('chats/' + chatId).once('value')).val();
+        if (typeof openChatWithData === 'function') {
+            openChatWithData(chatId, chatData);
+        } else if (typeof openChatById === 'function') {
+            openChatById(chatId);
+        }
+    }, 300);
 };
 
 console.log('✅ Полный профиль пользователя загружен');
