@@ -180,6 +180,24 @@ function switchToTab(tabName) {
     
     closeSidebar();
 }
+    // Обновляем иконку настроек
+    const settingsIcon = document.getElementById('settings-icon');
+    const settingsBtn = document.getElementById('nav-settings');
+    
+    if (settingsIcon && settingsBtn) {
+        if (tabName === 'settings') {
+            // Активная вкладка - цвет темы
+            settingsIcon.style.filter = `brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)`;
+        } else {
+            // Неактивная - каркас в зависимости от темы
+            if (document.body.classList.contains('night-mode')) {
+                settingsIcon.style.filter = 'brightness(0.8) invert(1)';
+            } else {
+                settingsIcon.style.filter = 'brightness(0.3)';
+            }
+        }
+    }
+}
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
