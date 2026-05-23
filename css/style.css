@@ -4184,3 +4184,57 @@ body.night-mode .default-avatar-channel {
     cursor: pointer;
     font-size: 16px;
 }
+/* НИЖНЯЯ НАВИГАЦИЯ */
+.bottom-nav {
+    height: 100px;
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.nav-icon img {
+    width: 85px;
+    height: 85px;
+    object-fit: contain;
+    transition: all 0.2s;
+}
+
+.nav-label {
+    font-size: 11px;
+    margin-top: 4px;
+    color: var(--text-muted);
+}
+
+/* Иконка настроек - каркас по умолчанию (светлая/тёмная тема) */
+#settings-icon {
+    filter: none !important;
+}
+
+/* Светлая тема - тёмный каркас */
+body:not(.night-mode) #settings-icon {
+    filter: brightness(0.3);
+}
+
+/* Тёмная тема - светлый каркас */
+body.night-mode #settings-icon {
+    filter: brightness(0.8) invert(1);
+}
+
+/* Когда активна вкладка настроек - цвет выбранной темы */
+#nav-settings.active #settings-icon {
+    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
+}
