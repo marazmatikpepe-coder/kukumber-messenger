@@ -742,7 +742,7 @@
         } 
         else if (chatData.type === 'channel') {
             name = chatData.name || 'Канал';
-            avatarContent = '📢';
+            avatarContent = '';
             if (chatData.avatar) avatarStyle = `background-image: url(${chatData.avatar}); background-size: cover;`;
         }
         else {
@@ -877,7 +877,7 @@
                 avatarEl.textContent = '';
             } else {
                 avatarEl.style.backgroundImage = '';
-                avatarEl.textContent = '📢';
+                avatarEl.textContent = '';
             }
         }
         else {
