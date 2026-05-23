@@ -93,24 +93,6 @@ function checkSuperAdmin() {
         window.isSuperAdmin = isSuperAdmin;
     });
 }
-
-// ========== СЛУШАТЕЛЬ НЕПРОЧИТАННЫХ СООБЩЕНИЙ ==========
-function setupUnreadListener() {
-    if (!currentUser || !currentUser.uid) return;
-    
-    database.ref('unread/' + currentUser.uid).on('value', function(snapshot) {
-        window.unreadMessages = snapshot.val() || {};
-        if (typeof updateAllUnreadBadges === 'function') {
-            updateAllUnreadBadges();
-        }
-        
-        // Обновляем список чатов (поднимаем вверх чаты с новыми сообщениями)
-        if (typeof loadChats === 'function') {
-            loadChats();
-        }
-    });
-}
-
 function updateUserDisplay() {
     if (!currentUserData) return;
     var username = currentUserData.username || 'Пользователь';
