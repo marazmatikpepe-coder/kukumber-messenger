@@ -4125,3 +4125,62 @@ body.night-mode .default-avatar-group {
 body.night-mode .default-avatar-channel {
     background-image: url('https://i.ibb.co/BH6QbPYc/image.png') !important;
 }
+/* ========== МАСТЕР СОЗДАНИЯ ГРУПП/КАНАЛОВ ========== */
+.wizard-step-content {
+    padding: 20px;
+}
+.wizard-input, .wizard-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 15px;
+    margin-bottom: 15px;
+    background: white;
+}
+.wizard-input:focus, .wizard-select:focus {
+    outline: none;
+    border-color: var(--forest);
+}
+.wizard-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+.wizard-back-btn-step, .wizard-next-btn, .wizard-create-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.wizard-back-btn-step {
+    background: var(--background);
+    border: 1px solid var(--border);
+}
+.wizard-next-btn, .wizard-create-btn {
+    background: linear-gradient(135deg, var(--forest), var(--lime));
+    color: white;
+    border: none;
+}
+.selected-members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+}
+.selected-member-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--sage);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+.selected-member-chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
