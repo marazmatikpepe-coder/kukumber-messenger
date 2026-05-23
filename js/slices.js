@@ -1732,3 +1732,55 @@ console.log('✅ Дополнительные функции профиля до
 
 // ===== ЭТО САМОЕ ВАЖНОЕ - ДОБАВЬТЕ ЭТУ СТРОКУ =====
 window.openUserProfile = openUserProfileFull;
+// ========== ФОРСИРОВАННОЕ ИСПРАВЛЕНИЕ АВАТАРОК НА ТЕЛЕФОНЕ ==========
+(function fixAvatarsOnMobile() {
+    console.log('🔧 Запуск фикса аватарок');
+    
+    // Функция принудительного обновления всех аватарок
+    function forceFixAllAvatars() {
+        // Все аватарки на странице
+        var allAvatars = document.querySelectorAll('.avatar, .profile-avatar, .settings-avatar, #profile-avatar, #user-avatar, #chat-avatar, #slices-user-avatar');
+        
+        allAvatars.forEach(function(avatar) {
+            // Получаем текущий style
+            var currentStyle = avatar.getAttribute('style') || '';
+            
+            // Если есть background-image, форсируем правильные стили
+            if (currentStyle.includes('background-image') && !currentStyle.includes('background-size: cover')) {
+                avatar.style.backgroundSize = 'cover';
+                avatar.style.backgroundPosition = 'center';
+                avatar.style.backgroundRepeat = 'no-repeat';
+                avatar.style.textIndent = '-9999px';
+                avatar.style.color = 'transparent';
+                
+                // Очищаем текстовое содержимое
+                if (avatar.textContent && avatar.textContent !== '') {
+                    avatar.textContent = '';
+                }
+            }
+        });
+    }
+    
+    // Запускаем сразу
+    setTimeout(forceFixAllAvatars, 100);
+    
+    // Запускаем снова через 1 секунду
+    setTimeout(forceFixAllAvatars, 1000);
+    
+    // Запускаем снова через 3 секунды (когда профиль может открыться)
+    setTimeout(forceFixAllAvatars, 3000);
+    
+    // Наблюдаем за изменениями на странице
+    var observer = new MutationObserver(function() {
+        forceFixAllAvatars();
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+    });
+    
+    console.log('✅ Фикс аватарок активирован');
+})();
