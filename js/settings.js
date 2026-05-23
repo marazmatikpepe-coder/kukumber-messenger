@@ -837,6 +837,17 @@ function setSimpleTheme(colorKey) {
         btn.style.background = gradient;
     });
     
+    // Обновляем цвет иконки настроек если активна вкладка
+    const settingsBtn = document.getElementById('nav-settings');
+    const settingsIcon = document.getElementById('settings-icon');
+    if (settingsBtn && settingsBtn.classList.contains('active') && settingsIcon) {
+        settingsIcon.style.filter = `brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)`;
+    }
+    
+    renderThemesGrid();
+    showNotification('Тема "' + theme.name + '" применена', 'success');
+}
+    
     // ===== МЕНЯЕМ ИКОНКУ НАСТРОЕК В ЗАВИСИМОСТИ ОТ ЦВЕТА =====
     var settingsIcon = document.getElementById('settings-icon-img');
     if (settingsIcon) {
