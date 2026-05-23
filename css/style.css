@@ -1,4 +1,4 @@
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+ *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--forest:#228B22;--lime:#32CD32;--sage:#9DC183;--dark-green:#1a5c1a;--cucumber:#71BC78;--olive:#556B2F;--white:#fff;--background:#f5f7f5;--text-dark:#2c3e2c;--text-light:#6b8e6b;--text-muted:#94a894;--border:#d4e4d4;--shadow:rgba(47,79,47,0.15);--error:#dc3545;--success:#28a745}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--background);color:var(--text-dark)}
 .hidden{display:none !important}
@@ -2426,5 +2426,1064 @@ body.night-mode #message-input {
 .settings-section + .settings-section {
     margin-top: 12px;
 }
+/* ========== ТЁМНАЯ ТЕМА ДЛЯ ПРОФИЛЯ ГРУППЫ ========== */
+body.night-mode .group-profile-container {
+    background: #1e1e1e !important;
+    color: #e0e0e0 !important;
+}
 
+body.night-mode #group-profile-header {
+    background: #1e1e1e !important;
+    border-bottom-color: #3a3a3a !important;
+}
+
+body.night-mode #group-profile-header h3,
+body.night-mode #group-profile-header button {
+    color: #e0e0e0 !important;
+}
+
+body.night-mode #group-profile-main {
+    background: #121212 !important;
+}
+
+body.night-mode .group-banner {
+    border-radius: 28px 28px 0 0;
+}
+
+body.night-mode .group-avatar {
+    border-color: #1e1e1e !important;
+    background: #2a2a2a !important;
+}
+
+body.night-mode #group-name-display {
+    color: #ffffff !important;
+}
+
+body.night-mode .group-tab-btn {
+    background: #1e1e1e !important;
+    color: #a0a0a0 !important;
+}
+
+body.night-mode .group-tab-btn.active {
+    color: var(--forest) !important;
+    border-bottom-color: var(--forest) !important;
+}
+
+body.night-mode #members-tab,
+body.night-mode #info-tab {
+    background: #121212 !important;
+}
+
+body.night-mode .member-item {
+    background: #1e1e1e !important;
+    border-bottom-color: #3a3a3a !important;
+}
+
+body.night-mode .member-item .avatar {
+    background: #2a2a2a !important;
+}
+
+body.night-mode .member-item div {
+    color: #e0e0e0 !important;
+}
+
+body.night-mode #member-permissions-modal {
+    background: #1e1e1e !important;
+}
+
+body.night-mode #member-permissions-modal > div:first-child {
+    background: #1e1e1e !important;
+    border-bottom-color: #3a3a3a !important;
+}
+
+body.night-mode #member-permissions-modal h3,
+body.night-mode #member-permissions-modal button {
+    color: #e0e0e0 !important;
+}
+
+body.night-mode .permission-item {
+    border-bottom-color: #3a3a3a !important;
+    color: #e0e0e0 !important;
+}
+
+body.night-mode .permission-item span {
+    color: #e0e0e0 !important;
+}
+
+body.night-mode #member-role-select {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+    color: #e0e0e0 !important;
+}
+
+body.night-mode .switch .slider {
+    background-color: #3a3a3a !important;
+}
+
+body.night-mode .switch input:checked + .slider {
+    background-color: var(--forest) !important;
+}
+
+body.night-mode #info-tab > div {
+    background: #1e1e1e !important;
+}
+
+body.night-mode #info-tab span {
+    color: #e0e0e0 !important;
+}
+
+body.night-mode #edit-group-settings-btn {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+    color: #e0e0e0 !important;
+}
+
+body.night-mode .group-profile-container .btn-secondary {
+    background: #2a2a2a !important;
+    border-color: #3a3a3a !important;
+    color: #e0e0e0 !important;
+}
+/* ========== ИСПРАВЛЕНИЕ АВАТАРОК В ПРОФИЛЯХ ========== */
+.avatar {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-color: var(--sage, #9DC183) !important;
+}
+
+.group-avatar {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.profile-avatar {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Аватарки в списке участников */
+.member-item .avatar {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+}
+
+/* Аватарки в списке чатов */
+.chat-item-avatar .avatar {
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* Дефолтные аватарки для пользователей */
+.default-avatar-user {
+    background-image: url('https://i.ibb.co/W4xM0wf7/image.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* Дефолтные аватарки для групп */
+.default-avatar-group {
+    background-image: url('https://i.ibb.co/0RWPwqwQ/image.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* Дефолтные аватарки для каналов */
+.default-avatar-channel {
+    background-image: url('https://i.ibb.co/3ydBsv59/image.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* Убираем текстовое содержимое если есть фон */
+.avatar:not([style*="background-image"]) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar[style*="background-image"] {
+    text-indent: -9999px;
+}
+/* ========== ФИКС АВАТАРОК В МОДАЛЬНЫХ ОКНАХ ========== */
+#user-profile-modal .profile-avatar,
+#group-profile-modal .group-avatar,
+#channel-profile-modal .avatar {
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+#group-profile-modal .member-item .avatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background-size: cover !important;
+    background-position: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Дефолтные аватарки для модалок */
+.default-avatar-user {
+    background-image: url('https://i.ibb.co/W4xM0wf7/image.png') !important;
+    background-size: cover !important;
+}
+
+.default-avatar-group {
+    background-image: url('https://i.ibb.co/0RWPwqwQ/image.png') !important;
+    background-size: cover !important;
+}
+
+.default-avatar-channel {
+    background-image: url('https://i.ibb.co/3ydBsv59/image.png') !important;
+    background-size: cover !important;
+}
+/* Модальные окна на телефоне - прокрутка */
+@media (max-width: 768px) {
+    .modal .modal-content {
+        max-height: 85vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .modal .modal-header {
+        position: sticky !important;
+        top: 0 !important;
+        background: inherit !important;
+        z-index: 10 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .modal .modal-body,
+    .modal > div > div:not(.modal-header) {
+        overflow-y: auto !important;
+        flex: 1 !important;
+    }
+}
+/* Контекстное меню для сообщений */
+.context-menu-item {
+    transition: background 0.1s;
+}
+.context-menu-item:hover {
+    background: #f5f5f5;
+}
+body.night-mode .context-menu-item:hover {
+    background: #2a2a2a;
+}
+#message-context-menu {
+    animation: menuFadeIn 0.1s ease;
+}
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+/* ========== ИСПРАВЛЕНИЕ НАСТРОЕК ДЛЯ ТЕЛЕФОНА ========== */
+
+/* Контейнер настроек */
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background: var(--background);
+    min-height: 100%;
+}
+
+/* Шапка настроек */
+.settings-header {
+    background: white;
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.settings-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-dark);
+}
+
+/* Карточка профиля */
+.settings-profile {
+    background: white;
+    margin: 12px 16px;
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.settings-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.settings-profile-info {
+    flex: 1;
+}
+
+.settings-profile-info h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-dark);
+}
+
+.settings-profile-info p {
+    font-size: 13px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.arrow {
+    font-size: 20px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* Секции настроек */
+.settings-section {
+    background: white;
+    margin: 12px 16px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Пункты меню */
+.settings-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+    background: white;
+}
+
+.settings-item:last-child {
+    border-bottom: none;
+}
+
+.settings-item:hover {
+    background: var(--background);
+}
+
+.settings-icon {
+    font-size: 22px;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.settings-item span:nth-child(2) {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-dark);
+}
+
+.settings-value {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+/* Опасные пункты */
+.settings-item.danger span:nth-child(2) {
+    color: var(--error);
+}
+
+/* Футер */
+.settings-footer {
+    text-align: center;
+    padding: 30px 20px 40px;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: auto;
+}
+
+.settings-footer p {
+    margin: 5px 0;
+}
+
+/* Тёмная тема для настроек */
+body.night-mode .settings-header {
+    background: #1e1e1e;
+    border-bottom-color: #3a3a3a;
+}
+
+body.night-mode .settings-header h2 {
+    color: white;
+}
+
+body.night-mode .settings-profile {
+    background: #2a2a2a;
+}
+
+body.night-mode .settings-profile-info h3 {
+    color: white;
+}
+
+body.night-mode .settings-profile-info p {
+    color: #aaa;
+}
+
+body.night-mode .settings-section {
+    background: #2a2a2a;
+}
+
+body.night-mode .settings-item {
+    background: #2a2a2a;
+    border-bottom-color: #3a3a3a;
+}
+
+body.night-mode .settings-item span:nth-child(2) {
+    color: white;
+}
+
+body.night-mode .settings-item:hover {
+    background: #3a3a3a;
+}
+
+body.night-mode .settings-footer {
+    color: #888;
+}
+
+/* Модальные окна настроек на телефоне */
+@media (max-width: 768px) {
+    .settings-container {
+        padding-bottom: 20px;
+    }
+    
+    .settings-profile {
+        margin: 12px 12px;
+    }
+    
+    .settings-section {
+        margin: 12px 12px;
+    }
+    
+    .settings-icon {
+        width: 28px;
+        font-size: 20px;
+    }
+    
+    .settings-item span:nth-child(2) {
+        font-size: 15px;
+    }
+    
+    .settings-header h2 {
+        font-size: 24px;
+    }
+}
+/* ========== НАСТРОЙКИ ДЛЯ ТЕЛЕФОНА ========== */
+
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--background);
+    padding-bottom: 20px;
+}
+
+/* Шапка */
+.settings-header {
+    background: white;
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+}
+
+.settings-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-dark);
+}
+
+/* Карточка профиля */
+.settings-profile {
+    background: white;
+    margin: 16px;
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: 0.2s;
+}
+
+.settings-profile:active {
+    transform: scale(0.98);
+    background: var(--background);
+}
+
+.settings-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.settings-profile-info {
+    flex: 1;
+}
+
+.settings-profile-info h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-dark);
+}
+
+.settings-profile-info p {
+    font-size: 13px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.arrow {
+    font-size: 20px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* Секции настроек */
+.settings-section {
+    background: white;
+    margin: 8px 16px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Пункты меню */
+.settings-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: 0.2s;
+    background: white;
+}
+
+.settings-item:active {
+    background: var(--background);
+}
+
+.settings-item:last-child {
+    border-bottom: none;
+}
+
+.settings-icon {
+    font-size: 22px;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.settings-item span:nth-child(2) {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-dark);
+}
+
+.settings-value {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+/* Опасный пункт (выход) */
+.settings-item.danger span:nth-child(2) {
+    color: var(--error);
+}
+
+/* Футер */
+.settings-footer {
+    text-align: center;
+    padding: 30px 20px 40px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.settings-footer p {
+    margin: 5px 0;
+}
+
+/* Тёмная тема */
+body.night-mode .settings-header {
+    background: #1e1e1e;
+    border-bottom-color: #3a3a3a;
+}
+
+body.night-mode .settings-header h2 {
+    color: white;
+}
+
+body.night-mode .settings-profile {
+    background: #2a2a2a;
+}
+
+body.night-mode .settings-profile-info h3 {
+    color: white;
+}
+
+body.night-mode .settings-profile-info p {
+    color: #aaa;
+}
+
+body.night-mode .settings-section {
+    background: #2a2a2a;
+}
+
+body.night-mode .settings-item {
+    background: #2a2a2a;
+    border-bottom-color: #3a3a3a;
+}
+
+body.night-mode .settings-item span:nth-child(2) {
+    color: white;
+}
+
+body.night-mode .settings-item:active {
+    background: #3a3a3a;
+}
+
+body.night-mode .settings-footer {
+    color: #888;
+}
+
+/* Убираем горизонтальную прокрутку */
+.settings-container {
+    overflow-x: hidden !important;
+}
+
+* {
+    -webkit-overflow-scrolling: touch;
+}
+/* ========== НАСТРОЙКИ ДЛЯ ТЕЛЕФОНА (ФОРСИРОВАННО) ========== */
+
+/* Контейнер настроек */
+.settings-container {
+    display: block !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: #f5f7f5 !important;
+    padding-bottom: 30px !important;
+}
+
+/* Шапка */
+.settings-header {
+    background: white !important;
+    padding: 20px 16px !important;
+    border-bottom: 1px solid #d4e4d4 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+.settings-header h2 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    color: #2c3e2c !important;
+}
+
+/* Карточка профиля */
+.settings-profile {
+    background: white !important;
+    margin: 16px !important;
+    border-radius: 20px !important;
+    padding: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.settings-avatar {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    background: #9DC183 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 32px !important;
+    background-size: cover !important;
+    background-position: center !important;
+    flex-shrink: 0 !important;
+}
+
+.settings-profile-info {
+    flex: 1 !important;
+}
+
+.settings-profile-info h3 {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    margin: 0 0 4px 0 !important;
+    color: #2c3e2c !important;
+}
+
+.settings-profile-info p {
+    font-size: 13px !important;
+    color: #6b8e6b !important;
+    margin: 0 !important;
+}
+
+.arrow {
+    font-size: 20px !important;
+    color: #94a894 !important;
+    flex-shrink: 0 !important;
+}
+
+/* Секции */
+.settings-section {
+    background: white !important;
+    margin: 12px 16px !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Пункты */
+.settings-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid #d4e4d4 !important;
+    cursor: pointer !important;
+    background: white !important;
+}
+
+.settings-item:last-child {
+    border-bottom: none !important;
+}
+
+.settings-icon {
+    font-size: 22px !important;
+    width: 32px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+
+.settings-item span:nth-child(2) {
+    flex: 1 !important;
+    font-size: 16px !important;
+    color: #2c3e2c !important;
+}
+
+.settings-value {
+    color: #6b8e6b !important;
+    font-size: 14px !important;
+    margin-right: 4px !important;
+}
+
+.settings-item.danger span:nth-child(2) {
+    color: #dc3545 !important;
+}
+
+/* Футер */
+.settings-footer {
+    text-align: center !important;
+    padding: 30px 20px 40px !important;
+    color: #94a894 !important;
+    font-size: 13px !important;
+}
+
+.settings-footer p {
+    margin: 5px 0 !important;
+}
+
+/* Нажатие на пункт */
+.settings-item:active {
+    background: #f5f7f5 !important;
+}
+
+.settings-profile:active {
+    background: #f5f7f5 !important;
+    transform: scale(0.98) !important;
+}
+
+/* Тёмная тема */
+body.night-mode .settings-container {
+    background: #121212 !important;
+}
+
+body.night-mode .settings-header,
+body.night-mode .settings-profile,
+body.night-mode .settings-section,
+body.night-mode .settings-item {
+    background: #1e1e1e !important;
+}
+
+body.night-mode .settings-header h2,
+body.night-mode .settings-profile-info h3,
+body.night-mode .settings-item span:nth-child(2) {
+    color: white !important;
+}
+
+body.night-mode .settings-profile-info p,
+body.night-mode .settings-value {
+    color: #aaa !important;
+}
+
+body.night-mode .settings-item {
+    border-bottom-color: #3a3a3a !important;
+}
+
+body.night-mode .settings-item:active {
+    background: #2a2a2a !important;
+}
+
+body.night-mode .settings-profile:active {
+    background: #2a2a2a !important;
+}
+/* ========== НАСТРОЙКИ ДЛЯ ТЕЛЕФОНА - ИСПРАВЛЕННЫЕ ========== */
+
+/* Главный контейнер настроек - обязательно для прокрутки */
+.settings-container {
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: var(--background, #f5f7f5) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Шапка */
+.settings-header {
+    background: white !important;
+    padding: 20px 16px !important;
+    border-bottom: 1px solid var(--border, #d4e4d4) !important;
+    flex-shrink: 0 !important;
+}
+
+.settings-header h2 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    color: var(--text-dark, #2c3e2c) !important;
+}
+
+/* Карточка профиля */
+.settings-profile {
+    background: white !important;
+    margin: 16px !important;
+    border-radius: 20px !important;
+    padding: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.settings-avatar {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    background: var(--sage, #9DC183) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 32px !important;
+    background-size: cover !important;
+    background-position: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Аватарка с картинкой - чтобы отображалась */
+.settings-avatar[style*="background-image"] {
+    background-size: cover !important;
+    background-position: center !important;
+    text-indent: -9999px !important;
+}
+
+.settings-avatar[style*="background-image"]::before {
+    display: none !important;
+}
+
+.settings-profile-info {
+    flex: 1 !important;
+}
+
+.settings-profile-info h3 {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    margin: 0 0 4px 0 !important;
+    color: var(--text-dark, #2c3e2c) !important;
+}
+
+.settings-profile-info p {
+    font-size: 13px !important;
+    color: var(--text-light, #6b8e6b) !important;
+    margin: 0 !important;
+}
+
+/* Стрелка */
+.arrow {
+    font-size: 20px !important;
+    color: var(--text-muted, #94a894) !important;
+    flex-shrink: 0 !important;
+}
+
+/* Секции */
+.settings-section {
+    background: white !important;
+    margin: 12px 16px !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Пункты меню */
+.settings-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--border, #d4e4d4) !important;
+    cursor: pointer !important;
+    background: white !important;
+}
+
+.settings-item:last-child {
+    border-bottom: none !important;
+}
+
+.settings-icon {
+    font-size: 22px !important;
+    width: 32px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+
+.settings-item span:nth-child(2) {
+    flex: 1 !important;
+    font-size: 16px !important;
+    color: var(--text-dark, #2c3e2c) !important;
+}
+
+.settings-value {
+    color: var(--text-light, #6b8e6b) !important;
+    font-size: 14px !important;
+    margin-right: 4px !important;
+}
+
+.settings-item.danger span:nth-child(2) {
+    color: #dc3545 !important;
+}
+
+/* Футер - внизу */
+.settings-footer {
+    text-align: center !important;
+    padding: 30px 20px 40px !important;
+    color: var(--text-muted, #94a894) !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+}
+
+.settings-footer p {
+    margin: 5px 0 !important;
+}
+
+/* Эффект нажатия */
+.settings-item:active,
+.settings-profile:active {
+    background: var(--background, #f5f7f5) !important;
+    transform: scale(0.98) !important;
+    transition: 0.1s !important;
+}
+
+/* Тёмная тема */
+body.night-mode .settings-container {
+    background: #121212 !important;
+}
+
+body.night-mode .settings-header,
+body.night-mode .settings-profile,
+body.night-mode .settings-section,
+body.night-mode .settings-item {
+    background: #1e1e1e !important;
+}
+
+body.night-mode .settings-header h2,
+body.night-mode .settings-profile-info h3,
+body.night-mode .settings-item span:nth-child(2) {
+    color: white !important;
+}
+
+body.night-mode .settings-profile-info p,
+body.night-mode .settings-value {
+    color: #aaa !important;
+}
+
+body.night-mode .settings-item {
+    border-bottom-color: #3a3a3a !important;
+}
+
+body.night-mode .settings-item:active,
+body.night-mode .settings-profile:active {
+    background: #2a2a2a !important;
+}
 
