@@ -1,3 +1,36 @@
+// ========== ОТОБРАЖЕНИЕ ОШИБОК НА ЭКРАНЕ ТЕЛЕФОНА ==========
+(function() {
+    // Создаём контейнер для ошибок
+    var errorContainer = document.createElement('div');
+    errorContainer.id = 'debug-console';
+    errorContainer.style.cssText = 'position:fixed; bottom:0; left:0; right:0; background:rgba(0,0,0,0.9); color:red; font-size:12px; padding:10px; z-index:99999; max-height:200px; overflow-y:auto; font-family:monospace; display:none;';
+    document.body.appendChild(errorContainer);
+    
+    // Перехватываем все ошибки
+    window.onerror = function(msg, url, line, col, error) {
+        errorContainer.style.display = 'block';
+        errorContainer.innerHTML += '❌ ' + msg + ' (строка ' + line + ')<br>';
+        console.error(msg);
+        return false;
+    };
+    
+    // Показываем контейнер по двойному тапу
+    window.addEventListener('dblclick', function() {
+        errorContainer.style.display = errorContainer.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    // Перехватываем Promise ошибки
+    window.addEventListener('unhandledrejection', function(e) {
+        errorContainer.style.display = 'block';
+        errorContainer.innerHTML += '⚠️ Promise: ' + (e.reason?.message || e.reason) + '<br>';
+    });
+})();
+
+// Проверка Firebase инициализации
+console.log('App.js запущен');
+if (typeof firebase === 'undefined') {
+    alert('Firebase не загружен! Проверьте интернет.');
+}
 // KUKUMBER MESSENGER - APP.JS (исправленный: поиск, настройки, профиль)
 var firebaseConfig = {
     apiKey: "AIzaSyBYNJPhbs8YaNAhdjSUIdj1Ok433N19GJM",
