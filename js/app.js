@@ -746,7 +746,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
         
         if (chatData.type === 'group') {
             name = chatData.name || 'Группа';
-            avatarContent = '👥';
+            avatarContent = '';
             if (chatData.avatar) avatarStyle = `background-image: url(${chatData.avatar}); background-size: cover;`;
         } 
         else if (chatData.type === 'channel') {
@@ -858,7 +858,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
                 avatarEl.style.backgroundImage = `url(${chatData.avatar})`;
                 avatarEl.style.backgroundSize = 'cover';
             } else {
-                avatarEl.textContent = '👥';
+                avatarEl.textContent = '';
                 avatarEl.classList.add('default-avatar-group');
             }
         } 
@@ -1270,7 +1270,7 @@ window.closeMessagesSidebar = function() {
                 // Определяем тип чата
                 if (chat.data.type === 'group') {
                     name = chat.data.name || 'Группа';
-                    avatarHtml = '👥';
+                    avatarHtml = '';
                 } 
                 else if (chat.data.type === 'channel') {
                     name = chat.data.name || 'Канал';
@@ -1360,7 +1360,7 @@ window.closeMessagesSidebar = function() {
         if (chatData.type === 'group') {
             nameEl.textContent = chatData.name || 'Группа';
             statusEl.textContent = 'группа';
-            avatarEl.textContent = '👥';
+            avatarEl.textContent = '';
         } 
         else if (chatData.type === 'channel') {
             nameEl.textContent = chatData.name || 'Канал';
