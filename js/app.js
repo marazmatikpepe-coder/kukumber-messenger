@@ -751,7 +751,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
         } 
         else if (chatData.type === 'channel') {
             name = chatData.name || 'Канал';
-            avatarContent = '📢';
+            avatarContent = '';
             if (chatData.avatar) avatarStyle = `background-image: url(${chatData.avatar}); background-size: cover;`;
         }
         else {
@@ -869,7 +869,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
                 avatarEl.style.backgroundImage = `url(${chatData.avatar})`;
                 avatarEl.style.backgroundSize = 'cover';
             } else {
-                avatarEl.textContent = '📢';
+                avatarEl.textContent = '';
                 avatarEl.classList.add('default-avatar-channel');
             }
         }
@@ -1274,7 +1274,7 @@ window.closeMessagesSidebar = function() {
                 } 
                 else if (chat.data.type === 'channel') {
                     name = chat.data.name || 'Канал';
-                    avatarHtml = '📢';
+                    avatarHtml = '';
                 }
                 else {
                     // Личный чат - ищем имя собеседника
@@ -1365,7 +1365,7 @@ window.closeMessagesSidebar = function() {
         else if (chatData.type === 'channel') {
             nameEl.textContent = chatData.name || 'Канал';
             statusEl.textContent = 'канал';
-            avatarEl.textContent = '📢';
+            avatarEl.textContent = '';
         }
         else {
             // Личный чат
