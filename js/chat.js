@@ -393,7 +393,7 @@ async function updateChatHeader(chatId, chatData) {
                     chatAvatar.style.backgroundImage = 'url(' + userData.avatar + ')';
                     chatAvatar.style.backgroundSize = 'cover';
                 } else {
-                    chatAvatar.textContent = '👤';
+                    chatAvatar.textContent = '';
                     chatAvatar.classList.add('default-avatar-user');
                 }
             }
@@ -401,7 +401,7 @@ async function updateChatHeader(chatId, chatData) {
             chatUsername.textContent = 'Пользователь';
             if (chatStatus) chatStatus.textContent = 'неизвестно';
             if (chatAvatar) {
-                chatAvatar.textContent = '👤';
+                chatAvatar.textContent = '';
                 chatAvatar.classList.add('default-avatar-user');
             }
         }
