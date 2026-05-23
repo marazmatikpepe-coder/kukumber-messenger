@@ -476,7 +476,12 @@ function loadMessages(chatId) {
         loadedMessageIds.add(messageId);
         message.id = messageId;
         appendMessage(message);
-        setTimeout(function() { container.scrollTop = container.scrollHeight; }, 100);
+        
+        // Добавляем разделитель после загрузки всех сообщений
+        setTimeout(function() {
+            addMessagesDivider();
+            countNewMessages();
+        }, 100);
     });
 }
 
