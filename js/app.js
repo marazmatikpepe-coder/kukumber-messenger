@@ -1749,3 +1749,114 @@ async function startPrivateChatFromGlobalSearch(userId) {
     if (typeof switchToTab === 'function') switchToTab('chats');
     setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
 }
+// ========== КНОПКА ПЛЮС И СОЗДАНИЕ ==========
+window.openCreateMenu = function() {
+    const modal = document.getElementById('create-menu-modal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.closeCreateMenu = function() {
+    const modal = document.getElementById('create-menu-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.openNewChatFromMenu = function() {
+    closeCreateMenu();
+    showNewChatDialog();
+};
+
+function showNewChatDialog() {
+    const modalHtml = `
+        <div id="new-chat-dialog" class="modal" style="z-index:10050;">
+            <div class="modal-content" style="max-width:400px;">
+                <div class="modal-header">
+                    <h3>💬 Новый чат</h3>
+                    <button onclick="closeNewChatDialog()" class="btn-close">×</button>
+                </div>
+                <div style="padding:20px;">
+                    <input type="text" id="new-chat-search" placeholder="🔍 Поиск пользователей..." style="width:100%; padding:12px; border:2px solid var(--border); border-radius:30px;">
+                    <div id="new-chat-results" style="margin-top:15px; max-height:300px; overflow-y:auto;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const old = document.getElementById('new-chat-dialog');
+    if (old) old.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('new-chat-dialog').classList.remove('hidden');
+    
+    const searchInput = document.getElementById('new-chat-search');
+    searchInput.oninput = async function() {
+        const query = this.value.trim().toLowerCase();
+        const container = document.getElementById('new-chat-results');
+        if (!query || query.length < 2) {
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Введите минимум 2 символа</div>';
+            return;
+        }
+        container.innerHTML = '<div style="text-align:center;padding:20px;">🔍 Поиск...</div>';
+        
+        const usersSnap = await database.ref('users').once('value');
+        const users = usersSnap.val();
+        const results = [];
+        for (const uid in users) {
+            if (uid === currentUser?.uid) continue;
+            const username = (users[uid].username || '').toLowerCase();
+            if (username.includes(query)) results.push({ uid, ...users[uid] });
+            if (results.length >= 20) break;
+        }
+        
+        if (results.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:20px;">👻 Не найдено</div>';
+            return;
+        }
+        container.innerHTML = '';
+        for (const user of results) {
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid var(--border); cursor:pointer;';
+            div.onclick = () => createNewChatFromDialog(user.uid, user.username);
+            div.innerHTML = `
+                <div style="width:45px;height:45px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;${user.avatar ? 'background-image:url('+user.avatar+');background-size:cover;' : ''}">${user.avatar ? '' : '👤'}</div>
+                <div style="flex:1;"><strong>${escapeHtml(user.username)}</strong></div>
+                <div style="color:var(--forest);">→</div>
+            `;
+            container.appendChild(div);
+        }
+    };
+    searchInput.focus();
+}
+
+window.closeNewChatDialog = function() {
+    const dialog = document.getElementById('new-chat-dialog');
+    if (dialog) dialog.remove();
+};
+
+async function createNewChatFromDialog(userId, userName) {
+    closeNewChatDialog();
+    const chatId = currentUser.uid < userId ? currentUser.uid + '_' + userId : userId + '_' + currentUser.uid;
+    const chatSnap = await database.ref('chats/' + chatId).once('value');
+    if (!chatSnap.exists()) {
+        await database.ref('chats/' + chatId).set({
+            type: 'private',
+            participants: [currentUser.uid, userId],
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastMessage: 'Чат создан',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        await database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
+        await database.ref('userChats/' + userId + '/' + chatId).set(true);
+        showNotification('Чат создан!', 'success');
+    }
+    if (typeof switchToTab === 'function') switchToTab('chats');
+    setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
+}
+
+window.openCreateGroupWizard = function() {
+    closeCreateMenu();
+    showNotification('Создание группы скоро будет доступно', 'info');
+};
+
+window.openCreateChannelWizard = function() {
+    closeCreateMenu();
+    showNotification('Создание канала скоро будет доступно', 'info');
+};
