@@ -663,9 +663,9 @@ function initChat() {
 
 setTimeout(initChat, 1000);
 console.log('✅ chat.js исправлен и загружен');
-// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (РАБОЧАЯ ВЕРСИЯ) ==========
+// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (ПОЛНАЯ ВЕРСИЯ) ==========
 window.openUserProfile = async function(userId) {
-    console.log('openUserProfile вызван для:', userId);
+    console.log('openUserProfile:', userId);
     
     if (!userId) {
         showNotification('ID пользователя не указан', 'error');
@@ -673,7 +673,6 @@ window.openUserProfile = async function(userId) {
     }
     
     try {
-        // Получаем данные пользователя
         const userSnap = await database.ref('users/' + userId).once('value');
         const userData = userSnap.val();
         
@@ -682,29 +681,37 @@ window.openUserProfile = async function(userId) {
             return;
         }
         
-        // Получаем статус (онлайн/оффлайн)
-        const statusSnap = await database.ref('users/' + userId + '/status').once('value');
-        const statusData = statusSnap.val() || {};
+        const isOwnProfile = (userId === window.currentUser?.uid);
+        const isAdmin = window.isSuperAdmin === true;
+        const canEdit = isOwnProfile || isAdmin;
+        
+        // Получаем статус
+        const statusData = userData.status || {};
         const isOnline = statusData.online === true;
         const lastSeen = statusData.lastSeen;
         
-        // Получаем количество подписчиков
+        // Подписчики
         const subsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
         const subscribersCount = subsSnap.val() ? Object.keys(subsSnap.val()).length : 0;
         
-        // Проверяем подписку текущего пользователя
+        // Проверяем подписку
         let isSubscribed = false;
-        if (userId !== window.currentUser?.uid) {
+        let notificationsEnabled = false;
+        if (!isOwnProfile) {
             const subSnap = await database.ref('subscriptions/' + window.currentUser.uid + '/' + userId).once('value');
             isSubscribed = subSnap.exists();
+            const notifSnap = await database.ref('subscriptionNotifications/' + window.currentUser.uid + '/' + userId).once('value');
+            notificationsEnabled = notifSnap.val() === true;
         }
         
         const userName = userData.username || 'Пользователь';
+        const userTag = userData.userTag || '@' + userName.toLowerCase().replace(/\s/g, '');
         const userAvatar = userData.avatar || '';
         const userBio = userData.bio || 'Нет описания';
         const userBanner = userData.banner || null;
+        const userVerified = userData.verified === true;
         
-        // Формируем стиль баннера
+        // Баннер
         let bannerStyle = '';
         if (userBanner) {
             if (userBanner.startsWith('#')) {
@@ -742,32 +749,62 @@ window.openUserProfile = async function(userId) {
         modal.className = 'modal';
         modal.style.zIndex = '10003';
         modal.innerHTML = `
-            <div class="profile-modal-content" style="max-width: 450px; border-radius: 24px; overflow: hidden; background: white;">
+            <div class="profile-modal-content" style="max-width: 450px; border-radius: 24px; overflow: hidden; background: white; position: relative;">
                 <!-- Баннер -->
-                <div class="profile-banner" style="height: 120px; position: relative; ${bannerStyle}">
+                <div class="profile-banner" id="profile-banner" style="height: 140px; position: relative; ${bannerStyle}">
+                    ${canEdit ? '<button id="edit-banner-btn" class="profile-banner-edit-btn" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px;">✏️</button>' : ''}
                     <button class="profile-close-btn" onclick="closeUserProfileModal()" style="position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
                 </div>
                 
-                <!-- Аватар -->
-                <div style="display: flex; justify-content: center; margin-top: -50px; position: relative;">
-                    <div class="profile-avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 4px solid white; background: var(--sage); display: flex; align-items: center; justify-content: center; font-size: 40px; ${userAvatar ? 'background-image: url(' + userAvatar + '); background-size: cover;' : ''}">
+                <!-- Аватар (накрывает баннер) -->
+                <div style="display: flex; justify-content: center; margin-top: -50px; position: relative; z-index: 5;">
+                    <div class="profile-avatar" id="profile-avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; background: var(--sage); display: flex; align-items: center; justify-content: center; font-size: 45px; ${userAvatar ? 'background-image: url(' + userAvatar + '); background-size: cover; background-position: center;' : ''} cursor: pointer;">
                         ${userAvatar ? '' : '👤'}
+                        ${canEdit ? '<button id="edit-avatar-btn" class="profile-avatar-edit-btn" style="position: absolute; bottom: 0; right: 0; background: var(--forest); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px;">✏️</button>' : ''}
                     </div>
                 </div>
                 
                 <!-- Информация -->
-                <div style="text-align: center; padding: 15px;">
-                    <h2 style="margin-bottom: 5px;">${escapeHtml(userName)}</h2>
-                    <div style="margin-bottom: 10px;">${statusText}</div>
-                    <div class="profile-subscribers" style="margin-bottom: 10px;">👥 ${subscribersCount} подписчиков</div>
-                    <p style="color: #666; margin-bottom: 15px; padding: 0 15px;">${escapeHtml(userBio)}</p>
+                <div style="text-align: center; padding: 15px 20px 20px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                        <h2 id="profile-name" style="margin: 0; cursor: ${canEdit ? 'pointer' : 'default'};">${escapeHtml(userName)}</h2>
+                        ${userVerified ? '<img id="verified-badge" src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width: 20px; height: 20px; cursor: pointer;" onclick="showVerifiedInfo()">' : ''}
+                        ${isAdmin ? '<button id="toggle-verified-btn" class="btn-small" style="background: none; border: none; cursor: pointer; font-size: 14px;">🔘 ' + (userVerified ? 'Снять' : 'Выдать') + '</button>' : ''}
+                        ${canEdit ? '<span id="edit-name-icon" style="cursor: pointer; font-size: 16px;">✏️</span>' : ''}
+                    </div>
+                    <div class="profile-username" style="color: var(--text-muted); margin: 5px 0;">${escapeHtml(userTag)}</div>
+                    <div class="profile-subscribers" style="margin: 5px 0;">👥 ${subscribersCount} подписчиков</div>
+                    <div class="profile-status" style="margin: 5px 0; font-size: 13px;">${statusText}</div>
                     
-                    ${userId !== window.currentUser?.uid ? `
-                        <div style="display: flex; gap: 10px; justify-content: center;">
+                    ${!isOwnProfile ? `
+                        <div style="display: flex; gap: 10px; justify-content: center; margin: 15px 0;">
                             <button id="profile-subscribe-btn" class="btn-primary" style="padding: 10px 20px; background: ${isSubscribed ? '#555' : 'var(--forest)'};">${isSubscribed ? 'Отписаться' : 'Подписаться'}</button>
+                            <button id="profile-notify-btn" class="btn-secondary" style="padding: 10px 20px; opacity: ${notificationsEnabled ? '1' : '0.5'};">🔔</button>
                             <button id="profile-chat-btn" class="btn-secondary" style="padding: 10px 20px;" onclick="startPrivateChatFromProfile('${userId}')">💬 Написать</button>
                         </div>
                     ` : ''}
+                    
+                    <div class="profile-bio" style="margin-top: 10px; padding: 10px; background: var(--background); border-radius: 16px; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600;">📝 О себе</span>
+                            ${canEdit ? '<button id="edit-bio-btn" style="background: none; border: none; cursor: pointer;">✏️</button>' : ''}
+                        </div>
+                        <p id="profile-bio-text" style="margin: 8px 0 0 0; color: var(--text-light);">${escapeHtml(userBio)}</p>
+                    </div>
+                </div>
+                
+                <!-- Вкладки -->
+                <div style="display: flex; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+                    <button id="profile-tab-posts" class="profile-tab-btn active" style="flex: 1; padding: 12px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--forest); border-bottom: 2px solid var(--forest);">📷 Посты</button>
+                    <button id="profile-tab-reposts" class="profile-tab-btn" style="flex: 1; padding: 12px; background: none; border: none; cursor: pointer;">🔄 Репосты</button>
+                </div>
+                
+                <!-- Контент вкладок -->
+                <div id="profile-posts-container" style="padding: 15px; max-height: 400px; overflow-y: auto;">
+                    <div class="profile-loading">Загрузка постов...</div>
+                </div>
+                <div id="profile-reposts-container" style="padding: 15px; max-height: 400px; overflow-y: auto; display: none;">
+                    <div class="profile-loading">Загрузка репостов...</div>
                 </div>
             </div>
         `;
@@ -775,38 +812,16 @@ window.openUserProfile = async function(userId) {
         document.body.appendChild(modal);
         modal.classList.remove('hidden');
         
-        // Обработчик подписки
-        if (userId !== window.currentUser?.uid) {
-            const subBtn = document.getElementById('profile-subscribe-btn');
-            if (subBtn) {
-                subBtn.onclick = async () => {
-                    const subRef = database.ref('subscriptions/' + window.currentUser.uid + '/' + userId);
-                    const snap = await subRef.once('value');
-                    
-                    if (snap.exists()) {
-                        await subRef.remove();
-                        showNotification('Вы отписались', 'info');
-                        subBtn.textContent = 'Подписаться';
-                        subBtn.style.background = 'var(--forest)';
-                        // Обновляем счётчик
-                        const newSubsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
-                        const newCount = newSubsSnap.val() ? Object.keys(newSubsSnap.val()).length : 0;
-                        const subsDiv = document.querySelector('.profile-subscribers');
-                        if (subsDiv) subsDiv.textContent = `👥 ${newCount} подписчиков`;
-                    } else {
-                        await subRef.set(true);
-                        showNotification('Вы подписались', 'success');
-                        subBtn.textContent = 'Отписаться';
-                        subBtn.style.background = '#555';
-                        // Обновляем счётчик
-                        const newSubsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
-                        const newCount = newSubsSnap.val() ? Object.keys(newSubsSnap.val()).length : 0;
-                        const subsDiv = document.querySelector('.profile-subscribers');
-                        if (subsDiv) subsDiv.textContent = `👥 ${newCount} подписчиков`;
-                    }
-                };
-            }
-        }
+        // Сохраняем ID для использования в других функциях
+        window.viewingProfileUserId = userId;
+        window.viewingProfileUserData = userData;
+        
+        // Загружаем посты и репосты
+        await loadUserPosts(userId);
+        await loadUserReposts(userId);
+        
+        // Привязываем обработчики
+        bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit, isSubscribed, notificationsEnabled);
         
     } catch (err) {
         console.error('Ошибка открытия профиля:', err);
@@ -814,40 +829,364 @@ window.openUserProfile = async function(userId) {
     }
 };
 
-window.closeUserProfileModal = function() {
-    const modal = document.getElementById('user-profile-modal');
+// Загрузка постов пользователя
+async function loadUserPosts(userId) {
+    const container = document.getElementById('profile-posts-container');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="profile-loading">Загрузка постов...</div>';
+    
+    const slicesSnap = await database.ref('slices').orderByChild('authorId').equalTo(userId).once('value');
+    const slices = slicesSnap.val();
+    
+    if (!slices) {
+        container.innerHTML = '<div class="profile-empty">Нет постов</div>';
+        return;
+    }
+    
+    let postsHtml = '';
+    const slicesArray = [];
+    for (let id in slices) {
+        const slice = slices[id];
+        if (slice.type !== 'repost') {
+            slicesArray.push({ id: id, data: slice });
+        }
+    }
+    slicesArray.sort((a, b) => (b.data.createdAt || 0) - (a.data.createdAt || 0));
+    
+    for (const slice of slicesArray) {
+        const mediaHtml = slice.data.mediaUrl ? 
+            `<div class="slice-media" style="margin-bottom: 10px;"><img src="${slice.data.mediaUrl}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; cursor: pointer;" onclick="openSliceLightbox('${slice.data.mediaUrl}')"></div>` : '';
+        
+        postsHtml += `
+            <div class="profile-slice-card" style="background: var(--background); border-radius: 16px; margin-bottom: 15px; overflow: hidden;">
+                ${mediaHtml}
+                <div style="padding: 12px;">
+                    <div style="font-size: 14px; color: var(--text-light); margin-bottom: 8px;">${escapeHtml(slice.data.text || '')}</div>
+                    <div style="display: flex; gap: 15px; font-size: 12px; color: var(--text-muted);">
+                        <span>❤️ ${slice.data.likesCount || 0}</span>
+                        <span>💬 ${slice.data.commentsCount || 0}</span>
+                        <span>🔄 ${slice.data.repostsCount || 0}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = postsHtml || '<div class="profile-empty">Нет постов</div>';
+}
+
+// Загрузка репостов пользователя
+async function loadUserReposts(userId) {
+    const container = document.getElementById('profile-reposts-container');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="profile-loading">Загрузка репостов...</div>';
+    
+    const slicesSnap = await database.ref('slices').orderByChild('authorId').equalTo(userId).once('value');
+    const slices = slicesSnap.val();
+    
+    if (!slices) {
+        container.innerHTML = '<div class="profile-empty">Нет репостов</div>';
+        return;
+    }
+    
+    let repostsHtml = '';
+    const repostsArray = [];
+    for (let id in slices) {
+        const slice = slices[id];
+        if (slice.type === 'repost') {
+            repostsArray.push({ id: id, data: slice });
+        }
+    }
+    repostsArray.sort((a, b) => (b.data.createdAt || 0) - (a.data.createdAt || 0));
+    
+    for (const repost of repostsArray) {
+        repostsHtml += `
+            <div class="profile-slice-card" style="background: var(--background); border-radius: 16px; margin-bottom: 15px; overflow: hidden; padding: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span>🔄</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">Репост от @${escapeHtml(repost.data.originalAuthorName || 'пользователя')}</span>
+                </div>
+                <div style="font-size: 14px;">${escapeHtml(repost.data.originalText || '')}</div>
+                <button class="btn-small" style="margin-top: 8px; padding: 4px 12px;" onclick="deleteRepost('${repost.id}')">Удалить репост</button>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = repostsHtml || '<div class="profile-empty">Нет репостов</div>';
+}
+
+// Удаление репоста
+window.deleteRepost = async function(repostId) {
+    if (!confirm('Удалить репост?')) return;
+    
+    const repostSnap = await database.ref('slices/' + repostId).once('value');
+    const repostData = repostSnap.val();
+    const originalId = repostData?.originalId;
+    
+    await database.ref('slices/' + repostId).remove();
+    await database.ref('userReposts/' + window.currentUser.uid + '/' + originalId).remove();
+    if (originalId) {
+        await database.ref('slices/' + originalId + '/repostsCount').transaction(c => Math.max((c || 1) - 1, 0));
+    }
+    
+    showNotification('Репост удалён', 'success');
+    if (window.viewingProfileUserId) {
+        loadUserReposts(window.viewingProfileUserId);
+    }
+};
+
+// Привязка событий профиля
+function bindUserProfileEvents(userId, userData, isOwnProfile, isAdmin, canEdit, isSubscribed, notificationsEnabled) {
+    // Переключение вкладок
+    const postsTab = document.getElementById('profile-tab-posts');
+    const repostsTab = document.getElementById('profile-tab-reposts');
+    const postsContainer = document.getElementById('profile-posts-container');
+    const repostsContainer = document.getElementById('profile-reposts-container');
+    
+    if (postsTab) {
+        postsTab.onclick = () => {
+            postsTab.classList.add('active');
+            postsTab.style.color = 'var(--forest)';
+            postsTab.style.borderBottom = '2px solid var(--forest)';
+            repostsTab.classList.remove('active');
+            repostsTab.style.color = '';
+            repostsTab.style.borderBottom = 'none';
+            postsContainer.style.display = 'block';
+            repostsContainer.style.display = 'none';
+        };
+    }
+    
+    if (repostsTab) {
+        repostsTab.onclick = () => {
+            repostsTab.classList.add('active');
+            repostsTab.style.color = 'var(--forest)';
+            repostsTab.style.borderBottom = '2px solid var(--forest)';
+            postsTab.classList.remove('active');
+            postsTab.style.color = '';
+            postsTab.style.borderBottom = 'none';
+            postsContainer.style.display = 'none';
+            repostsContainer.style.display = 'block';
+        };
+    }
+    
+    // Редактирование имени
+    if (canEdit) {
+        const editNameIcon = document.getElementById('edit-name-icon');
+        const nameElement = document.getElementById('profile-name');
+        if (editNameIcon) {
+            editNameIcon.onclick = async () => {
+                const newName = prompt('Введите новое имя:', userData.username || '');
+                if (newName && newName.trim()) {
+                    await database.ref('users/' + userId + '/username').set(newName.trim());
+                    showNotification('Имя обновлено', 'success');
+                    nameElement.textContent = newName.trim();
+                }
+            };
+        }
+        if (nameElement) {
+            nameElement.ondblclick = () => editNameIcon?.onclick();
+        }
+    }
+    
+    // Редактирование био
+    if (canEdit) {
+        const editBioBtn = document.getElementById('edit-bio-btn');
+        const bioText = document.getElementById('profile-bio-text');
+        if (editBioBtn) {
+            editBioBtn.onclick = async () => {
+                const newBio = prompt('Введите новое описание:', userData.bio || '');
+                if (newBio !== null) {
+                    await database.ref('users/' + userId + '/bio').set(newBio.trim());
+                    showNotification('Описание обновлено', 'success');
+                    bioText.textContent = newBio.trim() || 'Нет описания';
+                }
+            };
+        }
+    }
+    
+    // Редактирование аватара
+    if (canEdit) {
+        const editAvatarBtn = document.getElementById('edit-avatar-btn');
+        if (editAvatarBtn) {
+            editAvatarBtn.onclick = () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    showNotification('Загрузка аватара...', 'info');
+                    try {
+                        const url = await uploadToImgBB(file);
+                        await database.ref('users/' + userId + '/avatar').set(url);
+                        showNotification('Аватар обновлён', 'success');
+                        const avatarDiv = document.getElementById('profile-avatar');
+                        if (avatarDiv) {
+                            avatarDiv.style.backgroundImage = `url(${url})`;
+                            avatarDiv.style.backgroundSize = 'cover';
+                            avatarDiv.textContent = '';
+                        }
+                    } catch (err) {
+                        showNotification('Ошибка загрузки', 'error');
+                    }
+                };
+                input.click();
+            };
+        }
+    }
+    
+    // Редактирование баннера
+    if (canEdit) {
+        const editBannerBtn = document.getElementById('edit-banner-btn');
+        if (editBannerBtn) {
+            editBannerBtn.onclick = () => {
+                const colors = ['#228B22', '#556B2F', '#1a5c1a', '#32CD32', '#6b8e6b', '#000000', '#1E90FF', '#FFD700', '#FFA500', '#FF69B4'];
+                let colorPickerHtml = '<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px;">';
+                colors.forEach(color => {
+                    colorPickerHtml += `<div style="width: 45px; height: 45px; border-radius: 50%; background: ${color}; cursor: pointer;" onclick="setUserBanner('${userId}', '${color}')"></div>`;
+                });
+                colorPickerHtml += '</div><div style="text-align:center;"><button onclick="uploadUserBannerImage(\'' + userId + '\')" class="btn-primary">📷 Загрузить картинку</button></div>';
+                showCustomModal('Выберите баннер', colorPickerHtml);
+            };
+        }
+    }
+    
+    // Подписка
+    if (!isOwnProfile) {
+        const subBtn = document.getElementById('profile-subscribe-btn');
+        if (subBtn) {
+            subBtn.onclick = async () => {
+                const subRef = database.ref('subscriptions/' + window.currentUser.uid + '/' + userId);
+                const snap = await subRef.once('value');
+                if (snap.exists()) {
+                    await subRef.remove();
+                    showNotification('Вы отписались', 'info');
+                    subBtn.textContent = 'Подписаться';
+                    subBtn.style.background = 'var(--forest)';
+                } else {
+                    await subRef.set(true);
+                    showNotification('Вы подписались', 'success');
+                    subBtn.textContent = 'Отписаться';
+                    subBtn.style.background = '#555';
+                }
+                // Обновляем счётчик
+                const newSubsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
+                const newCount = newSubsSnap.val() ? Object.keys(newSubsSnap.val()).length : 0;
+                const subsDiv = document.querySelector('.profile-subscribers');
+                if (subsDiv) subsDiv.textContent = `👥 ${newCount} подписчиков`;
+            };
+        }
+        
+        // Уведомления
+        const notifBtn = document.getElementById('profile-notify-btn');
+        if (notifBtn) {
+            notifBtn.onclick = async () => {
+                const notifRef = database.ref('subscriptionNotifications/' + window.currentUser.uid + '/' + userId);
+                const snap = await notifRef.once('value');
+                if (snap.val() === true) {
+                    await notifRef.remove();
+                    showNotification('Уведомления выключены', 'info');
+                    notifBtn.style.opacity = '0.5';
+                } else {
+                    await notifRef.set(true);
+                    showNotification('Уведомления включены', 'success');
+                    notifBtn.style.opacity = '1';
+                }
+            };
+        }
+    }
+    
+    // Верификация (только для админов)
+    if (isAdmin) {
+        const toggleVerifiedBtn = document.getElementById('toggle-verified-btn');
+        if (toggleVerifiedBtn) {
+            toggleVerifiedBtn.onclick = async () => {
+                const newVerified = !userData.verified;
+                await database.ref('users/' + userId + '/verified').set(newVerified);
+                showNotification(newVerified ? 'Галочка выдана' : 'Галочка снята', 'success');
+                location.reload();
+            };
+        }
+    }
+}
+
+// Установка баннера пользователя
+window.setUserBanner = async function(userId, color) {
+    await database.ref('users/' + userId + '/banner').set(color);
+    showNotification('Баннер обновлён', 'success');
+    closeCustomModal();
+    const bannerDiv = document.getElementById('profile-banner');
+    if (bannerDiv) {
+        bannerDiv.style.background = color;
+        bannerDiv.style.backgroundImage = 'none';
+    }
+};
+
+window.uploadUserBannerImage = async function(userId) {
+    closeCustomModal();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,image/gif';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        showNotification('Загрузка баннера...', 'info');
+        try {
+            const url = await uploadToImgBB(file);
+            await database.ref('users/' + userId + '/banner').set(url);
+            showNotification('Баннер обновлён', 'success');
+            const bannerDiv = document.getElementById('profile-banner');
+            if (bannerDiv) {
+                bannerDiv.style.backgroundImage = `url(${url})`;
+                bannerDiv.style.backgroundSize = 'cover';
+                bannerDiv.style.backgroundPosition = 'center';
+            }
+        } catch (err) {
+            showNotification('Ошибка загрузки', 'error');
+        }
+    };
+    input.click();
+};
+
+window.showCustomModal = function(title, contentHtml) {
+    const oldModal = document.getElementById('custom-modal');
+    if (oldModal) oldModal.remove();
+    const modal = document.createElement('div');
+    modal.id = 'custom-modal';
+    modal.className = 'modal';
+    modal.style.zIndex = '10005';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 350px; border-radius: 24px;">
+            <div class="modal-header">
+                <h3>${title}</h3>
+                <button onclick="closeCustomModal()" class="btn-close">×</button>
+            </div>
+            <div style="padding: 10px 20px 20px;">
+                ${contentHtml}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.classList.remove('hidden');
+};
+
+window.closeCustomModal = function() {
+    const modal = document.getElementById('custom-modal');
     if (modal) modal.remove();
 };
 
-window.startPrivateChatFromProfile = async function(userId) {
-    closeUserProfileModal();
-    
-    const chatId = window.currentUser.uid < userId ? window.currentUser.uid + '_' + userId : userId + '_' + window.currentUser.uid;
-    const chatSnap = await database.ref('chats/' + chatId).once('value');
-    
-    if (!chatSnap.exists()) {
-        await database.ref('chats/' + chatId).set({
-            type: 'private',
-            participants: [window.currentUser.uid, userId],
-            createdAt: firebase.database.ServerValue.TIMESTAMP,
-            lastMessage: 'Чат создан',
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-        });
-        await database.ref('userChats/' + window.currentUser.uid + '/' + chatId).set(true);
-        await database.ref('userChats/' + userId + '/' + chatId).set(true);
-    }
-    
-    const chatData = await database.ref('chats/' + chatId).once('value');
-    if (typeof window.openChatWithData === 'function') {
-        window.openChatWithData(chatId, chatData.val());
-    } else if (typeof openChatWithData === 'function') {
-        openChatWithData(chatId, chatData.val());
-    }
-    
-    if (typeof window.loadChats === 'function') window.loadChats();
+window.showVerifiedInfo = function() {
+    alert('Этот пользователь имеет подтверждённый, верифицированный аккаунт 🌟');
 };
 
-// Открытие профиля из слайсов
+window.closeUserProfileModal = function() {
+    const modal = document.getElementById('user-profile-modal');
+    if (modal) modal.remove();
+    window.viewingProfileUserId = null;
+};
+
 window.openSlicesProfile = function() {
     if (window.currentUser && window.currentUser.uid) {
         window.openUserProfile(window.currentUser.uid);
@@ -856,4 +1195,4 @@ window.openSlicesProfile = function() {
     }
 };
 
-console.log('✅ Профиль пользователя загружен');
+console.log('✅ Полный профиль пользователя загружен');
