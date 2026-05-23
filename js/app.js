@@ -1851,12 +1851,318 @@ async function createNewChatFromDialog(userId, userName) {
     setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
 }
 
+// ========== СОЗДАНИЕ ГРУППЫ (ПОЛНАЯ ВЕРСИЯ) ==========
 window.openCreateGroupWizard = function() {
     closeCreateMenu();
-    showNotification('Создание группы скоро будет доступно', 'info');
+    
+    // Создаём модальное окно
+    const modalHtml = `
+        <div id="create-group-wizard" class="modal" style="z-index:10050;">
+            <div class="modal-content" style="max-width: 500px; border-radius: 24px;">
+                <div class="wizard-header" style="position: relative; padding: 15px 20px; border-bottom: 1px solid var(--border);">
+                    <button class="wizard-back-btn" onclick="closeCreateGroupWizard()" style="position: absolute; left: 15px; top: 12px; background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+                    <h3 style="text-align: center; margin: 0;">👥 Создание группы</h3>
+                    <div class="wizard-steps" style="display: flex; justify-content: center; gap: 20px; margin-top: 15px;">
+                        <div class="wizard-step active" id="step1-indicator">1</div>
+                        <div class="wizard-step" id="step2-indicator">2</div>
+                        <div class="wizard-step" id="step3-indicator">3</div>
+                    </div>
+                </div>
+                <div id="wizard-step-1" class="wizard-step-content">
+                    <input type="text" id="group-name" class="wizard-input" placeholder="Название группы">
+                    <input type="text" id="group-kname" class="wizard-input" placeholder="Ссылка (только латиница, например: mygroup)">
+                    <textarea id="group-desc" class="wizard-input" placeholder="Описание группы" rows="3"></textarea>
+                    <div class="wizard-buttons">
+                        <button class="wizard-next-btn" onclick="goToGroupStep(2)">Далее →</button>
+                    </div>
+                </div>
+                <div id="wizard-step-2" class="wizard-step-content" style="display: none;">
+                    <div style="margin-bottom: 15px;">
+                        <input type="text" id="member-search" class="wizard-input" placeholder="🔍 Поиск пользователей...">
+                    </div>
+                    <div id="member-search-results" style="max-height: 300px; overflow-y: auto;"></div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">Выбранные участники:</div>
+                        <div id="selected-members-list" class="selected-members"></div>
+                    </div>
+                    <div class="wizard-buttons">
+                        <button class="wizard-back-btn-step" onclick="goToGroupStep(1)">← Назад</button>
+                        <button class="wizard-next-btn" onclick="goToGroupStep(3)">Далее →</button>
+                    </div>
+                </div>
+                <div id="wizard-step-3" class="wizard-step-content" style="display: none;">
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
+                        <h3>Готова к созданию!</h3>
+                        <p id="group-summary" style="color: var(--text-light);"></p>
+                    </div>
+                    <div class="wizard-buttons">
+                        <button class="wizard-back-btn-step" onclick="goToGroupStep(2)">← Назад</button>
+                        <button class="wizard-create-btn" onclick="createGroup()">🚀 Создать группу</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const old = document.getElementById('create-group-wizard');
+    if (old) old.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('create-group-wizard').classList.remove('hidden');
+    
+    window.selectedGroupMembers = [];
+    window.groupStep = 1;
+    
+    // Поиск пользователей
+    const searchInput = document.getElementById('member-search');
+    if (searchInput) {
+        searchInput.oninput = async function() {
+            const query = this.value.trim().toLowerCase();
+            const container = document.getElementById('member-search-results');
+            if (!query || query.length < 2) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = '<div style="padding:20px;text-align:center;">🔍 Поиск...</div>';
+            
+            const usersSnap = await database.ref('users').once('value');
+            const users = usersSnap.val();
+            container.innerHTML = '';
+            
+            for (const uid in users) {
+                if (uid === currentUser?.uid) continue;
+                if (window.selectedGroupMembers.includes(uid)) continue;
+                const username = (users[uid].username || '').toLowerCase();
+                if (username.includes(query)) {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid var(--border); cursor:pointer;';
+                    div.onclick = () => addGroupMember(uid, users[uid].username, users[uid].avatar);
+                    div.innerHTML = `
+                        <div style="width:40px;height:40px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;${users[uid].avatar ? 'background-image:url('+users[uid].avatar+');background-size:cover;' : ''}">${users[uid].avatar ? '' : '👤'}</div>
+                        <div style="flex:1;"><strong>${escapeHtml(users[uid].username)}</strong></div>
+                        <div style="color:var(--forest);">➕</div>
+                    `;
+                    container.appendChild(div);
+                }
+            }
+            if (container.children.length === 0) {
+                container.innerHTML = '<div style="padding:20px;text-align:center;">👻 Ничего не найдено</div>';
+            }
+        };
+    }
+    
+    updateSelectedMembersList();
 };
 
+window.closeCreateGroupWizard = function() {
+    const modal = document.getElementById('create-group-wizard');
+    if (modal) modal.remove();
+};
+
+function addGroupMember(uid, username, avatar) {
+    if (window.selectedGroupMembers.includes(uid)) return;
+    window.selectedGroupMembers.push({ uid, username, avatar });
+    updateSelectedMembersList();
+    document.getElementById('member-search').value = '';
+    document.getElementById('member-search-results').innerHTML = '';
+}
+
+function removeGroupMember(uid) {
+    window.selectedGroupMembers = window.selectedGroupMembers.filter(m => m.uid !== uid);
+    updateSelectedMembersList();
+}
+
+function updateSelectedMembersList() {
+    const container = document.getElementById('selected-members-list');
+    if (!container) return;
+    container.innerHTML = window.selectedGroupMembers.map(m => `
+        <div class="selected-member-chip">
+            👤 ${escapeHtml(m.username)}
+            <button onclick="removeGroupMember('${m.uid}')">×</button>
+        </div>
+    `).join('');
+}
+
+function goToGroupStep(step) {
+    window.groupStep = step;
+    for (let i = 1; i <= 3; i++) {
+        const stepDiv = document.getElementById(`wizard-step-${i}`);
+        const indicator = document.getElementById(`step${i}-indicator`);
+        if (stepDiv) stepDiv.style.display = i === step ? 'block' : 'none';
+        if (indicator) {
+            if (i === step) indicator.classList.add('active');
+            else indicator.classList.remove('active');
+        }
+    }
+    
+    if (step === 3) {
+        const name = document.getElementById('group-name').value.trim() || 'Без названия';
+        const membersCount = window.selectedGroupMembers.length;
+        document.getElementById('group-summary').innerHTML = `📝 Название: ${escapeHtml(name)}<br>👥 Участников: ${membersCount + 1} (включая вас)`;
+    }
+}
+
+async function createGroup() {
+    const name = document.getElementById('group-name').value.trim();
+    if (!name) {
+        showNotification('Введите название группы!', 'error');
+        return;
+    }
+    
+    const kname = document.getElementById('group-kname').value.trim().toLowerCase();
+    const description = document.getElementById('group-desc').value.trim();
+    
+    if (kname) {
+        const knamePattern = /^[a-z0-9_]+$/;
+        if (!knamePattern.test(kname)) {
+            showNotification('Ссылка: только латиница, цифры и _', 'error');
+            return;
+        }
+        const existing = await database.ref('channelKnames/' + kname).once('value');
+        if (existing.exists()) {
+            showNotification('Такая ссылка уже существует!', 'error');
+            return;
+        }
+    }
+    
+    showNotification('Создание группы...', 'info');
+    
+    const chatId = 'group_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    const members = { [currentUser.uid]: true };
+    const admins = { [currentUser.uid]: true };
+    
+    for (const m of window.selectedGroupMembers) {
+        members[m.uid] = true;
+    }
+    
+    const groupData = {
+        type: 'group',
+        name: name,
+        kname: kname || null,
+        description: description,
+        createdBy: currentUser.uid,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        members: members,
+        admins: admins,
+        membersCount: Object.keys(members).length,
+        lastMessage: 'Группа создана',
+        lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    await database.ref('chats/' + chatId).set(groupData);
+    
+    for (const uid of Object.keys(members)) {
+        await database.ref('userChats/' + uid + '/' + chatId).set(true);
+    }
+    
+    if (kname) {
+        await database.ref('channelKnames/' + kname).set(chatId);
+    }
+    
+    showNotification('✅ Группа создана!', 'success');
+    closeCreateGroupWizard();
+    
+    if (typeof switchToTab === 'function') switchToTab('chats');
+    setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
+}
+
+// ========== СОЗДАНИЕ КАНАЛА (ПОЛНАЯ ВЕРСИЯ) ==========
 window.openCreateChannelWizard = function() {
     closeCreateMenu();
-    showNotification('Создание канала скоро будет доступно', 'info');
+    
+    const modalHtml = `
+        <div id="create-channel-wizard" class="modal" style="z-index:10050;">
+            <div class="modal-content" style="max-width: 500px; border-radius: 24px;">
+                <div class="wizard-header" style="position: relative; padding: 15px 20px; border-bottom: 1px solid var(--border);">
+                    <button class="wizard-back-btn" onclick="closeCreateChannelWizard()" style="position: absolute; left: 15px; top: 12px; background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+                    <h3 style="text-align: center; margin: 0;">📢 Создание канала</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <input type="text" id="channel-name" class="wizard-input" placeholder="Название канала">
+                    <input type="text" id="channel-kname" class="wizard-input" placeholder="Ссылка (только латиница, например: mychannel)">
+                    <textarea id="channel-desc" class="wizard-input" placeholder="Описание канала" rows="3"></textarea>
+                    <div style="margin: 15px 0;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="radio" name="channel-type" value="public" checked> 📢 Публичный
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 8px; cursor: pointer;">
+                            <input type="radio" name="channel-type" value="private"> 🔒 Приватный
+                        </label>
+                    </div>
+                    <div class="wizard-buttons">
+                        <button class="wizard-create-btn" onclick="createChannel()">🚀 Создать канал</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const old = document.getElementById('create-channel-wizard');
+    if (old) old.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('create-channel-wizard').classList.remove('hidden');
 };
+
+window.closeCreateChannelWizard = function() {
+    const modal = document.getElementById('create-channel-wizard');
+    if (modal) modal.remove();
+};
+
+async function createChannel() {
+    const name = document.getElementById('channel-name').value.trim();
+    if (!name) {
+        showNotification('Введите название канала!', 'error');
+        return;
+    }
+    
+    const kname = document.getElementById('channel-kname').value.trim().toLowerCase();
+    const description = document.getElementById('channel-desc').value.trim();
+    const isPublic = document.querySelector('input[name="channel-type"]:checked').value === 'public';
+    
+    if (kname) {
+        const knamePattern = /^[a-z0-9_]+$/;
+        if (!knamePattern.test(kname)) {
+            showNotification('Ссылка: только латиница, цифры и _', 'error');
+            return;
+        }
+        const existing = await database.ref('channelKnames/' + kname).once('value');
+        if (existing.exists()) {
+            showNotification('Такая ссылка уже существует!', 'error');
+            return;
+        }
+    }
+    
+    showNotification('Создание канала...', 'info');
+    
+    const chatId = 'channel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    const subscribers = { [currentUser.uid]: true };
+    const admins = { [currentUser.uid]: true };
+    
+    const channelData = {
+        type: 'channel',
+        name: name,
+        kname: kname || null,
+        description: description,
+        isPublic: isPublic,
+        createdBy: currentUser.uid,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        subscribers: subscribers,
+        admins: admins,
+        subscribersCount: 1,
+        lastMessage: 'Канал создан',
+        lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    await database.ref('chats/' + chatId).set(channelData);
+    await database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
+    
+    if (kname) {
+        await database.ref('channelKnames/' + kname).set(chatId);
+    }
+    
+    showNotification('✅ Канал создан!', 'success');
+    closeCreateChannelWizard();
+    
+    if (typeof switchToTab === 'function') switchToTab('chats');
+    setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
+}
