@@ -2184,3 +2184,39 @@ async function createChannel() {
     if (typeof switchToTab === 'function') switchToTab('chats');
     setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
 }
+// ========== ФИКС БЕСКОНЕЧНОЙ ЗАГРУЗКИ НА ТЕЛЕФОНЕ ==========
+(function fixLoadingOnMobile() {
+    // Отключаем загрузку если прошло слишком много времени
+    setTimeout(function() {
+        var loadingScreen = document.getElementById('loading-screen');
+        var mainScreen = document.getElementById('main-screen');
+        var authScreen = document.getElementById('auth-screen');
+        
+        if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+            console.log('Принудительное скрытие загрузки');
+            loadingScreen.classList.add('hidden');
+            
+            // Проверяем авторизацию
+            if (currentUser) {
+                if (mainScreen) mainScreen.classList.remove('hidden');
+                if (authScreen) authScreen.classList.add('hidden');
+            } else {
+                if (mainScreen) mainScreen.classList.add('hidden');
+                if (authScreen) authScreen.classList.remove('hidden');
+            }
+        }
+    }, 3000);
+    
+    // Форсируем проверку авторизации каждые 2 секунды
+    var checkInterval = setInterval(function() {
+        if (currentUser && currentUser.uid) {
+            var loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+                loadingScreen.classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                document.getElementById('auth-screen').classList.add('hidden');
+                clearInterval(checkInterval);
+            }
+        }
+    }, 2000);
+})();
