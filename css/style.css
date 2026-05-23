@@ -3487,3 +3487,61 @@ body.night-mode .settings-profile:active {
     background: #2a2a2a !important;
 }
 
+/* Профиль пользователя */
+.profile-modal-content {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    max-width: 450px;
+    width: 90%;
+}
+
+.profile-banner {
+    height: 120px;
+    position: relative;
+}
+
+.profile-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: var(--sage);
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-subscribers {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+body.night-mode .profile-modal-content {
+    background: #1e1e1e;
+}
+
+body.night-mode .profile-banner {
+    background: linear-gradient(135deg, #2a4a2a, #3a5a3a);
+}
+
+body.night-mode .profile-modal-content h2,
+body.night-mode .profile-modal-content p {
+    color: #e0e0e0;
+}
