@@ -232,7 +232,7 @@ async function loadGroupMembersList(chatId, chatData) {
             const isBanned = chatData.banned && chatData.banned[memberId];
             
             const avatarStyle = userData?.avatar ? `background-image: url(${userData.avatar}); background-size: cover;` : '';
-            const avatarContent = userData?.avatar ? '' : '👤';
+            const avatarContent = userData?.avatar ? '' : '';
             
             const memberHtml = `
                 <div class="member-item" data-member-id="${memberId}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #eee; ${canManage && !isUserCreator ? 'cursor: pointer;' : ''}">
