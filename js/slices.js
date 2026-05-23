@@ -1727,4 +1727,3 @@ window.startPrivateChatFromProfile = startPrivateChatFromProfile;
 window.editProfileUserTag = editProfileUserTag;
 
 console.log('✅ Дополнительные функции профиля добавлены');
-window.openChannelProfile = openChannelProfile;
