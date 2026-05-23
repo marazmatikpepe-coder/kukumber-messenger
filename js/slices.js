@@ -1569,4 +1569,158 @@ window.openChannelProfile = openChannelProfile;
 function openChannelProfile(chatId) {
     console.log('openChannelProfile вызван для:', chatId);
 }
+// ========== ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ПРОФИЛЯ ==========
+
+// Форматирование последнего посещения
+function formatLastSeen(timestamp) {
+    if (!timestamp) return 'неизвестно';
+    var date = new Date(timestamp);
+    var now = new Date();
+    var diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'только что';
+    if (diff < 3600) return Math.floor(diff / 60) + ' минут назад';
+    if (diff < 86400) {
+        return 'сегодня в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString('ru-RU') + ' в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Функция для начала чата из профиля
+function startPrivateChatFromProfile(userId) {
+    if (!currentUser || !currentUser.uid) {
+        showNotification('Авторизуйтесь', 'error');
+        return;
+    }
+    
+    // Закрываем профиль
+    closeProfileModal();
+    
+    // Переключаемся на вкладку чатов
+    if (typeof switchToTab === 'function') {
+        switchToTab('chats');
+    }
+    
+    // Создаём или открываем чат
+    var chatId = currentUser.uid < userId ? 
+        currentUser.uid + '_' + userId : 
+        userId + '_' + currentUser.uid;
+    
+    database.ref('chats/' + chatId).once('value').then(function(chatSnap) {
+        if (!chatSnap.exists()) {
+            database.ref('chats/' + chatId).set({
+                type: 'private',
+                participants: [currentUser.uid, userId],
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                lastMessage: 'Чат создан',
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            }).then(function() {
+                return Promise.all([
+                    database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true),
+                    database.ref('userChats/' + userId + '/' + chatId).set(true)
+                ]);
+            }).then(function() {
+                showNotification('Чат создан!', 'success');
+                // Открываем чат после создания
+                setTimeout(function() {
+                    database.ref('chats/' + chatId).once('value').then(function(newSnap) {
+                        if (typeof openChatById === 'function') {
+                            openChatById(chatId);
+                        } else if (typeof openChatWithData === 'function') {
+                            openChatWithData(chatId, newSnap.val());
+                        }
+                    });
+                }, 500);
+            });
+        } else {
+            // Чат уже существует, открываем его
+            showNotification('Открываем чат...', 'info');
+            setTimeout(function() {
+                if (typeof openChatById === 'function') {
+                    openChatById(chatId);
+                } else if (typeof openChatWithData === 'function') {
+                    database.ref('chats/' + chatId).once('value').then(function(newSnap) {
+                        openChatWithData(chatId, newSnap.val());
+                    });
+                }
+            }, 300);
+        }
+    }).catch(function(err) {
+        console.error('Ошибка создания чата:', err);
+        showNotification('Ошибка создания чата', 'error');
+    });
+}
+
+// Редактирование юзернейма (добавляем в профиль)
+function editProfileUserTag() {
+    var userId = window.viewingProfileUserId;
+    var isOwnProfile = (userId === currentUser.uid);
+    var isAdmin = window.isSuperAdmin === true;
+    
+    if (!isOwnProfile && !isAdmin) return;
+    
+    var currentTag = window.viewingProfileUserData?.userTag || '';
+    var newTag = prompt('Введите новый юзернейм (только латиница, цифры и _):', currentTag.replace('@', ''));
+    if (!newTag) return;
+    
+    // Проверка формата
+    var tagPattern = /^[a-zA-Z0-9_]+$/;
+    if (!tagPattern.test(newTag)) {
+        showNotification('Юзернейм может содержать только латиницу, цифры и _', 'error');
+        return;
+    }
+    
+    var formattedTag = '@' + newTag.toLowerCase();
+    
+    // Проверяем уникальность
+    database.ref('userTags/' + formattedTag).once('value').then(function(snap) {
+        if (snap.exists() && snap.val() !== userId) {
+            showNotification('Юзернейм ' + formattedTag + ' уже занят', 'error');
+            return;
+        }
+        
+        var oldTag = window.viewingProfileUserData?.userTag;
+        var updates = { userTag: formattedTag };
+        
+        database.ref('users/' + userId).update(updates).then(function() {
+            if (oldTag && oldTag !== formattedTag) {
+                database.ref('userTags/' + oldTag).remove();
+            }
+            database.ref('userTags/' + formattedTag).set(userId);
+            
+            showNotification('Юзернейм обновлён!', 'success');
+            
+            // Обновляем отображение в профиле
+            var usernameDiv = document.querySelector('.profile-username');
+            if (usernameDiv) usernameDiv.textContent = formattedTag;
+            
+            if (window.viewingProfileUserData) {
+                window.viewingProfileUserData.userTag = formattedTag;
+            }
+            
+            // Обновляем в настройках, если это свой профиль
+            if (userId === currentUser.uid && typeof updateUserDisplay === 'function') {
+                updateUserDisplay();
+            }
+            
+            // Перезагружаем профиль
+            setTimeout(function() {
+                openUserProfile(userId);
+            }, 500);
+        }).catch(function(err) {
+            showNotification('Ошибка: ' + err.message, 'error');
+        });
+    });
+}
+
+// Переопределяем HTML профиля, чтобы добавить редактирование юзернейма и кнопку "Написать"
+// Обновляем функцию openUserProfile (замените существующую или добавьте эти строки)
+// ВНИМАНИЕ: В existing openUserProfile найдите строку с .profile-username и замените её на:
+// <div class="profile-username" ${canEdit ? 'ondblclick="editProfileUserTag()" style="cursor:pointer;"' : ''}>${escapeHtml(userTag)}</div>
+// И добавьте кнопку "Написать" после кнопок подписки/уведомлений
+
+// Добавляем глобальные функции
+window.startPrivateChatFromProfile = startPrivateChatFromProfile;
+window.editProfileUserTag = editProfileUserTag;
+
+console.log('✅ Дополнительные функции профиля добавлены');
 window.openChannelProfile = openChannelProfile;
