@@ -317,8 +317,13 @@ function logout() {
 }
 // ========== PUSH-УВЕДОМЛЕНИЯ ==========
 async function requestNotificationPermission() {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        console.log('Push-уведомления не поддерживаются');
+    if (!('Notification' in window)) {
+        console.log('Браузер не поддерживает уведомления');
+        return false;
+    }
+    
+    if (!('serviceWorker' in navigator)) {
+        console.log('Service Worker не поддерживается');
         return false;
     }
     
@@ -331,9 +336,13 @@ async function requestNotificationPermission() {
     try {
         const messaging = firebase.messaging();
         
-        // Регистрируем Service Worker
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        console.log('Service Worker зарегистрирован');
+        // Получаем Service Worker регистрацию
+        let registration;
+        try {
+            registration = await navigator.serviceWorker.ready;
+        } catch (e) {
+            registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        }
         
         // Получаем токен
         const token = await messaging.getToken({
@@ -342,15 +351,26 @@ async function requestNotificationPermission() {
         });
         
         if (token) {
-            console.log('FCM Token:', token);
+            console.log('✅ FCM Token получен:', token);
+            
             // Сохраняем токен в базе
-            if (currentUser) {
+            if (currentUser && currentUser.uid) {
                 await database.ref('users/' + currentUser.uid + '/fcmToken').set(token);
+                console.log('✅ Токен сохранён в базе');
             }
+            
+            // Показываем тестовое уведомление
+            setTimeout(() => {
+                new Notification('✅ Уведомления включены!', {
+                    body: 'Теперь вы будете получать уведомления о новых сообщениях',
+                    icon: 'https://i.ibb.co/jPd3zD4K/039-C01-D0-CD06-45-F1-8151-5-B9634-D4-CBFA.png'
+                });
+            }, 1000);
+            
             return true;
         }
     } catch (err) {
-        console.error('Ошибка получения токена:', err);
+        console.error('❌ Ошибка получения токена:', err);
     }
     return false;
 }
@@ -359,13 +379,21 @@ async function requestNotificationPermission() {
 function setupForegroundMessages() {
     const messaging = firebase.messaging();
     messaging.onMessage((payload) => {
-        console.log('Уведомление в активном окне:', payload);
+        console.log('📨 Уведомление в активном окне:', payload);
+        
         // Показываем уведомление даже если сайт открыт
         if (Notification.permission === 'granted') {
             new Notification(payload.notification?.title || 'K Messenger', {
                 body: payload.notification?.body || 'Новое сообщение',
-                icon: 'https://i.ibb.co/jPd3zD4K/039-C01-D0-CD06-45-F1-8151-5-B9634-D4-CBFA.png'
+                icon: 'https://i.ibb.co/jPd3zD4K/039-C01-D0-CD06-45-F1-8151-5-B9634-D4-CBFA.png',
+                badge: 'https://i.ibb.co/23pNfd0W/F449-F920-46-E7-4-E73-85-EF-26-CFF5-CAD938.jpg',
+                vibrate: [200, 100, 200]
             });
+        }
+        
+        // Также показываем в нашем контейнере
+        if (payload.notification?.body) {
+            showNotification(payload.notification.body, 'info');
         }
     });
 }
