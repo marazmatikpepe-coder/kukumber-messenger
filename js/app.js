@@ -52,13 +52,18 @@ function loadUserData() {
             checkSuperAdmin();
             showMainScreen();
             
-            // ОБЯЗАТЕЛЬНО ЗАГРУЖАЕМ ЧАТЫ
+            // ===== ВЫЗЫВАЕМ УВЕДОМЛЕНИЯ =====
+            setTimeout(function() {
+                requestNotificationPermission();
+                setupForegroundMessages();
+            }, 2000);
+            // ================================
+            
             if (typeof loadChats === 'function') {
                 setTimeout(function() {
                     loadChats();
                 }, 500);
             }
-            
             // ... остальной код
             // Обновляем аватарку в Slices
             var slicesAvatar = document.getElementById('slices-user-avatar');
