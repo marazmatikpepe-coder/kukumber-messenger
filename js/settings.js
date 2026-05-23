@@ -837,10 +837,26 @@ function setSimpleTheme(colorKey) {
         btn.style.background = gradient;
     });
     
+    // ===== МЕНЯЕМ ИКОНКУ НАСТРОЕК В ЗАВИСИМОСТИ ОТ ЦВЕТА =====
+    var settingsIcon = document.getElementById('settings-icon-img');
+    if (settingsIcon) {
+        var iconUrls = {
+            green: 'https://i.ibb.co/kVRp49V3/image.png',
+            red: 'https://i.ibb.co/35nsv1Jj/image.png',
+            orange: 'https://i.ibb.co/NgF7rsS5/image.png',
+            pink: 'https://i.ibb.co/5XPCgDvR/image.png',
+            blue: 'https://i.ibb.co/7xbXjHbX/image.png',
+            purple: 'https://i.ibb.co/JW98wL2s/image.png',
+            yellow: 'https://i.ibb.co/RG9QJSN2/image.png',
+            turquoise: 'https://i.ibb.co/NdnJNWvC/image.png'
+        };
+        settingsIcon.src = iconUrls[colorKey] || 'https://i.ibb.co/jk3xSxs6/image.png';
+    }
+    // =======================================================
+    
     renderThemesGrid();
     showNotification('Тема "' + theme.name + '" применена', 'success');
 }
-
 function toggleNightModeUI() {
     nightModeEnabled = !nightModeEnabled;
     localStorage.setItem('kukumber_night_mode', nightModeEnabled);
