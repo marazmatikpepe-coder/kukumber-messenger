@@ -1664,3 +1664,88 @@ window.toggleMessagesSidebar = function() {
         });
     }, 1000);
 })();
+// ========== ГЛОБАЛЬНЫЙ ПОИСК ==========
+window.searchGlobalNew = async function() {
+    const query = document.getElementById('global-search-input').value.trim().toLowerCase();
+    const resultsContainer = document.getElementById('global-search-results');
+    const resultsList = document.getElementById('search-results-list');
+    
+    if (!query || query.length < 2) {
+        resultsContainer.style.display = 'none';
+        return;
+    }
+    
+    resultsContainer.style.display = 'block';
+    resultsList.innerHTML = '<div style="padding:20px;text-align:center;">🔍 Поиск...</div>';
+    
+    try {
+        const usersSnap = await database.ref('users').once('value');
+        const users = usersSnap.val();
+        const results = [];
+        
+        for (const uid in users) {
+            if (uid === currentUser?.uid) continue;
+            const user = users[uid];
+            const username = (user.username || '').toLowerCase();
+            const userTag = (user.userTag || '').toLowerCase();
+            
+            if (username.includes(query) || userTag.includes(query)) {
+                results.push({ uid, ...user });
+            }
+            if (results.length >= 20) break;
+        }
+        
+        if (results.length === 0) {
+            resultsList.innerHTML = '<div style="padding:20px;text-align:center;">👻 Ничего не найдено</div>';
+            return;
+        }
+        
+        resultsList.innerHTML = '';
+        results.forEach(user => {
+            const avatarUrl = user.avatar || '';
+            const avatarStyle = avatarUrl ? `background-image:url(${avatarUrl});background-size:cover;` : '';
+            const item = document.createElement('div');
+            item.className = 'search-result-item';
+            item.innerHTML = `
+                <div class="search-result-avatar" style="${avatarStyle}">${avatarUrl ? '' : '👤'}</div>
+                <div class="search-result-info">
+                    <div class="search-result-name">${escapeHtml(user.username)}</div>
+                    <div class="search-result-username">${user.userTag || '@' + user.username.toLowerCase()}</div>
+                </div>
+                <div class="search-result-badge">💬</div>
+            `;
+            item.onclick = () => startPrivateChatFromGlobalSearch(user.uid);
+            resultsList.appendChild(item);
+        });
+    } catch(err) {
+        console.error('Ошибка поиска:', err);
+        resultsList.innerHTML = '<div style="padding:20px;text-align:center;">❌ Ошибка</div>';
+    }
+};
+
+window.closeSearchResults = function() {
+    document.getElementById('global-search-results').style.display = 'none';
+    document.getElementById('global-search-input').value = '';
+};
+
+async function startPrivateChatFromGlobalSearch(userId) {
+    closeSearchResults();
+    
+    const chatId = currentUser.uid < userId ? currentUser.uid + '_' + userId : userId + '_' + currentUser.uid;
+    const chatSnap = await database.ref('chats/' + chatId).once('value');
+    
+    if (!chatSnap.exists()) {
+        await database.ref('chats/' + chatId).set({
+            type: 'private',
+            participants: [currentUser.uid, userId],
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastMessage: 'Чат создан',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        await database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
+        await database.ref('userChats/' + userId + '/' + chatId).set(true);
+    }
+    
+    if (typeof switchToTab === 'function') switchToTab('chats');
+    setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
+}
