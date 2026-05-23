@@ -663,3 +663,197 @@ function initChat() {
 
 setTimeout(initChat, 1000);
 console.log('✅ chat.js исправлен и загружен');
+// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (РАБОЧАЯ ВЕРСИЯ) ==========
+window.openUserProfile = async function(userId) {
+    console.log('openUserProfile вызван для:', userId);
+    
+    if (!userId) {
+        showNotification('ID пользователя не указан', 'error');
+        return;
+    }
+    
+    try {
+        // Получаем данные пользователя
+        const userSnap = await database.ref('users/' + userId).once('value');
+        const userData = userSnap.val();
+        
+        if (!userData) {
+            showNotification('Пользователь не найден', 'error');
+            return;
+        }
+        
+        // Получаем статус (онлайн/оффлайн)
+        const statusSnap = await database.ref('users/' + userId + '/status').once('value');
+        const statusData = statusSnap.val() || {};
+        const isOnline = statusData.online === true;
+        const lastSeen = statusData.lastSeen;
+        
+        // Получаем количество подписчиков
+        const subsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
+        const subscribersCount = subsSnap.val() ? Object.keys(subsSnap.val()).length : 0;
+        
+        // Проверяем подписку текущего пользователя
+        let isSubscribed = false;
+        if (userId !== window.currentUser?.uid) {
+            const subSnap = await database.ref('subscriptions/' + window.currentUser.uid + '/' + userId).once('value');
+            isSubscribed = subSnap.exists();
+        }
+        
+        const userName = userData.username || 'Пользователь';
+        const userAvatar = userData.avatar || '';
+        const userBio = userData.bio || 'Нет описания';
+        const userBanner = userData.banner || null;
+        
+        // Формируем стиль баннера
+        let bannerStyle = '';
+        if (userBanner) {
+            if (userBanner.startsWith('#')) {
+                bannerStyle = `background: ${userBanner};`;
+            } else {
+                bannerStyle = `background-image: url(${userBanner}); background-size: cover; background-position: center;`;
+            }
+        } else {
+            bannerStyle = 'background: linear-gradient(135deg, #228B22, #556B2F);';
+        }
+        
+        // Статус текст
+        let statusText = '';
+        if (isOnline) {
+            statusText = '<span style="color: #32CD32;">● В сети</span>';
+        } else if (lastSeen) {
+            const lastSeenDate = new Date(lastSeen);
+            const now = new Date();
+            const diff = Math.floor((now - lastSeenDate) / 1000);
+            if (diff < 60) statusText = 'был(а) только что';
+            else if (diff < 3600) statusText = `был(а) ${Math.floor(diff / 60)} мин назад`;
+            else if (diff < 86400) statusText = `был(а) сегодня в ${lastSeenDate.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}`;
+            else statusText = `был(а) ${lastSeenDate.toLocaleDateString('ru-RU')}`;
+        } else {
+            statusText = 'неизвестно';
+        }
+        
+        // Удаляем старое окно
+        const oldModal = document.getElementById('user-profile-modal');
+        if (oldModal) oldModal.remove();
+        
+        // Создаём модальное окно
+        const modal = document.createElement('div');
+        modal.id = 'user-profile-modal';
+        modal.className = 'modal';
+        modal.style.zIndex = '10003';
+        modal.innerHTML = `
+            <div class="profile-modal-content" style="max-width: 450px; border-radius: 24px; overflow: hidden; background: white;">
+                <!-- Баннер -->
+                <div class="profile-banner" style="height: 120px; position: relative; ${bannerStyle}">
+                    <button class="profile-close-btn" onclick="closeUserProfileModal()" style="position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
+                </div>
+                
+                <!-- Аватар -->
+                <div style="display: flex; justify-content: center; margin-top: -50px; position: relative;">
+                    <div class="profile-avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 4px solid white; background: var(--sage); display: flex; align-items: center; justify-content: center; font-size: 40px; ${userAvatar ? 'background-image: url(' + userAvatar + '); background-size: cover;' : ''}">
+                        ${userAvatar ? '' : '👤'}
+                    </div>
+                </div>
+                
+                <!-- Информация -->
+                <div style="text-align: center; padding: 15px;">
+                    <h2 style="margin-bottom: 5px;">${escapeHtml(userName)}</h2>
+                    <div style="margin-bottom: 10px;">${statusText}</div>
+                    <div class="profile-subscribers" style="margin-bottom: 10px;">👥 ${subscribersCount} подписчиков</div>
+                    <p style="color: #666; margin-bottom: 15px; padding: 0 15px;">${escapeHtml(userBio)}</p>
+                    
+                    ${userId !== window.currentUser?.uid ? `
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button id="profile-subscribe-btn" class="btn-primary" style="padding: 10px 20px; background: ${isSubscribed ? '#555' : 'var(--forest)'};">${isSubscribed ? 'Отписаться' : 'Подписаться'}</button>
+                            <button id="profile-chat-btn" class="btn-secondary" style="padding: 10px 20px;" onclick="startPrivateChatFromProfile('${userId}')">💬 Написать</button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        
+        // Обработчик подписки
+        if (userId !== window.currentUser?.uid) {
+            const subBtn = document.getElementById('profile-subscribe-btn');
+            if (subBtn) {
+                subBtn.onclick = async () => {
+                    const subRef = database.ref('subscriptions/' + window.currentUser.uid + '/' + userId);
+                    const snap = await subRef.once('value');
+                    
+                    if (snap.exists()) {
+                        await subRef.remove();
+                        showNotification('Вы отписались', 'info');
+                        subBtn.textContent = 'Подписаться';
+                        subBtn.style.background = 'var(--forest)';
+                        // Обновляем счётчик
+                        const newSubsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
+                        const newCount = newSubsSnap.val() ? Object.keys(newSubsSnap.val()).length : 0;
+                        const subsDiv = document.querySelector('.profile-subscribers');
+                        if (subsDiv) subsDiv.textContent = `👥 ${newCount} подписчиков`;
+                    } else {
+                        await subRef.set(true);
+                        showNotification('Вы подписались', 'success');
+                        subBtn.textContent = 'Отписаться';
+                        subBtn.style.background = '#555';
+                        // Обновляем счётчик
+                        const newSubsSnap = await database.ref('subscriptions').orderByChild(userId).equalTo(true).once('value');
+                        const newCount = newSubsSnap.val() ? Object.keys(newSubsSnap.val()).length : 0;
+                        const subsDiv = document.querySelector('.profile-subscribers');
+                        if (subsDiv) subsDiv.textContent = `👥 ${newCount} подписчиков`;
+                    }
+                };
+            }
+        }
+        
+    } catch (err) {
+        console.error('Ошибка открытия профиля:', err);
+        showNotification('Ошибка загрузки профиля', 'error');
+    }
+};
+
+window.closeUserProfileModal = function() {
+    const modal = document.getElementById('user-profile-modal');
+    if (modal) modal.remove();
+};
+
+window.startPrivateChatFromProfile = async function(userId) {
+    closeUserProfileModal();
+    
+    const chatId = window.currentUser.uid < userId ? window.currentUser.uid + '_' + userId : userId + '_' + window.currentUser.uid;
+    const chatSnap = await database.ref('chats/' + chatId).once('value');
+    
+    if (!chatSnap.exists()) {
+        await database.ref('chats/' + chatId).set({
+            type: 'private',
+            participants: [window.currentUser.uid, userId],
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastMessage: 'Чат создан',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        await database.ref('userChats/' + window.currentUser.uid + '/' + chatId).set(true);
+        await database.ref('userChats/' + userId + '/' + chatId).set(true);
+    }
+    
+    const chatData = await database.ref('chats/' + chatId).once('value');
+    if (typeof window.openChatWithData === 'function') {
+        window.openChatWithData(chatId, chatData.val());
+    } else if (typeof openChatWithData === 'function') {
+        openChatWithData(chatId, chatData.val());
+    }
+    
+    if (typeof window.loadChats === 'function') window.loadChats();
+};
+
+// Открытие профиля из слайсов
+window.openSlicesProfile = function() {
+    if (window.currentUser && window.currentUser.uid) {
+        window.openUserProfile(window.currentUser.uid);
+    } else {
+        showNotification('Авторизуйтесь', 'error');
+    }
+};
+
+console.log('✅ Профиль пользователя загружен');
