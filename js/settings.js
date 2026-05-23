@@ -871,6 +871,8 @@ function toggleNightModeUI() {
 
 // Замени функцию applyNightModeToBody на эту:
 function applyNightModeToBody() {
+    var settingsIcon = document.getElementById('settings-icon-img');
+    
     if (nightModeEnabled) {
         document.body.classList.add('night-mode');
         document.documentElement.style.setProperty('--background', '#121212');
@@ -880,6 +882,9 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--border', '#2c2c2c');
         document.documentElement.style.setProperty('--sage', '#2a4a2a');
         document.documentElement.style.setProperty('--olive', '#3a5a3a');
+        
+        // Меняем иконку на тёмную тему
+        if (settingsIcon) settingsIcon.src = 'https://i.ibb.co/9389n86D/image.png';
     } else {
         document.body.classList.remove('night-mode');
         document.documentElement.style.setProperty('--background', '#f5f7f5');
@@ -889,9 +894,11 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--border', '#d4e4d4');
         document.documentElement.style.setProperty('--sage', '#9DC183');
         document.documentElement.style.setProperty('--olive', '#556B2F');
+        
+        // Меняем иконку на светлую тему
+        if (settingsIcon) settingsIcon.src = 'https://i.ibb.co/jk3xSxs6/image.png';
     }
 }
-
 // В initSettings() убери проверку системной темы, просто ставь light:
 function initSettings() {
     loadNotificationSettings();
