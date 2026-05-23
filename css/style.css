@@ -4076,3 +4076,52 @@ body.night-mode .default-avatar-channel {
     display: none !important;
     content: none !important;
 }
+/* ФОРСИРОВАННЫЕ СТИЛИ ДЛЯ АВАТАРОК НА ТЕЛЕФОНЕ */
+.avatar, 
+.profile-avatar, 
+.settings-avatar,
+#profile-avatar,
+#user-avatar,
+#chat-avatar,
+#slices-user-avatar {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-color: transparent !important;
+    text-indent: -9999px !important;
+    color: transparent !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+}
+
+/* Убираем все внутренние тексты */
+.avatar *,
+.profile-avatar *,
+.settings-avatar * {
+    display: none !important;
+}
+
+/* Дефолтные аватарки */
+.default-avatar-user {
+    background-image: url('https://i.ibb.co/3HQYCh1/image.png') !important;
+}
+
+.default-avatar-group {
+    background-image: url('https://i.ibb.co/ch9Rcqsc/image.png') !important;
+}
+
+.default-avatar-channel {
+    background-image: url('https://i.ibb.co/C3XpQYbJ/image.png') !important;
+}
+
+body.night-mode .default-avatar-user {
+    background-image: url('https://i.ibb.co/8D8SnGQF/image.png') !important;
+}
+
+body.night-mode .default-avatar-group {
+    background-image: url('https://i.ibb.co/hFLS1t5H/image.png') !important;
+}
+
+body.night-mode .default-avatar-channel {
+    background-image: url('https://i.ibb.co/BH6QbPYc/image.png') !important;
+}
