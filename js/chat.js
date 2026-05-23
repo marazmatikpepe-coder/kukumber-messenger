@@ -349,7 +349,7 @@ async function updateChatHeader(chatId, chatData) {
                 chatAvatar.style.backgroundImage = 'url(' + chatData.avatar + ')';
                 chatAvatar.style.backgroundSize = 'cover';
             } else {
-                chatAvatar.textContent = '👥';
+                chatAvatar.textContent = '';
                 chatAvatar.classList.add('default-avatar-group');
             }
         }
