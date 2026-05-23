@@ -58,3 +58,36 @@ self.addEventListener('notificationclick', (event) => {
             })
     );
 });
+// Добавьте в конец файла
+self.addEventListener('push', function(event) {
+    console.log('🔔 Push получен:', event);
+    
+    let data = {};
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch(e) {
+            data = { notification: { title: 'K Messenger', body: 'Новое сообщение' } };
+        }
+    }
+    
+    const title = data.notification?.title || data.data?.title || 'K Messenger';
+    const options = {
+        body: data.notification?.body || data.data?.body || 'Новое сообщение',
+        icon: 'https://i.ibb.co/jPd3zD4K/039-C01-D0-CD06-45-F1-8151-5-B9634-D4-CBFA.png',
+        badge: 'https://i.ibb.co/23pNfd0W/F449-F920-46-E7-4-E73-85-EF-26-CFF5-CAD938.jpg',
+        vibrate: [200, 100, 200],
+        sound: 'default',
+        tag: data.data?.chatId || 'message',
+        renotify: true,
+        priority: 'high',
+        data: {
+            chatId: data.data?.chatId,
+            url: '/'
+        }
+    };
+    
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
+});
