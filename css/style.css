@@ -3993,3 +3993,86 @@ body.night-mode #user-profile-modal .profile-notify-btn {
     border-color: #3a3a3a;
     color: white;
 }
+/* ========== НОВЫЕ ДЕФОЛТНЫЕ АВАТАРКИ (БЕЗ ЭМОДЗИ) ========== */
+
+/* СВЕТЛАЯ ТЕМА */
+.default-avatar-user {
+    background-image: url('https://i.ibb.co/3HQYCh1/image.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    text-indent: -9999px !important;
+}
+
+.default-avatar-group {
+    background-image: url('https://i.ibb.co/ch9Rcqsc/image.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    text-indent: -9999px !important;
+}
+
+.default-avatar-channel {
+    background-image: url('https://i.ibb.co/C3XpQYbJ/image.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    text-indent: -9999px !important;
+}
+
+/* ТЁМНАЯ ТЕМА */
+body.night-mode .default-avatar-user {
+    background-image: url('https://i.ibb.co/8D8SnGQF/image.png') !important;
+}
+
+body.night-mode .default-avatar-group {
+    background-image: url('https://i.ibb.co/hFLS1t5H/image.png') !important;
+}
+
+body.night-mode .default-avatar-channel {
+    background-image: url('https://i.ibb.co/BH6QbPYc/image.png') !important;
+}
+
+/* Убираем все текстовые эмодзи у аватарок */
+.avatar:not([style*="background-image"]),
+.profile-avatar:not([style*="background-image"]),
+.settings-avatar:not([style*="background-image"]),
+.group-avatar:not([style*="background-image"]) {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    text-indent: -9999px !important;
+}
+
+/* Аватарка в профиле (ПРАВИЛЬНОЕ ОТОБРАЖЕНИЕ) */
+#user-profile-modal .profile-avatar,
+.profile-avatar {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    width: 100px !important;
+    height: 100px !important;
+    border-radius: 50% !important;
+}
+
+/* Если есть фоновая картинка - скрываем текст */
+.avatar[style*="background-image"],
+.profile-avatar[style*="background-image"],
+.settings-avatar[style*="background-image"],
+.group-avatar[style*="background-image"] {
+    text-indent: -9999px !important;
+    color: transparent !important;
+}
+
+/* Убираем все :before и :after у аватарок */
+.avatar::before,
+.avatar::after,
+.profile-avatar::before,
+.profile-avatar::after,
+.settings-avatar::before,
+.settings-avatar::after,
+.group-avatar::before,
+.group-avatar::after {
+    display: none !important;
+    content: none !important;
+}
