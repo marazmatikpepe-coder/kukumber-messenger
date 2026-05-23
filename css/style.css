@@ -3682,3 +3682,314 @@ body.night-mode .profile-loading,
 body.night-mode .profile-empty {
     color: #888;
 }
+/* ========== ПОЛНЫЙ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ========== */
+
+/* Модальное окно профиля */
+#user-profile-modal {
+    z-index: 10001 !important;
+}
+
+#user-profile-modal .profile-modal-content {
+    max-width: 450px;
+    width: 90%;
+    background: white;
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    margin: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Баннер */
+#user-profile-modal .profile-banner {
+    height: 140px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+#user-profile-modal .profile-banner-edit-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    color: white;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.2s;
+}
+
+#user-profile-modal .profile-banner-edit-btn:hover {
+    background: rgba(0,0,0,0.8);
+    transform: scale(1.05);
+}
+
+#user-profile-modal .profile-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.2s;
+}
+
+#user-profile-modal .profile-close-btn:hover {
+    background: rgba(0,0,0,0.7);
+    transform: scale(1.05);
+}
+
+/* Аватар (НАКРЫВАЕТ баннер) */
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: -55px;
+    position: relative;
+    z-index: 15;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: var(--sage, #9DC183);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+}
+
+#user-profile-modal .profile-avatar-edit-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: var(--forest, #228B22);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#user-profile-modal .profile-avatar-edit-btn:hover {
+    transform: scale(1.1);
+    background: var(--lime, #32CD32);
+}
+
+/* Информация */
+#user-profile-modal .profile-info {
+    text-align: center;
+    padding: 16px 20px 20px;
+}
+
+#user-profile-modal .profile-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+#user-profile-modal .profile-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-dark, #2c3e2c);
+}
+
+#user-profile-modal .profile-username {
+    font-size: 14px;
+    color: var(--text-muted, #94a894);
+    margin: 4px 0;
+    cursor: pointer;
+}
+
+#user-profile-modal .profile-username:hover {
+    color: var(--forest, #228B22);
+}
+
+#user-profile-modal .profile-subscribers {
+    font-size: 13px;
+    color: var(--text-light, #6b8e6b);
+    margin: 6px 0;
+}
+
+#user-profile-modal .profile-status {
+    font-size: 13px;
+    margin: 6px 0;
+}
+
+#user-profile-modal .profile-subscribe-btn,
+#user-profile-modal .profile-notify-btn,
+#user-profile-modal .profile-chat-btn {
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+#user-profile-modal .profile-subscribe-btn {
+    background: var(--forest, #228B22);
+    color: white;
+}
+
+#user-profile-modal .profile-subscribe-btn:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+
+#user-profile-modal .profile-notify-btn {
+    background: var(--background, #f5f7f5);
+    border: 1px solid var(--border, #d4e4d4);
+    font-size: 18px;
+    padding: 8px 16px;
+}
+
+#user-profile-modal .profile-chat-btn {
+    background: var(--forest, #228B22);
+    color: white;
+}
+
+#user-profile-modal .profile-chat-btn:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+
+/* Биография */
+#user-profile-modal .profile-bio {
+    margin-top: 15px;
+    padding: 12px;
+    background: var(--background, #f5f7f5);
+    border-radius: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#user-profile-modal .profile-bio:hover {
+    background: var(--border, #d4e4d4);
+}
+
+#user-profile-modal .profile-bio p {
+    margin: 8px 0 0 0;
+    color: var(--text-light, #6b8e6b);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Вкладки */
+#user-profile-modal .profile-tabs {
+    display: flex;
+    border-top: 1px solid var(--border, #d4e4d4);
+    border-bottom: 1px solid var(--border, #d4e4d4);
+}
+
+#user-profile-modal .profile-tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: var(--text-light, #6b8e6b);
+}
+
+#user-profile-modal .profile-tab-btn.active {
+    color: var(--forest, #228B22);
+    border-bottom: 2px solid var(--forest, #228B22);
+}
+
+/* Контент вкладок */
+#user-profile-modal .profile-content {
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--background, #f5f7f5);
+}
+
+#user-profile-modal .profile-loading,
+#user-profile-modal .profile-empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted, #94a894);
+}
+
+/* Карточки постов в профиле */
+#user-profile-modal .profile-slice-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Тёмная тема */
+body.night-mode #user-profile-modal .profile-modal-content {
+    background: #1e1e1e;
+}
+
+body.night-mode #user-profile-modal .profile-name {
+    color: white;
+}
+
+body.night-mode #user-profile-modal .profile-bio {
+    background: #2a2a2a;
+}
+
+body.night-mode #user-profile-modal .profile-bio p {
+    color: #aaa;
+}
+
+body.night-mode #user-profile-modal .profile-slice-card {
+    background: #2a2a2a;
+}
+
+body.night-mode #user-profile-modal .profile-tab-btn {
+    color: #aaa;
+}
+
+body.night-mode #user-profile-modal .profile-tab-btn.active {
+    color: var(--forest);
+}
+
+body.night-mode #user-profile-modal .profile-content {
+    background: #121212;
+}
+
+body.night-mode #user-profile-modal .profile-notify-btn {
+    background: #2a2a2a;
+    border-color: #3a3a3a;
+    color: white;
+}
