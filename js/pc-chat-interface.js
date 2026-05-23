@@ -728,7 +728,7 @@
         div.setAttribute('data-chat-id', chatId);
         
         let name = '';
-        let avatarContent = '👤';
+        let avatarContent = '';
         let avatarStyle = '';
         let isOnline = false;
         let preview = chatData.lastMessage || 'Нет сообщений';
@@ -906,7 +906,7 @@
                     avatarEl.textContent = '';
                 } else {
                     avatarEl.style.backgroundImage = '';
-                    avatarEl.textContent = '👤';
+                    avatarEl.textContent = '';
                 }
             } else {
                 nameEl.textContent = 'Пользователь';
@@ -1100,7 +1100,7 @@
             
             for (const user of results) {
                 const avatarStyle = user.avatar ? `background-image: url(${user.avatar}); background-size: cover;` : '';
-                const avatarContent = user.avatar ? '' : '👤';
+                const avatarContent = user.avatar ? '' : '';
                 
                 const div = document.createElement('div');
                 div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #eee; cursor:pointer;';
