@@ -737,7 +737,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
         div.setAttribute('data-chat-id', chatId);
         
         let name = '';
-        let avatarContent = '👤';
+        let avatarContent = '';
         let avatarStyle = '';
         let preview = chatData.lastMessage || 'Нет сообщений';
         let time = chatData.lastMessageTime ? formatMessageTime(chatData.lastMessageTime) : '';
@@ -888,7 +888,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
                     avatarEl.style.backgroundImage = `url(${userData.avatar})`;
                     avatarEl.style.backgroundSize = 'cover';
                 } else {
-                    avatarEl.textContent = '👤';
+                    avatarEl.textContent = '';
                     avatarEl.classList.add('default-avatar-user');
                 }
             }
@@ -1290,7 +1290,7 @@ window.closeMessagesSidebar = function() {
                     if (otherId) {
                         const userSnap = await database.ref('users/' + otherId + '/username').once('value');
                         name = userSnap.val() || 'Пользователь';
-                        avatarHtml = '👤';
+                        avatarHtml = '';
                     }
                 }
                 
@@ -1383,7 +1383,7 @@ window.closeMessagesSidebar = function() {
                 const userData = userSnap.val();
                 nameEl.textContent = userData?.username || 'Пользователь';
                 statusEl.textContent = userData?.status?.online ? 'в сети' : 'не в сети';
-                avatarEl.textContent = '👤';
+                avatarEl.textContent = '';
                 if (userData?.avatar) {
                     avatarEl.style.backgroundImage = `url(${userData.avatar})`;
                     avatarEl.style.backgroundSize = 'cover';
