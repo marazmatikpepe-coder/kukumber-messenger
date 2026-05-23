@@ -554,6 +554,7 @@ function openUserProfile(userId) {
         if (!userData) return;
         
         var userName = userData.username || 'Пользователь';
+        var userTag = userData.userTag || '@' + userName.toLowerCase().replace(/\s/g, '');
         var userAvatar = userData.avatar || '';
         var userBio = userData.bio || 'Нет описания';
         var userVerified = userData.verified === true;
@@ -604,13 +605,16 @@ function openUserProfile(userId) {
             ${userVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:18px; height:18px; cursor:pointer;" onclick="showVerifiedInfo()">' : ''}
             ${isAdmin ? '<button onclick="toggleUserVerification(\''+userId+'\')" style="background:none; border:none; cursor:pointer; font-size:14px;">🔘 ' + (userVerified ? 'Снять галочку' : 'Выдать галочку') + '</button>' : ''}
         </div>
-        ${isOwnProfile ? '' : `
-            <button class="profile-subscribe-btn" id="profile-subscribe-btn" onclick="toggleSubscription()">Подписаться</button>
-            <button class="profile-notify-btn" id="profile-notify-btn" onclick="toggleNotifications()">🔔</button>
-        `}
+       ${isOwnProfile ? '' : `
+    <div style="display: flex; gap: 10px; justify-content: center; margin: 15px 0;">
+        <button class="profile-subscribe-btn" id="profile-subscribe-btn" onclick="toggleSubscription()">Подписаться</button>
+        <button class="profile-notify-btn" id="profile-notify-btn" onclick="toggleNotifications()">🔔</button>
+        <button class="profile-chat-btn" onclick="startPrivateChatFromProfile('${userId}')" style="padding: 8px 16px; background: var(--forest); border: none; border-radius: 30px; color: white; cursor: pointer;">💬 Написать</button>
+    </div>
+`}
     </div>
     <!-- ↓↓↓ ДОБАВЛЕНА СТРОКА С ЮЗЕРНЕЙМОМ ↓↓↓ -->
-    <div class="profile-username">${userData.userTag ? '@' + userData.userTag : '@' + userName.toLowerCase().replace(/\s/g, '')}</div>
+  <div class="profile-username" ${canEdit ? 'ondblclick="editProfileUserTag()" style="cursor:pointer;"' : ''}>${escapeHtml(userTag)}</div>
     <!-- ↑↑↑ ↑↑↑ -->
     <div class="profile-subscribers">👥 ${subscribersCount} подписчиков</div>
     <div class="profile-status">${statusText}</div>
