@@ -484,7 +484,7 @@ function loadReplies(sliceId, parentId) {
         
         repliesArray.forEach(function(reply) {
             var avatarStyle = reply.data.authorAvatar ? 'background-image:url('+reply.data.authorAvatar+');background-size:cover;' : '';
-            var avatarContent = reply.data.authorAvatar ? '' : '👤';
+            var avatarContent = reply.data.authorAvatar ? '' : '';
             
             repliesHtml += `
                 <div class="comment-item reply-item">
