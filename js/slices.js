@@ -1386,7 +1386,7 @@ function loadUserChannelsForPublish() {
                 if (chat && chat.type === 'channel' && chat.admins && chat.admins[currentUser.uid]) {
                     var option = document.createElement('option');
                     option.value = chatId;
-                    option.textContent = '📢 ' + (chat.name || 'Канал');
+                    option.textContent = ' ' + (chat.name || 'Канал');
                     select.appendChild(option);
                 }
             });
