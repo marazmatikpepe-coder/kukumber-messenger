@@ -66,7 +66,7 @@ window.openGroupProfile = async function(chatId) {
                     
                     <div style="display: flex; justify-content: center; margin-top: -50px; position: relative;">
                         <div id="group-avatar" style="width: 90px; height: 90px; border-radius: 50%; background: var(--sage); border: 4px solid white; display: flex; align-items: center; justify-content: center; font-size: 45px; ${chatData.avatar ? 'background-image: url(' + chatData.avatar + '); background-size: cover;' : ''}">
-                            ${chatData.avatar ? '' : '👥'}
+                            ${chatData.avatar ? '' : ''}
                             ${(isAdmin || isCreator) ? '<button id="edit-avatar-btn" style="position: absolute; bottom: 0; right: 0; background: var(--forest); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer;">✏️</button>' : ''}
                         </div>
                     </div>
