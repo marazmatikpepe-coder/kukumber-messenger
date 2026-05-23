@@ -538,7 +538,7 @@ function likeComment(sliceId, commentId) {
 }
 
 // ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (ИСПРАВЛЕН - БАННЕР РАБОТАЕТ) ==========
-function openUserProfile(userId) {
+function openUserProfileFull(userId) {
     window.viewingProfileUserId = userId;
     
     // Закрываем предыдущее окно профиля
@@ -999,7 +999,7 @@ function editProfileAvatar() {
                     
                     // ПЕРЕЗАГРУЖАЕМ ПРОФИЛЬ, ЧТОБЫ ОБНОВИТЬ ВСЁ
                     setTimeout(function() {
-                        openUserProfile(userId);
+                        openUserProfileFull(userId);
                     }, 500);
                     
                 }).catch(function(err) {
@@ -1060,7 +1060,7 @@ function editProfileName() {
             if (window.viewingProfileUserId === currentUser.uid && typeof updateUserDisplay === 'function') {
                 updateUserDisplay();
             }
-            openUserProfile(userId);
+          openUserProfileFull(userId);
         });
     }
 }
@@ -1077,7 +1077,7 @@ function editProfileBio() {
     if (newBio !== null) {
         database.ref('users/' + userId + '/bio').set(newBio.trim()).then(function() {
             showNotification('Описание обновлено', 'success');
-            openUserProfile(userId);
+           openUserProfileFull(userId);
         });
     }
 }
@@ -1092,7 +1092,7 @@ function toggleUserVerification(userId) {
             if (userId === currentUser.uid && currentUserData) {
                 currentUserData.verified = !isVerified;
             }
-            openUserProfile(userId);
+            openUserProfileFull(userId);
         });
     });
 }
@@ -1243,7 +1243,7 @@ function openSliceLightbox(url) {
 
 function openSlicesProfile() {
     if (currentUser) {
-        openUserProfile(currentUser.uid);
+       openUserProfileFull(currentUser.uid);
     }
 }
 
@@ -1708,7 +1708,7 @@ function editProfileUserTag() {
             
             // Перезагружаем профиль
             setTimeout(function() {
-                openUserProfile(userId);
+               openUserProfileFull(userId);
             }, 500);
         }).catch(function(err) {
             showNotification('Ошибка: ' + err.message, 'error');
@@ -1726,4 +1726,9 @@ function editProfileUserTag() {
 window.startPrivateChatFromProfile = startPrivateChatFromProfile;
 window.editProfileUserTag = editProfileUserTag;
 
+// ... весь ваш код ...
+
 console.log('✅ Дополнительные функции профиля добавлены');
+
+// ===== ЭТО САМОЕ ВАЖНОЕ - ДОБАВЬТЕ ЭТУ СТРОКУ =====
+window.openUserProfile = openUserProfileFull;
