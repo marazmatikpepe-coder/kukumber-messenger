@@ -578,12 +578,17 @@ function sendMessage() {
     
     input.value = '';
     
-    database.ref('messages/' + currentChatId).push(message).then(function() {
+    database.ref('messages/' + currentChatId).push(message).then(async function() {
         var lastMsg = text.length > 100 ? text.substring(0, 97) + '...' : text;
-        database.ref('chats/' + currentChatId).update({
+        await database.ref('chats/' + currentChatId).update({
             lastMessage: lastMsg,
             lastMessageTime: firebase.database.ServerValue.TIMESTAMP
         });
+        
+        // ========== ОТПРАВКА PUSH-УВЕДОМЛЕНИЯ ==========
+        await sendPushForMessage(currentChatId, text);
+        // =============================================
+        
         if (typeof KukumberSounds !== 'undefined') KukumberSounds.playSend();
     }).catch(function(err) {
         console.error('Ошибка отправки:', err);
@@ -592,6 +597,88 @@ function sendMessage() {
     });
 }
 
+// Функция отправки push-уведомления
+async function sendPushForMessage(chatId, messageText) {
+    try {
+        // Получаем данные чата
+        const chatSnap = await database.ref('chats/' + chatId).once('value');
+        const chatData = chatSnap.val();
+        if (!chatData) return;
+        
+        // Определяем получателя (не отправителя)
+        let recipientId = null;
+        let senderName = currentUserData?.username || 'Пользователь';
+        
+        if (chatData.type === 'private') {
+            // Личный чат - отправляем второму участнику
+            for (const uid of chatData.participants) {
+                if (uid !== currentUser.uid) {
+                    recipientId = uid;
+                    break;
+                }
+            }
+        } else if (chatData.type === 'group') {
+            // Группа - отправляем всем, кроме отправителя (если уведомления включены)
+            // Пока отправляем только если пользователь подписан на уведомления группы
+            return;
+        } else if (chatData.type === 'channel') {
+            // Канал - отправляем подписчикам
+            return;
+        }
+        
+        if (!recipientId) return;
+        
+        // Получаем токен получателя
+        const tokenSnap = await database.ref('users/' + recipientId + '/fcmToken').once('value');
+        const token = tokenSnap.val();
+        
+        if (!token) {
+            console.log('Нет токена у пользователя', recipientId);
+            return;
+        }
+        
+        // Короткий текст для уведомления
+        const shortText = messageText.length > 100 ? messageText.substring(0, 97) + '...' : messageText;
+        
+        // Отправляем через Firebase Cloud Messaging
+        const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'key=AAAAvNcyvSU:APA91bE2G-ybuDgJLvKv2rJghVQVYOE74w3Jq6yLdgpQv9YGlJ__P21hUq70dMsQ15cBPG0OZ1-JnMj0v3c6K7OQthRdua2RkS5MQe5N2ypAt4ooScdrBWY5VrHD-K4pO-0SeWXh33MF'
+            },
+            body: JSON.stringify({
+                to: token,
+                priority: 'high',
+                content_available: true,
+                notification: {
+                    title: senderName,
+                    body: shortText,
+                    icon: 'https://i.ibb.co/jPd3zD4K/039-C01-D0-CD06-45-F1-8151-5-B9634-D4-CBFA.png',
+                    badge: 'https://i.ibb.co/23pNfd0W/F449-F920-46-E7-4-E73-85-EF-26-CFF5-CAD938.jpg',
+                    sound: 'default',
+                    vibrate: [200, 100, 200],
+                    tag: chatId,
+                    renotify: true
+                },
+                data: {
+                    chatId: chatId,
+                    senderId: currentUser.uid,
+                    senderName: senderName,
+                    message: shortText,
+                    click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                    channelId: 'kukumber_messages'
+                }
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Push отправлен:', data);
+        
+    } catch (err) {
+        console.error('Ошибка отправки push:', err);
+    }
+}
 // ========== ОСТАЛЬНЫЕ ФУНКЦИИ ==========
 function closeChat() {
     if (messagesListener) messagesListener.off();
