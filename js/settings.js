@@ -837,7 +837,7 @@ function setSimpleTheme(colorKey) {
         btn.style.background = gradient;
     });
     
-    // ========== ОБНОВЛЕНИЕ ИКОНКИ НАСТРОЕК В ЗАВИСИМОСТИ ОТ ТЕМЫ ==========
+    // ========== ОБНОВЛЕНИЕ ИКОНКИ НАСТРОЕК ==========
     var settingsIcon = document.getElementById('settings-icon');
     if (settingsIcon) {
         var iconUrls = {
@@ -850,22 +850,25 @@ function setSimpleTheme(colorKey) {
             yellow: 'https://i.ibb.co/RG9QJSN2/image.png',
             turquoise: 'https://i.ibb.co/VcpzCM19/image.png'
         };
-        // Для зелёного используем ту же ссылку
-        if (colorKey === 'green') iconUrls.green = 'https://i.ibb.co/kVRp49V3/image.png';
         
+        // Меняем саму картинку иконки
         var newIconUrl = iconUrls[colorKey] || 'https://i.ibb.co/jk3xSxs6/image.png';
         settingsIcon.src = newIconUrl;
         
-        // Если вкладка настроек активна, применяем фильтр цвета
-        if (document.getElementById('nav-settings').classList.contains('active')) {
+        // Если вкладка настроек активна, применяем цветной фильтр
+        var settingsNav = document.getElementById('nav-settings');
+        if (settingsNav && settingsNav.classList.contains('active')) {
             settingsIcon.style.filter = 'brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)';
         } else if (document.body.classList.contains('night-mode')) {
             settingsIcon.style.filter = 'brightness(0.8) invert(1)';
         } else {
-            settingsIcon.style.filter = 'brightness(0.3)';
+            settingsIcon.style.filter = 'brightness(0.35)';
         }
     }
     
+    renderThemesGrid();
+    showNotification('Тема "' + theme.name + '" применена', 'success');
+}
     renderThemesGrid();
     showNotification('Тема "' + theme.name + '" применена', 'success');
 }
