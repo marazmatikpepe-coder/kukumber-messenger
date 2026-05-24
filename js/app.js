@@ -148,37 +148,29 @@ function showMainScreen() {
 function switchToTab(tabName) {
     currentTab = tabName;
     
-    // Скрываем все вкладки
     document.getElementById('chats-tab').classList.add('hidden');
     document.getElementById('messages-tab').classList.add('hidden');
     document.getElementById('reels-tab').classList.add('hidden');
     document.getElementById('settings-tab').classList.add('hidden');
     
-    // Убираем активный класс у всех кнопок навигации
     document.getElementById('nav-chats').classList.remove('active');
     document.getElementById('nav-messages').classList.remove('active');
     document.getElementById('nav-reels').classList.remove('active');
     document.getElementById('nav-settings').classList.remove('active');
     
-    // Показываем выбранную вкладку
     document.getElementById(tabName + '-tab').classList.remove('hidden');
     document.getElementById('nav-' + tabName).classList.add('active');
     
-    // Загружаем данные для вкладки если нужно
-    if (tabName === 'reels' && typeof loadSlices === 'function') {
-        loadSlices();
-    }
-    if (tabName === 'chats' && typeof loadChats === 'function') {
-        loadChats();
-    }
+    if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
+    if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
     if (tabName === 'messages' && typeof window.loadMessagesChats === 'function') {
         setTimeout(() => window.loadMessagesChats(), 100);
     }
-    if (tabName === 'settings' && typeof updateUserDisplay === 'function') {
-        updateUserDisplay();
-    }
+    if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
     
     closeSidebar();
+} // <-- ДОБАВЬ ЭТУ СКОБКУ
+
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
