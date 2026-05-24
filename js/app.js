@@ -21,6 +21,21 @@ var messagesListener = null;
 var currentTab = 'chats';
 var isSuperAdmin = false;
 
+// Принудительное скрытие загрузки через 3 секунды
+setTimeout(function() {
+    var loading = document.getElementById('loading-screen');
+    if (loading) loading.style.display = 'none';
+    var authScreen = document.getElementById('auth-screen');
+    var mainScreen = document.getElementById('main-screen');
+    
+    if (currentUser && currentUserData) {
+        if (authScreen) authScreen.classList.add('hidden');
+        if (mainScreen) mainScreen.classList.remove('hidden');
+    } else if (authScreen) {
+        authScreen.classList.remove('hidden');
+        if (mainScreen) mainScreen.classList.add('hidden');
+    }
+}, 3000);
 window.addEventListener('load', function() {
     setTimeout(function() {
         var loading = document.getElementById('loading-screen');
@@ -31,47 +46,79 @@ window.addEventListener('load', function() {
 });
 
 function checkAuthState() {
+    console.log('checkAuthState вызвана');
+    
+    // Принудительно скрываем загрузку через 2 секунды в любом случае
+    setTimeout(function() {
+        var loading = document.getElementById('loading-screen');
+        if (loading) loading.style.display = 'none';
+    }, 2000);
+    
     auth.onAuthStateChanged(function(user) {
+        console.log('onAuthStateChanged:', user ? user.uid : 'нет пользователя');
+        
+        var loading = document.getElementById('loading-screen');
+        if (loading) loading.style.display = 'none';
+        
         if (user) {
             currentUser = user;
             loadUserData();
         } else {
             currentUser = null;
             currentUserData = null;
-            showAuthScreen();
+            var authScreen = document.getElementById('auth-screen');
+            var mainScreen = document.getElementById('main-screen');
+            if (authScreen) authScreen.classList.remove('hidden');
+            if (mainScreen) mainScreen.classList.add('hidden');
         }
     });
 }
-
 function loadUserData() {
+    console.log('loadUserData вызвана для:', currentUser.uid);
+    
     if (!currentUser) return;
-    database.ref('users/' + currentUser.uid).on('value', function(snapshot) {
+    
+    database.ref('users/' + currentUser.uid).once('value').then(function(snapshot) {
         currentUserData = snapshot.val();
+        console.log('Данные пользователя загружены:', currentUserData ? 'да' : 'нет');
+        
         if (currentUserData) {
             updateUserDisplay();
             checkSuperAdmin();
-            showMainScreen();
-
-            // Обновляем аватарку в Slices
-            var slicesAvatar = document.getElementById('slices-user-avatar');
-            if (slicesAvatar) {
-                if (currentUserData.avatar) {
-                    slicesAvatar.style.backgroundImage = 'url(' + currentUserData.avatar + ')';
-                    slicesAvatar.style.backgroundSize = 'cover';
-                    slicesAvatar.textContent = '';
-                } else {
-                    slicesAvatar.style.backgroundImage = '';
-                    slicesAvatar.textContent = '🥒';
-                }
+            
+            // Показываем главный экран
+            var authScreen = document.getElementById('auth-screen');
+            var mainScreen = document.getElementById('main-screen');
+            if (authScreen) authScreen.classList.add('hidden');
+            if (mainScreen) mainScreen.classList.remove('hidden');
+            
+            // Загружаем чаты
+            if (typeof loadChats === 'function') {
+                setTimeout(function() { loadChats(); }, 500);
             }
             
-            // ===== ДОБАВЬ ЭТИ СТРОКИ ДЛЯ PUSH-УВЕДОМЛЕНИЙ =====
+            // Загружаем слайсы
+            setTimeout(function() {
+                if (typeof loadSlices === 'function') loadSlices();
+            }, 300);
+            
+            // Push-уведомления
             if (typeof requestNotificationPermission === 'function') {
-                requestNotificationPermission();
-                setupForegroundMessages();
+                setTimeout(function() {
+                    requestNotificationPermission();
+                    setupForegroundMessages();
+                }, 2000);
             }
-            // ================================================
         }
+    }).catch(function(err) {
+        console.error('Ошибка загрузки пользователя:', err);
+        // Показываем экран входа при ошибке
+        var authScreen = document.getElementById('auth-screen');
+        var mainScreen = document.getElementById('main-screen');
+        if (authScreen) authScreen.classList.remove('hidden');
+        if (mainScreen) mainScreen.classList.add('hidden');
+        var loading = document.getElementById('loading-screen');
+        if (loading) loading.style.display = 'none';
     });
 }
 function checkSuperAdmin() {
