@@ -4238,3 +4238,36 @@ body.night-mode #settings-icon {
 #nav-settings.active #settings-icon {
     filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
 }
+/* ========== ИКОНКИ НИЖНЕЙ НАВИГАЦИИ ========== */
+
+/* Иконка настроек по умолчанию (светлая тема) */
+#settings-icon {
+    filter: brightness(0.3);
+    transition: filter 0.2s ease;
+}
+
+/* Тёмная тема - инвертируем иконку настроек */
+body.night-mode #settings-icon {
+    filter: brightness(0.8) invert(1);
+}
+
+/* Активная вкладка настроек - цвет темы */
+#nav-settings.active #settings-icon {
+    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
+}
+
+/* Иконка чатов - всегда стикер (не меняем цвет) */
+#chats-icon {
+    filter: none !important;
+}
+
+/* Иконка Slices - всегда стикер */
+#reels-icon {
+    filter: none !important;
+}
+
+/* Активная вкладка - подсветка текста */
+.nav-item.active .nav-label {
+    color: var(--forest);
+    font-weight: 600;
+}
