@@ -195,29 +195,36 @@ function showMainScreen() {
 function switchToTab(tabName) {
     currentTab = tabName;
     
-    document.getElementById('chats-tab').classList.add('hidden');
-    document.getElementById('messages-tab').classList.add('hidden');
-    document.getElementById('reels-tab').classList.add('hidden');
-    document.getElementById('settings-tab').classList.add('hidden');
-    
-    document.getElementById('nav-chats').classList.remove('active');
-    document.getElementById('nav-messages').classList.remove('active');
-    document.getElementById('nav-reels').classList.remove('active');
-    document.getElementById('nav-settings').classList.remove('active');
+    var tabs = ['chats', 'reels', 'settings'];
+    tabs.forEach(function(tab) {
+        var tabEl = document.getElementById(tab + '-tab');
+        var navEl = document.getElementById('nav-' + tab);
+        if (tabEl) tabEl.classList.add('hidden');
+        if (navEl) navEl.classList.remove('active');
+    });
     
     document.getElementById(tabName + '-tab').classList.remove('hidden');
     document.getElementById('nav-' + tabName).classList.add('active');
     
+    // ========== ОБНОВЛЕНИЕ ИКОНКИ НАСТРОЕК ПРИ ПЕРЕКЛЮЧЕНИИ ==========
+    var settingsIcon = document.getElementById('settings-icon');
+    if (settingsIcon) {
+        if (tabName === 'settings') {
+            // Активная вкладка - применяем цвет темы
+            settingsIcon.style.filter = 'brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)';
+        } else if (document.body.classList.contains('night-mode')) {
+            settingsIcon.style.filter = 'brightness(0.8) invert(1)';
+        } else {
+            settingsIcon.style.filter = 'brightness(0.3)';
+        }
+    }
+    
     if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
     if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
-    if (tabName === 'messages' && typeof window.loadMessagesChats === 'function') {
-        setTimeout(() => window.loadMessagesChats(), 100);
-    }
     if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
     
     closeSidebar();
-} // <-- ДОБАВЬ ЭТУ СКОБКУ
-
+}
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
