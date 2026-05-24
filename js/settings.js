@@ -837,19 +837,8 @@ function setSimpleTheme(colorKey) {
         btn.style.background = gradient;
     });
     
-    // Обновляем цвет иконки настроек если активна вкладка
-    const settingsBtn = document.getElementById('nav-settings');
-    const settingsIcon = document.getElementById('settings-icon');
-    if (settingsBtn && settingsBtn.classList.contains('active') && settingsIcon) {
-        settingsIcon.style.filter = `brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)`;
-    }
-    
-    renderThemesGrid();
-    showNotification('Тема "' + theme.name + '" применена', 'success');
-}
-    
-    // ===== МЕНЯЕМ ИКОНКУ НАСТРОЕК В ЗАВИСИМОСТИ ОТ ЦВЕТА =====
-    var settingsIcon = document.getElementById('settings-icon-img');
+    // Меняем иконку настроек в зависимости от цвета
+    var settingsIcon = document.getElementById('settings-icon');
     if (settingsIcon) {
         var iconUrls = {
             green: 'https://i.ibb.co/kVRp49V3/image.png',
@@ -863,11 +852,11 @@ function setSimpleTheme(colorKey) {
         };
         settingsIcon.src = iconUrls[colorKey] || 'https://i.ibb.co/jk3xSxs6/image.png';
     }
-    // =======================================================
     
     renderThemesGrid();
     showNotification('Тема "' + theme.name + '" применена', 'success');
 }
+
 function toggleNightModeUI() {
     nightModeEnabled = !nightModeEnabled;
     localStorage.setItem('kukumber_night_mode', nightModeEnabled);
@@ -877,12 +866,11 @@ function toggleNightModeUI() {
     if (btn) {
         btn.innerHTML = nightModeEnabled ? '🌙 Ночной режим (вкл)' : '☀️ Ночной режим (выкл)';
     }
-    showNotification(nightModeEnabled ? 'Ночной режим включён 🌙' : 'Ночной режим выключен ☀️', 'success');
+    showNotification(nightModeEnabled ? 'Ночной режим включён' : 'Ночной режим выключен', 'success');
 }
 
-// Замени функцию applyNightModeToBody на эту:
 function applyNightModeToBody() {
-    var settingsIcon = document.getElementById('settings-icon-img');
+    var settingsIcon = document.getElementById('settings-icon');
     
     if (nightModeEnabled) {
         document.body.classList.add('night-mode');
@@ -894,7 +882,6 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--sage', '#2a4a2a');
         document.documentElement.style.setProperty('--olive', '#3a5a3a');
         
-        // Меняем иконку на тёмную тему
         if (settingsIcon) settingsIcon.src = 'https://i.ibb.co/9389n86D/image.png';
     } else {
         document.body.classList.remove('night-mode');
@@ -906,20 +893,14 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--sage', '#9DC183');
         document.documentElement.style.setProperty('--olive', '#556B2F');
         
-        // Меняем иконку на светлую тему
         if (settingsIcon) settingsIcon.src = 'https://i.ibb.co/jk3xSxs6/image.png';
     }
 }
-// В initSettings() убери проверку системной темы, просто ставь light:
+
 function initSettings() {
     loadNotificationSettings();
     detectUserLanguage();
-    
-    // ПРИНУДИТЕЛЬНО СВЕТЛАЯ ТЕМА (nightModeEnabled = false)
-    nightModeEnabled = false;
-    localStorage.setItem('kukumber_night_mode', 'false');
     applyNightModeToBody();
-    
     var savedTheme = localStorage.getItem('kukumber_theme_color');
     if (savedTheme && colorThemes[savedTheme]) {
         currentThemeColor = savedTheme;
@@ -938,7 +919,7 @@ function showStorageSettings() {
 
 function showAbout() {
     var t = translations[currentLanguage];
-    alert(t.app_name + ' ' + (t.version || 'v1.0') + '\n\n' + (t.tagline || 'Свежее общение каждый день 🥒'));
+    alert(t.app_name + ' ' + (t.version || 'v1.0') + '\n\n' + (t.tagline || 'Свежее общение каждый день'));
 }
 
 function showHelp() {
@@ -963,15 +944,6 @@ function detectUserLanguage() {
     applyTranslations();
 }
 
-function initSettings() {
-    loadNotificationSettings();
-    detectUserLanguage();
-    applyNightModeToBody();
-    var savedTheme = localStorage.getItem('kukumber_theme_color');
-    if (savedTheme && colorThemes[savedTheme]) {
-        currentThemeColor = savedTheme;
-        setSimpleTheme(currentThemeColor);
-    }
-}
-
+// Запуск
 initSettings();
+console.log('✅ settings.js загружен');
