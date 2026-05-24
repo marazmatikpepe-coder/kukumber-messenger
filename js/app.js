@@ -2272,3 +2272,33 @@ async function createChannel() {
         }
     }, 2000);
 })();
+// ========== РЕГИСТРАЦИЯ SERVICE WORKER ДЛЯ PWA ==========
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        // Определяем базовый путь
+        function getBasePath() {
+            const path = window.location.pathname;
+            if (path.includes('/Kukumber-messenger/')) {
+                return '/Kukumber-messenger/';
+            }
+            if (path !== '/' && path !== '') {
+                const parts = path.split('/');
+                if (parts.length > 1) {
+                    return '/' + parts[1] + '/';
+                }
+            }
+            return '/';
+        }
+        
+        const basePath = getBasePath();
+        console.log('Регистрация PWA SW с путём:', basePath + 'sw.js');
+        
+        navigator.serviceWorker.register(basePath + 'sw.js')
+            .then(function(reg) {
+                console.log('✅ PWA Service Worker готов, scope:', reg.scope);
+            })
+            .catch(function(err) {
+                console.log('❌ PWA Service Worker ошибка:', err);
+            });
+    });
+}
