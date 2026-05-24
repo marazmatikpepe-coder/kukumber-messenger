@@ -372,12 +372,37 @@ async function requestNotificationPermission() {
     try {
         const messaging = firebase.messaging();
         
+        // ========== ПОЛУЧАЕМ ПРАВИЛЬНЫЙ БАЗОВЫЙ ПУТЬ ==========
+        // Автоматически определяем путь к приложению
+        function getBasePath() {
+            const path = window.location.pathname;
+            // Если путь заканчивается на /Kukumber-messenger/ или содержит его
+            if (path.includes('/Kukumber-messenger/')) {
+                return '/Kukumber-messenger/';
+            }
+            // Если мы в корне репозитория
+            if (path !== '/' && path !== '') {
+                const parts = path.split('/');
+                if (parts.length > 1) {
+                    return '/' + parts[1] + '/';
+                }
+            }
+            return '/';
+        }
+        
+        const basePath = getBasePath();
+        console.log('Базовый путь для SW:', basePath);
+        
         // Получаем Service Worker регистрацию
         let registration;
         try {
             registration = await navigator.serviceWorker.ready;
+            console.log('Service Worker уже готов:', registration.scope);
         } catch (e) {
-            registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            // Регистрируем с правильным путём
+            console.log('Регистрируем Service Worker по пути:', basePath + 'firebase-messaging-sw.js');
+            registration = await navigator.serviceWorker.register(basePath + 'firebase-messaging-sw.js');
+            console.log('Service Worker зарегистрирован:', registration.scope);
         }
         
         // Получаем токен
