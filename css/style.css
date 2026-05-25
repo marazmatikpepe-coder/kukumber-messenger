@@ -4736,3 +4736,7 @@ body.night-mode .bottom-nav {
     object-fit: contain;
     transition: all 0.2s ease;
 }
+#chats-icon {
+    width: 39px;
+    height: 39px;
+}
