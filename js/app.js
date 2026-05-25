@@ -192,20 +192,34 @@ function showMainScreen() {
         }
     }, 300);
 }
-// ========== ОБНОВЛЕНИЕ ИКОНКИ НАСТРОЕК ПРИ ПЕРЕКЛЮЧЕНИИ ==========
-var settingsIcon = document.getElementById('settings-icon');
-var settingsNav = document.getElementById('nav-settings');
-
-if (settingsIcon && settingsNav) {
-    if (tabName === 'settings') {
-        // Активная вкладка - цвет темы
-        settingsIcon.style.filter = 'brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)';
-    } else if (document.body.classList.contains('night-mode')) {
-        settingsIcon.style.filter = 'brightness(0.8) invert(1)';
-    } else {
-        settingsIcon.style.filter = 'brightness(0.35)';
+function switchToTab(tabName) {
+    currentTab = tabName;
+    
+    var tabs = ['chats', 'reels', 'settings'];
+    tabs.forEach(function(tab) {
+        var tabEl = document.getElementById(tab + '-tab');
+        var navEl = document.getElementById('nav-' + tab);
+        if (tabEl) tabEl.classList.add('hidden');
+        if (navEl) navEl.classList.remove('active');
+    });
+    
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    document.getElementById('nav-' + tabName).classList.add('active');
+    
+    // ========== ОБНОВЛЕНИЕ ИКОНКИ НАСТРОЕК ==========
+    var settingsIcon = document.getElementById('settings-icon');
+    var settingsNav = document.getElementById('nav-settings');
+    
+    if (settingsIcon && settingsNav) {
+        if (tabName === 'settings') {
+            settingsIcon.style.filter = 'brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)';
+        } else if (document.body.classList.contains('night-mode')) {
+            settingsIcon.style.filter = 'brightness(0.8) invert(1)';
+        } else {
+            settingsIcon.style.filter = 'brightness(0.35)';
+        }
     }
-}
+    
     if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
     if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
     if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
