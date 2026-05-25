@@ -4586,3 +4586,13 @@ body.night-mode .bottom-nav {
     height: 44px;
     object-fit: contain;
 }
+/* Размеры иконок в нижней навигации */
+#chats-icon {
+    width: 40px !important;
+    height: 40px !important;
+}
+
+#reels-icon, #settings-icon {
+    width: 35px !important;
+    height: 35px !important;
+}
