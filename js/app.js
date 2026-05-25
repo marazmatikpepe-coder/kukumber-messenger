@@ -2356,3 +2356,93 @@ function updateBottomIcons(activeTab) {
         }
     }
 }
+// Функция перемещения плавающего индикатора
+function moveNavIndicator(activeTab) {
+    var indicator = document.getElementById('nav-indicator');
+    var activeWrapper = document.getElementById('nav-' + activeTab + '-wrapper');
+    
+    if (!indicator || !activeWrapper) return;
+    
+    var wrapperRect = activeWrapper.getBoundingClientRect();
+    var navRect = document.querySelector('.bottom-nav').getBoundingClientRect();
+    
+    var leftPos = wrapperRect.left - navRect.left;
+    var wrapperWidth = wrapperRect.width;
+    
+    indicator.style.left = leftPos + (wrapperWidth - 45) / 2 + 'px';
+    indicator.style.width = '45px';
+}
+
+// Обновление иконок в зависимости от темы (без цветных версий)
+function updateBottomIcons() {
+    var chatsIcon = document.getElementById('chats-icon');
+    var settingsIcon = document.getElementById('settings-icon');
+    var isNightMode = document.body.classList.contains('night-mode');
+    
+    // Иконка чатов: светлая/тёмная тема
+    if (chatsIcon) {
+        chatsIcon.src = isNightMode 
+            ? 'https://i.ibb.co/n8PNWgTB/image.png' 
+            : 'https://i.ibb.co/DP3FSmvR/image.png';
+    }
+    
+    // Иконка настроек: светлая/тёмная тема
+    if (settingsIcon) {
+        settingsIcon.src = isNightMode 
+            ? 'https://i.ibb.co/9389n86D/image.png' 
+            : 'https://i.ibb.co/jk3xSxs6/image.png';
+    }
+}
+
+// Функция переключения вкладок с анимацией
+function switchToTab(tabName) {
+    currentTab = tabName;
+    
+    var tabs = ['chats', 'reels', 'settings'];
+    tabs.forEach(function(tab) {
+        var tabEl = document.getElementById(tab + '-tab');
+        var navBtn = document.getElementById('nav-' + tab);
+        if (tabEl) tabEl.classList.add('hidden');
+        if (navBtn) navBtn.classList.remove('active');
+    });
+    
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    document.getElementById('nav-' + tabName).classList.add('active');
+    
+    // Анимируем индикатор
+    moveNavIndicator(tabName);
+    
+    if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
+    if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
+    if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
+    
+    closeSidebar();
+}
+
+// Обновление цвета индикатора при смене темы
+function updateIndicatorColor() {
+    var indicator = document.getElementById('nav-indicator');
+    var currentTheme = localStorage.getItem('kukumber_theme_color') || 'green';
+    var themeColors = {
+        green: '#228B22',
+        blue: '#1E90FF',
+        red: '#DC143C',
+        orange: '#FF8C00',
+        pink: '#FF69B4',
+        purple: '#8A2BE2',
+        yellow: '#FFD700',
+        turquoise: '#008080'
+    };
+    if (indicator) {
+        indicator.style.background = themeColors[currentTheme] || '#228B22';
+    }
+}
+
+// При загрузке страницы
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        updateBottomIcons();
+        updateIndicatorColor();
+        moveNavIndicator(currentTab);
+    }, 100);
+});
