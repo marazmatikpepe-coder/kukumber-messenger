@@ -195,7 +195,6 @@ function showMainScreen() {
 function switchToTab(tabName) {
     currentTab = tabName;
     
-    // Скрываем все вкладки
     var tabs = ['chats', 'reels', 'settings'];
     tabs.forEach(function(tab) {
         var tabEl = document.getElementById(tab + '-tab');
@@ -204,17 +203,25 @@ function switchToTab(tabName) {
         if (navEl) navEl.classList.remove('active');
     });
     
-    // Показываем выбранную вкладку
     document.getElementById(tabName + '-tab').classList.remove('hidden');
     document.getElementById('nav-' + tabName).classList.add('active');
     
-    // Загружаем данные
+    // Обновляем иконки
+    updateBottomIcons(tabName);
+    
     if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
     if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
     if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
     
     closeSidebar();
 }
+
+// Вызываем при загрузке страницы для установки правильных иконок
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        if (currentTab) updateBottomIcons(currentTab);
+    }, 500);
+});
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
