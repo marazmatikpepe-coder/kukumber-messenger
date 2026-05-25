@@ -880,8 +880,6 @@ function toggleNightModeUI() {
 }
 
 function applyNightModeToBody() {
-    var settingsIcon = document.getElementById('settings-icon');
-    
     if (nightModeEnabled) {
         document.body.classList.add('night-mode');
         document.documentElement.style.setProperty('--background', '#121212');
@@ -891,8 +889,6 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--border', '#2c2c2c');
         document.documentElement.style.setProperty('--sage', '#2a4a2a');
         document.documentElement.style.setProperty('--olive', '#3a5a3a');
-        
-        if (settingsIcon) settingsIcon.src = 'https://i.ibb.co/9389n86D/image.png';
     } else {
         document.body.classList.remove('night-mode');
         document.documentElement.style.setProperty('--background', '#f5f7f5');
@@ -902,11 +898,13 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--border', '#d4e4d4');
         document.documentElement.style.setProperty('--sage', '#9DC183');
         document.documentElement.style.setProperty('--olive', '#556B2F');
-        
-        if (settingsIcon) settingsIcon.src = 'https://i.ibb.co/jk3xSxs6/image.png';
+    }
+    
+    // Обновляем иконки при смене темы
+    if (typeof updateBottomIcons === 'function') {
+        updateBottomIcons(currentTab);
     }
 }
-
 function initSettings() {
     loadNotificationSettings();
     detectUserLanguage();
