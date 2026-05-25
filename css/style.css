@@ -4512,3 +4512,83 @@ body.night-mode #nav-settings:not(.active) #settings-icon {
 .nav-item:active .nav-icon {
     transform: scale(0.9);
 }
+/* ========== НИЖНЯЯ НАВИГАЦИЯ ========== */
+
+.bottom-nav {
+    height: 70px;
+    background: var(--background);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+/* Тёмная тема */
+body.night-mode .bottom-nav {
+    background: #1e1e1e;
+    border-top-color: #3a3a3a;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.nav-item:active {
+    transform: scale(0.92);
+}
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon img {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: contain;
+    transition: filter 0.2s ease;
+}
+
+/* ========== ИКОНКА ЧАТОВ ========== */
+#nav-chats .nav-icon img {
+    filter: brightness(0.4);
+}
+
+body.night-mode #nav-chats .nav-icon img {
+    filter: brightness(0.8);
+}
+
+#nav-chats.active .nav-icon img {
+    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
+}
+
+/* ========== ИКОНКА SLICES ========== */
+#reels-icon {
+    filter: none !important;
+}
+
+/* ========== ИКОНКА НАСТРОЕК ========== */
+/* Неактивная вкладка - светлая тема */
+#nav-settings:not(.active) #settings-icon {
+    filter: brightness(0.35);
+}
+
+/* Неактивная вкладка - тёмная тема */
+body.night-mode #nav-settings:not(.active) #settings-icon {
+    filter: brightness(0.8) invert(1);
+}
+
+/* Активная вкладка - цвет темы */
+#nav-settings.active #settings-icon {
+    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
+}
