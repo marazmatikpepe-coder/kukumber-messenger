@@ -880,7 +880,7 @@ function applyNightModeToBody() {
     
     // Обновляем иконки при смене темы
     if (typeof updateBottomIcons === 'function') {
-        updateBottomIcons(currentTab);
+        updateBottomIcons();
     }
 }
 function initSettings() {
