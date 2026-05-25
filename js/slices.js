@@ -597,9 +597,9 @@ function openUserProfileFull(userId) {
                     </div>
                     <div class="profile-scrollable">
                         <div class="profile-avatar-wrapper">
-                            <div class="profile-avatar ${!userAvatar ? 'default-avatar-user' : ''}" id="profile-avatar" style="${userAvatar ? 'background-image: url('+userAvatar+'); background-size: cover;' : ''}">
-                                ${canEdit ? '<button class="profile-avatar-edit-btn" onclick="editProfileAvatar()">✏️</button>' : ''}
-                            </div>
+                            <div class="profile-avatar ${!userAvatar ? 'default-avatar-user' : ''}" id="profile-avatar" style="${userAvatar ? 'background-image: url('+userAvatar+'); background-size: cover; background-position: center;' : ''}">
+    ${canEdit ? '<button class="profile-avatar-edit-btn" onclick="editProfileAvatar()">✏️</button>' : ''}
+</div>
                         </div>
                         <div class="profile-info">
                             <div class="profile-name-row">
