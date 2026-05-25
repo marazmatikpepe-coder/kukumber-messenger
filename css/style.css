@@ -4596,3 +4596,222 @@ body.night-mode .bottom-nav {
     width: 35px !important;
     height: 35px !important;
 }
+/* ========== АДАПТИВНЫЙ ПРОФИЛЬ ========== */
+
+/* Модальное окно профиля */
+#user-profile-modal .profile-modal-content {
+    max-width: 450px;
+    width: 90%;
+    max-height: 85vh;
+    border-radius: 28px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+/* Баннер - уменьшаем высоту */
+#user-profile-modal .profile-banner {
+    height: 100px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Аватар - чуть меньше и выше */
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: -45px;
+    position: relative;
+    z-index: 15;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid white;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    position: relative;
+}
+
+#user-profile-modal .profile-avatar-edit-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+}
+
+/* Информация о пользователе - компактнее */
+#user-profile-modal .profile-info {
+    text-align: center;
+    padding: 10px 16px 12px;
+}
+
+#user-profile-modal .profile-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+#user-profile-modal .profile-username {
+    font-size: 12px;
+    margin: 2px 0;
+}
+
+#user-profile-modal .profile-subscribers {
+    font-size: 12px;
+    margin: 4px 0;
+}
+
+#user-profile-modal .profile-status {
+    font-size: 11px;
+    margin: 2px 0;
+}
+
+#user-profile-modal .profile-bio {
+    margin-top: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+/* Кнопки действий - компактнее */
+#user-profile-modal .profile-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+#user-profile-modal .profile-subscribe-btn,
+#user-profile-modal .profile-notify-btn,
+#user-profile-modal .profile-chat-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+}
+
+/* Вкладки */
+#user-profile-modal .profile-tabs {
+    display: flex;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+#user-profile-modal .profile-tab-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 13px;
+}
+
+/* Контент с постами - прокручивается */
+#user-profile-modal .profile-content {
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Карточки постов внутри профиля */
+#user-profile-modal .profile-slice-card {
+    margin-bottom: 12px;
+    border-radius: 16px;
+}
+
+#user-profile-modal .profile-slice-card .slice-header {
+    padding: 8px 12px;
+}
+
+#user-profile-modal .profile-slice-card .slice-author .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+}
+
+#user-profile-modal .profile-slice-card .slice-author-name {
+    font-size: 13px;
+}
+
+#user-profile-modal .profile-slice-card .slice-date {
+    font-size: 10px;
+}
+
+#user-profile-modal .profile-slice-card .slice-text {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+#user-profile-modal .profile-slice-card .slice-media img {
+    max-height: 200px;
+}
+
+#user-profile-modal .profile-slice-card .slice-actions {
+    padding: 8px 12px;
+}
+
+#user-profile-modal .profile-slice-card .slice-action-btn {
+    font-size: 13px;
+    gap: 4px;
+}
+
+/* Для мобильных устройств */
+@media (max-width: 600px) {
+    #user-profile-modal .profile-modal-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    #user-profile-modal .profile-banner {
+        height: 80px;
+    }
+    
+    #user-profile-modal .profile-avatar-wrapper {
+        margin-top: -40px;
+    }
+    
+    #user-profile-modal .profile-avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 35px;
+    }
+    
+    #user-profile-modal .profile-info {
+        padding: 8px 12px 10px;
+    }
+    
+    #user-profile-modal .profile-name {
+        font-size: 18px;
+    }
+    
+    #user-profile-modal .profile-content {
+        max-height: 350px;
+        padding: 10px;
+    }
+    
+    #user-profile-modal .profile-slice-card {
+        margin-bottom: 10px;
+    }
+}
+
+/* Тёмная тема */
+body.night-mode #user-profile-modal .profile-modal-content {
+    background: #1e1e1e;
+}
+
+body.night-mode #user-profile-modal .profile-bio {
+    background: #2a2a2a;
+}
+
+body.night-mode #user-profile-modal .profile-slice-card {
+    background: #2a2a2a;
+}
