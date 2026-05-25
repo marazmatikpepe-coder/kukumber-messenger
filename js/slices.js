@@ -631,7 +631,17 @@ function openUserProfileFull(userId) {
 `;
             
             document.body.appendChild(modal);
-            modal.classList.remove('hidden');
+          modal.classList.remove('hidden');
+
+// Принудительное применение компактных стилей для вкладок
+setTimeout(function() {
+    var tabs = document.querySelectorAll('#user-profile-modal .profile-tab-btn');
+    tabs.forEach(function(tab) {
+        tab.style.padding = '8px 4px';
+        tab.style.fontSize = '12px';
+    });
+}, 10);
+            
             
             // ПРИНУДИТЕЛЬНО УСТАНАВЛИВАЕМ АВАТАРКУ
             setTimeout(function() {
