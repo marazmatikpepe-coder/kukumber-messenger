@@ -5139,3 +5139,36 @@ body.night-mode #user-profile-modal .profile-close-btn:hover {
         font-size: 17px;
     }
 }
+/* ========== ИСПРАВЛЕНИЕ БАННЕРА В ПРОФИЛЕ ========== */
+
+#user-profile-modal .profile-banner {
+    height: 110px !important;
+    min-height: 110px !important;
+    max-height: 110px !important;
+    width: 100% !important;
+    position: relative;
+    flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    border-radius: 28px 28px 0 0 !important;
+    overflow: hidden;
+}
+
+/* Если баннер - цвет, а не картинка */
+#user-profile-modal .profile-banner[style*="background:"] {
+    background-size: auto !important;
+}
+
+/* Убираем лишние отступы */
+#user-profile-modal .profile-modal-content {
+    overflow: hidden;
+    border-radius: 28px;
+}
+
+/* Аватар не должен вылезать за баннер */
+#user-profile-modal .profile-avatar-wrapper {
+    margin-top: -50px;
+    position: relative;
+    z-index: 15;
+}
