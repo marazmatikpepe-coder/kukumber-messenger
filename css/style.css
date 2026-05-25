@@ -4516,30 +4516,44 @@ body.night-mode #nav-settings:not(.active) #settings-icon {
 
 .bottom-nav {
     height: 70px;
-    background: var(--background);
-    border-top: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
     display: flex;
-    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-around;
     position: relative;
     z-index: 10;
-    padding-bottom: env(safe-area-inset-bottom, 8px);
+    padding-bottom: env(safe-area-inset-bottom, 10px);
 }
 
-/* Тёмная тема */
 body.night-mode .bottom-nav {
-    background: #1e1e1e;
-    border-top-color: #3a3a3a;
+    background: rgba(20, 20, 30, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.nav-item {
+.nav-item-wrapper {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.nav-item {
     background: none;
     border: none;
     cursor: pointer;
-    transition: transform 0.1s ease;
+    padding: 10px;
+    transition: transform 0.15s ease;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .nav-item:active {
@@ -4553,12 +4567,26 @@ body.night-mode .bottom-nav {
 }
 
 .nav-icon img {
-    width: 40px !important;
-    height: 40px !important;
     object-fit: contain;
-    transition: filter 0.2s ease;
 }
 
+/* Плавающий овал (не круг!) */
+.nav-indicator {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    height: 45px;
+    border-radius: 25px;
+    background: var(--forest);
+    opacity: 0.2;
+    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    z-index: 1;
+    pointer-events: none;
+}
+
+body.night-mode .nav-indicator {
+    opacity: 0.3;
+}
 /* ========== ИКОНКА ЧАТОВ ========== */
 #nav-chats .nav-icon img {
     filter: brightness(0.4);
