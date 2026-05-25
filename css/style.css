@@ -4608,50 +4608,74 @@ body.night-mode .bottom-nav {
     display: flex;
     flex-direction: column;
     background: white;
+    position: relative;
 }
 
-/* Баннер - уменьшаем высоту */
+/* Баннер - теперь виден! */
 #user-profile-modal .profile-banner {
-    height: 100px;
+    height: 110px;
     position: relative;
     flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
 }
 
-/* Аватар - чуть меньше и выше */
+/* Аватар - не обрезается, правильно позиционирован */
 #user-profile-modal .profile-avatar-wrapper {
     display: flex;
     justify-content: center;
-    margin-top: -45px;
+    margin-top: -50px;
     position: relative;
     z-index: 15;
+    padding-bottom: 0;
 }
 
 #user-profile-modal .profile-avatar {
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
-    border: 3px solid white;
+    border: 4px solid white;
     background: var(--sage);
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 40px;
     position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
+/* Убираем лишние элементы, которые могут мешать */
+#user-profile-modal .profile-avatar::before,
+#user-profile-modal .profile-avatar::after {
+    display: none !important;
+}
+
+/* Кнопка редактирования аватара */
 #user-profile-modal .profile-avatar-edit-btn {
     position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 24px;
-    height: 24px;
-    font-size: 11px;
+    bottom: 4px;
+    right: 4px;
+    background: var(--forest);
+    border: none;
+    color: white;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
 }
 
-/* Информация о пользователе - компактнее */
+/* Информация о пользователе */
 #user-profile-modal .profile-info {
     text-align: center;
-    padding: 10px 16px 12px;
+    padding: 12px 16px 16px;
 }
 
 #user-profile-modal .profile-name {
@@ -4661,43 +4685,70 @@ body.night-mode .bottom-nav {
 }
 
 #user-profile-modal .profile-username {
-    font-size: 12px;
-    margin: 2px 0;
+    font-size: 13px;
+    margin: 4px 0;
+    color: var(--text-muted);
 }
 
 #user-profile-modal .profile-subscribers {
     font-size: 12px;
     margin: 4px 0;
+    color: var(--text-light);
 }
 
 #user-profile-modal .profile-status {
-    font-size: 11px;
-    margin: 2px 0;
+    font-size: 12px;
+    margin: 4px 0;
 }
 
 #user-profile-modal .profile-bio {
-    margin-top: 8px;
-    padding: 8px 12px;
+    margin-top: 10px;
+    padding: 10px 12px;
     font-size: 13px;
-    max-height: 60px;
+    background: var(--background);
+    border-radius: 16px;
+    text-align: left;
+    max-height: 70px;
     overflow-y: auto;
 }
 
-/* Кнопки действий - компактнее */
+/* Кнопки действий */
 #user-profile-modal .profile-name-row {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 #user-profile-modal .profile-subscribe-btn,
 #user-profile-modal .profile-notify-btn,
 #user-profile-modal .profile-chat-btn {
-    padding: 6px 14px;
-    font-size: 12px;
+    padding: 7px 16px;
+    font-size: 13px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#user-profile-modal .profile-subscribe-btn {
+    background: var(--forest);
+    color: white;
+    border: none;
+}
+
+#user-profile-modal .profile-notify-btn {
+    background: var(--background);
+    border: 1px solid var(--border);
+    font-size: 16px;
+    padding: 7px 14px;
+}
+
+#user-profile-modal .profile-chat-btn {
+    background: var(--forest);
+    color: white;
+    border: none;
 }
 
 /* Вкладки */
@@ -4712,20 +4763,34 @@ body.night-mode .bottom-nav {
     flex: 1;
     padding: 10px;
     font-size: 13px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-light);
+}
+
+#user-profile-modal .profile-tab-btn.active {
+    color: var(--forest);
+    border-bottom: 2px solid var(--forest);
 }
 
 /* Контент с постами - прокручивается */
 #user-profile-modal .profile-content {
     padding: 12px;
-    max-height: 400px;
+    max-height: 380px;
     overflow-y: auto;
     flex: 1;
+    background: var(--background);
 }
 
 /* Карточки постов внутри профиля */
 #user-profile-modal .profile-slice-card {
     margin-bottom: 12px;
     border-radius: 16px;
+    background: white;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 #user-profile-modal .profile-slice-card .slice-header {
@@ -4753,15 +4818,12 @@ body.night-mode .bottom-nav {
 
 #user-profile-modal .profile-slice-card .slice-media img {
     max-height: 200px;
+    width: 100%;
+    object-fit: contain;
 }
 
 #user-profile-modal .profile-slice-card .slice-actions {
     padding: 8px 12px;
-}
-
-#user-profile-modal .profile-slice-card .slice-action-btn {
-    font-size: 13px;
-    gap: 4px;
 }
 
 /* Для мобильных устройств */
@@ -4772,21 +4834,20 @@ body.night-mode .bottom-nav {
     }
     
     #user-profile-modal .profile-banner {
-        height: 80px;
+        height: 90px;
     }
     
     #user-profile-modal .profile-avatar-wrapper {
-        margin-top: -40px;
+        margin-top: -42px;
     }
     
     #user-profile-modal .profile-avatar {
-        width: 70px;
-        height: 70px;
-        font-size: 35px;
+        width: 80px;
+        height: 80px;
     }
     
     #user-profile-modal .profile-info {
-        padding: 8px 12px 10px;
+        padding: 10px 12px 12px;
     }
     
     #user-profile-modal .profile-name {
@@ -4794,12 +4855,8 @@ body.night-mode .bottom-nav {
     }
     
     #user-profile-modal .profile-content {
-        max-height: 350px;
+        max-height: 340px;
         padding: 10px;
-    }
-    
-    #user-profile-modal .profile-slice-card {
-        margin-bottom: 10px;
     }
 }
 
@@ -4814,4 +4871,8 @@ body.night-mode #user-profile-modal .profile-bio {
 
 body.night-mode #user-profile-modal .profile-slice-card {
     background: #2a2a2a;
+}
+
+body.night-mode #user-profile-modal .profile-content {
+    background: #121212;
 }
