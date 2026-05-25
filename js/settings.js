@@ -837,7 +837,7 @@ function setSimpleTheme(colorKey) {
         btn.style.background = gradient;
     });
     
-    // ========== ОБНОВЛЕНИЕ ИКОНКИ НАСТРОЕК ==========
+    // Обновление иконки настроек
     var settingsIcon = document.getElementById('settings-icon');
     if (settingsIcon) {
         var iconUrls = {
@@ -851,11 +851,9 @@ function setSimpleTheme(colorKey) {
             turquoise: 'https://i.ibb.co/VcpzCM19/image.png'
         };
         
-        // Меняем саму картинку иконки
         var newIconUrl = iconUrls[colorKey] || 'https://i.ibb.co/jk3xSxs6/image.png';
         settingsIcon.src = newIconUrl;
         
-        // Если вкладка настроек активна, применяем цветной фильтр
         var settingsNav = document.getElementById('nav-settings');
         if (settingsNav && settingsNav.classList.contains('active')) {
             settingsIcon.style.filter = 'brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)';
@@ -866,9 +864,6 @@ function setSimpleTheme(colorKey) {
         }
     }
     
-    renderThemesGrid();
-    showNotification('Тема "' + theme.name + '" применена', 'success');
-}
     renderThemesGrid();
     showNotification('Тема "' + theme.name + '" применена', 'success');
 }
