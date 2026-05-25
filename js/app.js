@@ -2451,3 +2451,15 @@ window.addEventListener('load', function() {
         moveNavIndicator(currentTab);
     }, 100);
 });
+// При загрузке страницы
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        updateBottomIcons();
+        updateIndicatorColor();
+        if (currentTab) {
+            moveNavIndicator(currentTab);
+        } else {
+            moveNavIndicator('chats');
+        }
+    }, 100);
+});
