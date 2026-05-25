@@ -587,46 +587,47 @@ function openUserProfileFull(userId) {
             modal.id = 'user-profile-modal';
             modal.className = 'modal';
             modal.style.zIndex = '10001';
+            
+            // НОВАЯ СТРУКТУРА С ПРОКРУТКОЙ
             modal.innerHTML = `
                 <div class="profile-modal-content">
                     <div class="profile-banner" id="profile-banner" style="${bannerStyle}">
                         ${canEdit ? '<button class="profile-banner-edit-btn" onclick="editProfileBanner()">✏️</button>' : ''}
                         <button class="profile-close-btn" onclick="closeProfileModal()">×</button>
                     </div>
-                    <div class="profile-avatar-wrapper">
-                       <div class="profile-avatar ${!userAvatar ? 'default-avatar-user' : ''}" id="profile-avatar" style="${userAvatar ? 'background-image: url('+userAvatar+'); background-size: cover;' : ''}">
-                            ${canEdit ? '<button class="profile-avatar-edit-btn" onclick="editProfileAvatar()">✏️</button>' : ''}
+                    <div class="profile-scrollable">
+                        <div class="profile-avatar-wrapper">
+                            <div class="profile-avatar ${!userAvatar ? 'default-avatar-user' : ''}" id="profile-avatar" style="${userAvatar ? 'background-image: url('+userAvatar+'); background-size: cover;' : ''}">
+                                ${canEdit ? '<button class="profile-avatar-edit-btn" onclick="editProfileAvatar()">✏️</button>' : ''}
+                            </div>
                         </div>
-                    </div>
-                   <div class="profile-info">
-    <div class="profile-name-row">
-        <div style="display: flex; align-items: center; gap: 5px;">
-            <h2 class="profile-name" id="profile-name" ${canEdit ? 'ondblclick="editProfileName()" style="cursor:pointer;"' : ''}>${escapeHtml(userName)}</h2>
-            ${userVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:18px; height:18px; cursor:pointer;" onclick="showVerifiedInfo()">' : ''}
-            ${isAdmin ? '<button onclick="toggleUserVerification(\''+userId+'\')" style="background:none; border:none; cursor:pointer; font-size:14px;">🔘 ' + (userVerified ? 'Снять галочку' : 'Выдать галочку') + '</button>' : ''}
-        </div>
-       ${isOwnProfile ? '' : `
-    <div style="display: flex; gap: 10px; justify-content: center; margin: 15px 0;">
-        <button class="profile-subscribe-btn" id="profile-subscribe-btn" onclick="toggleSubscription()">Подписаться</button>
-        <button class="profile-notify-btn" id="profile-notify-btn" onclick="toggleNotifications()">🔔</button>
-        <button class="profile-chat-btn" onclick="startPrivateChatFromProfile('${userId}')" style="padding: 8px 16px; background: var(--forest); border: none; border-radius: 30px; color: white; cursor: pointer;">💬 Написать</button>
-    </div>
-`}
-    </div>
-    <!-- ↓↓↓ ДОБАВЛЕНА СТРОКА С ЮЗЕРНЕЙМОМ ↓↓↓ -->
-  <div class="profile-username" ${canEdit ? 'ondblclick="editProfileUserTag()" style="cursor:pointer;"' : ''}>${escapeHtml(userTag)}</div>
-    <!-- ↑↑↑ ↑↑↑ -->
-    <div class="profile-subscribers">👥 ${subscribersCount} подписчиков</div>
-    <div class="profile-status">${statusText}</div>
-    <p class="profile-bio" id="profile-bio" ${canEdit ? 'ondblclick="editProfileBio()" style="cursor:pointer;"' : ''}>${escapeHtml(userBio)}</p>
-</div>
-                       
-                    <div class="profile-tabs">
-                        <button class="profile-tab-btn active" onclick="switchProfileTab('posts', '${userId}')">📷 Посты</button>
-                        <button class="profile-tab-btn" onclick="switchProfileTab('reposts', '${userId}')">🔄 Репосты</button>
-                    </div>
-                    <div id="profile-content" class="profile-content">
-                        <div class="profile-loading">Загрузка...</div>
+                        <div class="profile-info">
+                            <div class="profile-name-row">
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <h2 class="profile-name" id="profile-name" ${canEdit ? 'ondblclick="editProfileName()" style="cursor:pointer;"' : ''}>${escapeHtml(userName)}</h2>
+                                    ${userVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:16px; height:16px; cursor:pointer;" onclick="showVerifiedInfo()">' : ''}
+                                    ${isAdmin ? '<button onclick="toggleUserVerification(\''+userId+'\')" style="background:none; border:none; cursor:pointer; font-size:12px;">🔘 ' + (userVerified ? 'Снять галочку' : 'Выдать галочку') + '</button>' : ''}
+                                </div>
+                                ${isOwnProfile ? '' : `
+                                    <div style="display: flex; gap: 8px; justify-content: center; margin: 10px 0;">
+                                        <button class="profile-subscribe-btn" id="profile-subscribe-btn" onclick="toggleSubscription()">Подписаться</button>
+                                        <button class="profile-notify-btn" id="profile-notify-btn" onclick="toggleNotifications()">🔔</button>
+                                        <button class="profile-chat-btn" onclick="startPrivateChatFromProfile('${userId}')">💬 Написать</button>
+                                    </div>
+                                `}
+                            </div>
+                            <div class="profile-username" ${canEdit ? 'ondblclick="editProfileUserTag()" style="cursor:pointer;"' : ''}>${escapeHtml(userTag)}</div>
+                            <div class="profile-subscribers">👥 ${subscribersCount} подписчиков</div>
+                            <div class="profile-status">${statusText}</div>
+                            <div class="profile-bio" id="profile-bio" ${canEdit ? 'ondblclick="editProfileBio()" style="cursor:pointer;"' : ''}>${escapeHtml(userBio)}</div>
+                        </div>
+                        <div class="profile-tabs">
+                            <button class="profile-tab-btn active" onclick="switchProfileTab('posts', '${userId}')">📷 Посты</button>
+                            <button class="profile-tab-btn" onclick="switchProfileTab('reposts', '${userId}')">🔄 Репосты</button>
+                        </div>
+                        <div id="profile-content" class="profile-content">
+                            <div class="profile-loading">Загрузка...</div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -643,7 +644,6 @@ function openUserProfileFull(userId) {
         });
     });
 }
-
 function checkSubscriptionStatus(userId) {
     database.ref('subscriptions/' + currentUser.uid + '/' + userId).once('value').then(function(snap) {
         var isSubscribed = snap.exists();
