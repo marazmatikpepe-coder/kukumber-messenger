@@ -94,20 +94,41 @@ function loadUserData() {
             
             // Загружаем чаты
             if (typeof loadChats === 'function') {
-                setTimeout(function() { loadChats(); }, 500);
+                setTimeout(function() { 
+                    loadChats(); 
+                }, 500);
             }
             
             // Загружаем слайсы
             setTimeout(function() {
-                if (typeof loadSlices === 'function') loadSlices();
+                if (typeof loadSlices === 'function') {
+                    loadSlices();
+                }
             }, 300);
+            
+            // Запускаем слушатель входящих звонков
+            if (typeof listenForIncomingCalls === 'function') {
+                setTimeout(function() {
+                    console.log('📞 Запуск слушателя звонков...');
+                    listenForIncomingCalls();
+                }, 1000);
+            }
             
             // Push-уведомления
             if (typeof requestNotificationPermission === 'function') {
                 setTimeout(function() {
                     requestNotificationPermission();
-                    setupForegroundMessages();
+                    if (typeof setupForegroundMessages === 'function') {
+                        setupForegroundMessages();
+                    }
                 }, 2000);
+            }
+            
+            // Обновляем иконки нижней навигации
+            if (typeof updateBottomIcons === 'function') {
+                setTimeout(function() {
+                    updateBottomIcons();
+                }, 500);
             }
         }
     }).catch(function(err) {
@@ -119,6 +140,7 @@ function loadUserData() {
         if (mainScreen) mainScreen.classList.add('hidden');
         var loading = document.getElementById('loading-screen');
         if (loading) loading.style.display = 'none';
+        showNotification('Ошибка загрузки данных пользователя', 'error');
     });
 }
 function checkSuperAdmin() {
