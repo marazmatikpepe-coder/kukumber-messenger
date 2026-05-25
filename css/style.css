@@ -5172,3 +5172,14 @@ body.night-mode #user-profile-modal .profile-close-btn:hover {
     position: relative;
     z-index: 15;
 }
+/* Принудительные фиксы для баннера */
+#user-profile-modal .profile-banner {
+    height: 110px !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+}
+
+#user-profile-modal .profile-banner[style*="background-image"] {
+    background-size: cover !important;
+}
