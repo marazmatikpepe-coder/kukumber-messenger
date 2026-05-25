@@ -329,15 +329,24 @@ async function updateChatHeader(chatId, chatData) {
     var chatUsername = document.getElementById('chat-username');
     var chatStatus = document.getElementById('chat-status');
     var chatAvatar = document.getElementById('chat-avatar');
+    var callButtons = document.querySelectorAll('.chat-actions .call-btn');
+    var backBtn = document.querySelector('.chat-header .back-btn');
     
     if (!chatUsername) return;
     
+    // Сбрасываем аватар
     if (chatAvatar) {
         chatAvatar.style.backgroundImage = '';
         chatAvatar.textContent = '';
         chatAvatar.classList.remove('default-avatar-user', 'default-avatar-group', 'default-avatar-channel');
     }
     
+    // Скрываем кнопки звонков по умолчанию
+    callButtons.forEach(function(btn) {
+        btn.style.display = 'none';
+    });
+    
+    // ГРУППА
     if (chatData.type === 'group') {
         chatUsername.textContent = chatData.name || 'Группа';
         if (chatStatus) {
@@ -349,11 +358,11 @@ async function updateChatHeader(chatId, chatData) {
                 chatAvatar.style.backgroundImage = 'url(' + chatData.avatar + ')';
                 chatAvatar.style.backgroundSize = 'cover';
             } else {
-                chatAvatar.textContent = '';
                 chatAvatar.classList.add('default-avatar-group');
             }
         }
     } 
+    // КАНАЛ
     else if (chatData.type === 'channel') {
         chatUsername.textContent = chatData.name || 'Канал';
         if (chatStatus) {
@@ -365,12 +374,18 @@ async function updateChatHeader(chatId, chatData) {
                 chatAvatar.style.backgroundImage = 'url(' + chatData.avatar + ')';
                 chatAvatar.style.backgroundSize = 'cover';
             } else {
-                chatAvatar.textContent = '';
                 chatAvatar.classList.add('default-avatar-channel');
             }
         }
     } 
+    // ЛИЧНЫЙ ЧАТ
     else {
+        // ПОКАЗЫВАЕМ КНОПКИ ЗВОНКОВ
+        callButtons.forEach(function(btn) {
+            btn.style.display = 'flex';
+        });
+        
+        // Находим ID собеседника
         var otherUserId = null;
         if (chatData.participants) {
             for (var i = 0; i < chatData.participants.length; i++) {
@@ -382,32 +397,63 @@ async function updateChatHeader(chatId, chatData) {
         }
         
         if (otherUserId) {
-            window.currentChatData.otherUserId = otherUserId;
-            var userData = await getUserData(otherUserId);
-            chatUsername.textContent = userData.username;
-            if (chatStatus) {
-                chatStatus.innerHTML = userData.status.online ? 'в сети' : formatLastSeen(userData.status.lastSeen);
+            // Сохраняем ID собеседника в глобальную переменную
+            if (window.currentChatData) {
+                window.currentChatData.otherUserId = otherUserId;
             }
+            
+            // Получаем данные пользователя
+            var userData = await getUserData(otherUserId);
+            chatUsername.textContent = userData.username || 'Пользователь';
+            
+            // Статус (онлайн/оффлайн)
+            if (chatStatus) {
+                if (userData.status && userData.status.online === true) {
+                    chatStatus.innerHTML = '🟢 в сети';
+                    chatStatus.style.color = '#32CD32';
+                } else {
+                    var lastSeenText = formatLastSeen(userData.status?.lastSeen);
+                    chatStatus.innerHTML = '⚫ ' + lastSeenText;
+                    chatStatus.style.color = '#888';
+                }
+            }
+            
+            // Аватар
             if (chatAvatar) {
                 if (userData.avatar) {
                     chatAvatar.style.backgroundImage = 'url(' + userData.avatar + ')';
                     chatAvatar.style.backgroundSize = 'cover';
                 } else {
-                    chatAvatar.textContent = '';
                     chatAvatar.classList.add('default-avatar-user');
                 }
             }
         } else {
             chatUsername.textContent = 'Пользователь';
             if (chatStatus) chatStatus.textContent = 'неизвестно';
-            if (chatAvatar) {
-                chatAvatar.textContent = '';
-                chatAvatar.classList.add('default-avatar-user');
-            }
+            if (chatAvatar) chatAvatar.classList.add('default-avatar-user');
         }
     }
+    
+    // Настраиваем клик по шапке для открытия профиля
+    if (backBtn) {
+        backBtn.onclick = function() {
+            if (typeof closeChat === 'function') closeChat();
+        };
+    }
+    
+    var chatUserInfo = document.querySelector('.chat-user-info');
+    if (chatUserInfo) {
+        // Убираем старый обработчик
+        var newUserInfo = chatUserInfo.cloneNode(true);
+        chatUserInfo.parentNode.replaceChild(newUserInfo, chatUserInfo);
+        newUserInfo.style.cursor = 'pointer';
+        newUserInfo.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openChatProfile();
+        };
+    }
 }
-
 // ========== НАСТРОЙКА КЛИКА ПО ШАПКЕ ==========
 function setupChatHeaderClick() {
     var chatUserInfo = document.querySelector('.chat-user-info');
