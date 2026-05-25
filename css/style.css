@@ -5514,3 +5514,91 @@ body.night-mode #user-profile-modal .profile-avatar.default-avatar-user {
         height: 70px;
     }
 }
+/* ========== КОМПАКТНЫЕ ВКЛАДКИ В ПРОФИЛЕ ========== */
+
+#user-profile-modal .profile-tabs {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: inherit;
+}
+
+#user-profile-modal .profile-tab-btn {
+    flex: 1;
+    padding: 10px 5px;
+    font-size: 13px;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    color: var(--text-light);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+#user-profile-modal .profile-tab-btn.active {
+    color: var(--forest);
+    border-bottom: 2px solid var(--forest);
+    margin-bottom: -1px;
+}
+
+/* Убираем лишние отступы в контейнере */
+#user-profile-modal .profile-content {
+    padding: 8px;
+}
+
+/* Делаем карточки постов компактнее */
+#user-profile-modal .profile-slice-card {
+    margin-bottom: 8px;
+    border-radius: 12px;
+}
+
+#user-profile-modal .profile-slice-card .slice-header {
+    padding: 8px 10px;
+}
+
+#user-profile-modal .profile-slice-card .slice-author .avatar {
+    width: 32px;
+    height: 32px;
+}
+
+#user-profile-modal .profile-slice-card .slice-author-name {
+    font-size: 13px;
+}
+
+#user-profile-modal .profile-slice-card .slice-text {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+#user-profile-modal .profile-slice-card .slice-media img {
+    max-height: 140px;
+}
+
+#user-profile-modal .profile-slice-card .slice-actions {
+    padding: 6px 10px;
+}
+
+#user-profile-modal .profile-slice-card .slice-action-btn {
+    font-size: 12px;
+    gap: 4px;
+}
+
+/* Для мобильных устройств */
+@media (max-width: 600px) {
+    #user-profile-modal .profile-tab-btn {
+        padding: 8px 4px;
+        font-size: 12px;
+    }
+    
+    #user-profile-modal .profile-content {
+        padding: 6px;
+    }
+    
+    #user-profile-modal .profile-slice-card {
+        margin-bottom: 6px;
+    }
+}
