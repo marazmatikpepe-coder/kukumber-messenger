@@ -4912,3 +4912,230 @@ body.night-mode #user-profile-modal .profile-close-btn {
 body.night-mode #user-profile-modal .profile-close-btn:hover {
     background: rgba(255, 255, 255, 0.3);
 }
+/* ========== ПРОФИЛЬ С ПРОКРУТКОЙ ========== */
+
+/* Модальное окно профиля */
+#user-profile-modal .profile-modal-content {
+    max-width: 450px;
+    width: 90%;
+    height: 85vh;
+    max-height: 85vh;
+    border-radius: 28px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    position: relative;
+}
+
+/* Основной контент с прокруткой */
+#user-profile-modal .profile-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Баннер */
+#user-profile-modal .profile-banner {
+    height: 100px;
+    position: relative;
+    flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Аватар */
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: -45px;
+    position: relative;
+    z-index: 15;
+    flex-shrink: 0;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: var(--sage);
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Информация о пользователе - компактно */
+#user-profile-modal .profile-info {
+    text-align: center;
+    padding: 10px 16px 12px;
+    flex-shrink: 0;
+}
+
+#user-profile-modal .profile-name {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+}
+
+#user-profile-modal .profile-username {
+    font-size: 12px;
+    margin: 3px 0;
+    color: var(--text-muted);
+}
+
+#user-profile-modal .profile-subscribers {
+    font-size: 11px;
+    margin: 3px 0;
+    color: var(--text-light);
+}
+
+#user-profile-modal .profile-status {
+    font-size: 11px;
+    margin: 3px 0;
+}
+
+#user-profile-modal .profile-bio {
+    margin-top: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    background: var(--background);
+    border-radius: 14px;
+    text-align: left;
+    max-height: 50px;
+    overflow-y: auto;
+}
+
+/* Кнопки действий */
+#user-profile-modal .profile-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+#user-profile-modal .profile-subscribe-btn,
+#user-profile-modal .profile-notify-btn,
+#user-profile-modal .profile-chat-btn {
+    padding: 5px 14px;
+    font-size: 12px;
+    border-radius: 30px;
+}
+
+/* Вкладки - приклеенные сверху */
+#user-profile-modal .profile-tabs {
+    display: flex;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    background: inherit;
+    z-index: 5;
+}
+
+#user-profile-modal .profile-tab-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 13px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Контент с постами */
+#user-profile-modal .profile-content {
+    padding: 12px;
+    flex: 1;
+}
+
+/* Карточки постов внутри профиля - компактнее */
+#user-profile-modal .profile-slice-card {
+    margin-bottom: 10px;
+    border-radius: 14px;
+}
+
+#user-profile-modal .profile-slice-card .slice-header {
+    padding: 6px 10px;
+}
+
+#user-profile-modal .profile-slice-card .slice-author .avatar {
+    width: 32px;
+    height: 32px;
+}
+
+#user-profile-modal .profile-slice-card .slice-author-name {
+    font-size: 12px;
+}
+
+#user-profile-modal .profile-slice-card .slice-text {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+#user-profile-modal .profile-slice-card .slice-media img {
+    max-height: 150px;
+}
+
+#user-profile-modal .profile-slice-card .slice-actions {
+    padding: 6px 10px;
+}
+
+/* Кнопка закрытия */
+#user-profile-modal .profile-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+/* Для мобильных */
+@media (max-width: 600px) {
+    #user-profile-modal .profile-modal-content {
+        width: 95%;
+        height: 90vh;
+        max-height: 90vh;
+    }
+    
+    #user-profile-modal .profile-banner {
+        height: 85px;
+    }
+    
+    #user-profile-modal .profile-avatar-wrapper {
+        margin-top: -38px;
+    }
+    
+    #user-profile-modal .profile-avatar {
+        width: 75px;
+        height: 75px;
+    }
+    
+    #user-profile-modal .profile-info {
+        padding: 8px 12px 10px;
+    }
+    
+    #user-profile-modal .profile-name {
+        font-size: 17px;
+    }
+}
