@@ -2357,22 +2357,27 @@ function updateBottomIcons(activeTab) {
     }
 }
 // Функция перемещения плавающего индикатора
+// Функция перемещения плавающего овала
 function moveNavIndicator(activeTab) {
     var indicator = document.getElementById('nav-indicator');
     var activeWrapper = document.getElementById('nav-' + activeTab + '-wrapper');
+    var activeButton = document.getElementById('nav-' + activeTab);
     
-    if (!indicator || !activeWrapper) return;
+    if (!indicator || !activeWrapper || !activeButton) return;
     
+    // Получаем позиции
     var wrapperRect = activeWrapper.getBoundingClientRect();
     var navRect = document.querySelector('.bottom-nav').getBoundingClientRect();
+    var buttonRect = activeButton.getBoundingClientRect();
     
-    var leftPos = wrapperRect.left - navRect.left;
-    var wrapperWidth = wrapperRect.width;
+    // Вычисляем левую позицию овала (по центру кнопки)
+    var leftPos = buttonRect.left - navRect.left;
+    // Ширина овала = ширина кнопки + небольшие отступы
+    var ovalWidth = buttonRect.width + 16;
     
-    indicator.style.left = leftPos + (wrapperWidth - 45) / 2 + 'px';
-    indicator.style.width = '45px';
+    indicator.style.left = (leftPos - 8) + 'px';
+    indicator.style.width = ovalWidth + 'px';
 }
-
 // Обновление иконок в зависимости от темы (без цветных версий)
 function updateBottomIcons() {
     var chatsIcon = document.getElementById('chats-icon');
