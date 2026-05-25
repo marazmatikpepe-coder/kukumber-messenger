@@ -2301,84 +2301,31 @@ if ('serviceWorker' in navigator) {
 }
 // Функция обновления иконок в зависимости от активной вкладки и темы
 // Функция обновления иконок в зависимости от активной вкладки и темы
-function updateBottomIcons(activeTab) {
+// Обновление иконок в зависимости от темы
+function updateBottomIcons() {
     var chatsIcon = document.getElementById('chats-icon');
     var settingsIcon = document.getElementById('settings-icon');
-    var currentTheme = localStorage.getItem('kukumber_theme_color') || 'green';
+    var isNightMode = document.body.classList.contains('night-mode');
     
-    // Карта иконок для настроек (цветные)
-    var settingsIcons = {
-        green: 'https://i.ibb.co/jqQLgDS/image.png',
-        blue: 'https://i.ibb.co/zWH2jDV0/image.png',
-        red: 'https://i.ibb.co/rGMDRT5V/image.png',
-        orange: 'https://i.ibb.co/zW1q8Fkr/image.png',
-        pink: 'https://i.ibb.co/845jyMh2/image.png',
-        purple: 'https://i.ibb.co/wFm4nt68/image.png',
-        yellow: 'https://i.ibb.co/twC08Pv1/image.png',
-        turquoise: 'https://i.ibb.co/Tx5pkzFx/image.png'
-    };
-    
-    // Карта иконок для чатов (цветные)
-    var chatsIcons = {
-        green: 'https://i.ibb.co/jqQLgDS/image.png',
-        blue: 'https://i.ibb.co/zWH2jDV0/image.png',
-        red: 'https://i.ibb.co/rGMDRT5V/image.png',
-        orange: 'https://i.ibb.co/zW1q8Fkr/image.png',
-        pink: 'https://i.ibb.co/845jyMh2/image.png',
-        purple: 'https://i.ibb.co/wFm4nt68/image.png',
-        yellow: 'https://i.ibb.co/twC08Pv1/image.png',
-        turquoise: 'https://i.ibb.co/Tx5pkzFx/image.png'
-    };
-    
-    // ИКОНКА ЧАТОВ
-    if (activeTab === 'chats') {
-        // Активная вкладка - цветная иконка в зависимости от темы
-        chatsIcon.src = chatsIcons[currentTheme] || chatsIcons.green;
-    } else {
-        // Неактивная - серая версия (дневная/ночная)
-        if (document.body.classList.contains('night-mode')) {
-            chatsIcon.src = 'https://i.ibb.co/FqHLPx9X/image.png';
-        } else {
-            chatsIcon.src = 'https://i.ibb.co/DP3FSmvR/image.png';
-        }
+    if (chatsIcon) {
+        chatsIcon.src = isNightMode 
+            ? 'https://i.ibb.co/n8PNWgTB/image.png' 
+            : 'https://i.ibb.co/DP3FSmvR/image.png';
     }
     
-    // ИКОНКА НАСТРОЕК
-    if (activeTab === 'settings') {
-        // Активная вкладка - цветная иконка в зависимости от темы
-        settingsIcon.src = settingsIcons[currentTheme] || settingsIcons.green;
-    } else {
-        // Неактивная - серая версия (дневная/ночная)
-        if (document.body.classList.contains('night-mode')) {
-            settingsIcon.src = 'https://i.ibb.co/FqHLPx9X/image.png';
-        } else {
-            settingsIcon.src = 'https://i.ibb.co/DP3FSmvR/image.png';
-        }
+    if (settingsIcon) {
+        settingsIcon.src = isNightMode 
+            ? 'https://i.ibb.co/9389n86D/image.png' 
+            : 'https://i.ibb.co/jk3xSxs6/image.png';
     }
 }
-// Функция перемещения плавающего индикатора
-// Функция перемещения плавающего овала
-function moveNavIndicator(activeTab) {
-    var indicator = document.getElementById('nav-indicator');
-    var activeWrapper = document.getElementById('nav-' + activeTab + '-wrapper');
-    var activeButton = document.getElementById('nav-' + activeTab);
-    
-    if (!indicator || !activeWrapper || !activeButton) return;
-    
-    // Получаем позиции
-    var wrapperRect = activeWrapper.getBoundingClientRect();
-    var navRect = document.querySelector('.bottom-nav').getBoundingClientRect();
-    var buttonRect = activeButton.getBoundingClientRect();
-    
-    // Вычисляем левую позицию овала (по центру кнопки)
-    var leftPos = buttonRect.left - navRect.left;
-    // Ширина овала = ширина кнопки + небольшие отступы
-    var ovalWidth = buttonRect.width + 16;
-    
-    indicator.style.left = (leftPos - 8) + 'px';
-    indicator.style.width = ovalWidth + 'px';
-}
-// Обновление иконок в зависимости от темы (без цветных версий)
+
+// Вызов при загрузке
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        updateBottomIcons();
+    }, 100);
+});
 function updateBottomIcons() {
     var chatsIcon = document.getElementById('chats-icon');
     var settingsIcon = document.getElementById('settings-icon');
@@ -2425,41 +2372,3 @@ function switchToTab(tabName) {
 }
 
 // Обновление цвета индикатора при смене темы
-function updateIndicatorColor() {
-    var indicator = document.getElementById('nav-indicator');
-    var currentTheme = localStorage.getItem('kukumber_theme_color') || 'green';
-    var themeColors = {
-        green: '#228B22',
-        blue: '#1E90FF',
-        red: '#DC143C',
-        orange: '#FF8C00',
-        pink: '#FF69B4',
-        purple: '#8A2BE2',
-        yellow: '#FFD700',
-        turquoise: '#008080'
-    };
-    if (indicator) {
-        indicator.style.background = themeColors[currentTheme] || '#228B22';
-    }
-}
-
-// При загрузке страницы
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        updateBottomIcons();
-        updateIndicatorColor();
-        moveNavIndicator(currentTab);
-    }, 100);
-});
-// При загрузке страницы
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        updateBottomIcons();
-        updateIndicatorColor();
-        if (currentTab) {
-            moveNavIndicator(currentTab);
-        } else {
-            moveNavIndicator('chats');
-        }
-    }, 100);
-});
