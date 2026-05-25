@@ -837,31 +837,9 @@ function setSimpleTheme(colorKey) {
         btn.style.background = gradient;
     });
     
-    // Обновление иконки настроек
-    var settingsIcon = document.getElementById('settings-icon');
-    if (settingsIcon) {
-        var iconUrls = {
-            green: 'https://i.ibb.co/kVRp49V3/image.png',
-            red: 'https://i.ibb.co/35nsv1Jj/image.png',
-            orange: 'https://i.ibb.co/NgF7rsS5/image.png',
-            pink: 'https://i.ibb.co/kVRp49V3/image.png',
-            blue: 'https://i.ibb.co/4wJ7KcJ7/image.png',
-            purple: 'https://i.ibb.co/JW98wL2s/image.png',
-            yellow: 'https://i.ibb.co/RG9QJSN2/image.png',
-            turquoise: 'https://i.ibb.co/VcpzCM19/image.png'
-        };
-        
-        var newIconUrl = iconUrls[colorKey] || 'https://i.ibb.co/jk3xSxs6/image.png';
-        settingsIcon.src = newIconUrl;
-        
-        var settingsNav = document.getElementById('nav-settings');
-        if (settingsNav && settingsNav.classList.contains('active')) {
-            settingsIcon.style.filter = 'brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)';
-        } else if (document.body.classList.contains('night-mode')) {
-            settingsIcon.style.filter = 'brightness(0.8) invert(1)';
-        } else {
-            settingsIcon.style.filter = 'brightness(0.35)';
-        }
+    // Обновляем цвет плавающего индикатора
+    if (typeof updateIndicatorColor === 'function') {
+        updateIndicatorColor();
     }
     
     renderThemesGrid();
