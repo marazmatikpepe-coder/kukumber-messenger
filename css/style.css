@@ -5183,3 +5183,70 @@ body.night-mode #user-profile-modal .profile-close-btn:hover {
 #user-profile-modal .profile-banner[style*="background-image"] {
     background-size: cover !important;
 }
+/* ========== АВАТАР ПОВЕРХ БАННЕРА ========== */
+
+#user-profile-modal .profile-banner {
+    height: 110px !important;
+    min-height: 110px !important;
+    max-height: 110px !important;
+    width: 100% !important;
+    position: relative;
+    flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    border-radius: 28px 28px 0 0 !important;
+    z-index: 1;
+}
+
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: -55px !important;
+    position: relative !important;
+    z-index: 20 !important;
+    padding-bottom: 0 !important;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    border: 4px solid white !important;
+    background: var(--sage) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    z-index: 21 !important;
+}
+
+/* Принудительное отображение аватарки, если есть картинка */
+#user-profile-modal .profile-avatar[style*="background-image"] {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    text-indent: -9999px !important;
+}
+
+/* Убираем все возможные :before элементы */
+#user-profile-modal .profile-avatar::before,
+#user-profile-modal .profile-avatar::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Для мобильных */
+@media (max-width: 600px) {
+    #user-profile-modal .profile-avatar-wrapper {
+        margin-top: -45px !important;
+    }
+    #user-profile-modal .profile-avatar {
+        width: 80px !important;
+        height: 80px !important;
+    }
+}
