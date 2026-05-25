@@ -195,6 +195,7 @@ function showMainScreen() {
 function switchToTab(tabName) {
     currentTab = tabName;
     
+    // Скрываем все вкладки
     var tabs = ['chats', 'reels', 'settings'];
     tabs.forEach(function(tab) {
         var tabEl = document.getElementById(tab + '-tab');
@@ -203,23 +204,11 @@ function switchToTab(tabName) {
         if (navEl) navEl.classList.remove('active');
     });
     
+    // Показываем выбранную вкладку
     document.getElementById(tabName + '-tab').classList.remove('hidden');
     document.getElementById('nav-' + tabName).classList.add('active');
     
-    // ========== ОБНОВЛЕНИЕ ИКОНКИ НАСТРОЕК ==========
-    var settingsIcon = document.getElementById('settings-icon');
-    var settingsNav = document.getElementById('nav-settings');
-    
-    if (settingsIcon && settingsNav) {
-        if (tabName === 'settings') {
-            settingsIcon.style.filter = 'brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg)';
-        } else if (document.body.classList.contains('night-mode')) {
-            settingsIcon.style.filter = 'brightness(0.8) invert(1)';
-        } else {
-            settingsIcon.style.filter = 'brightness(0.35)';
-        }
-    }
-    
+    // Загружаем данные
     if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
     if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
     if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
