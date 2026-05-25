@@ -4535,112 +4535,25 @@ body.night-mode .bottom-nav {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.nav-item-wrapper {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 2;
-}
-
-.nav-item {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 10px;
-    transition: transform 0.15s ease;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.nav-item:active {
-    transform: scale(0.92);
-}
-
-.nav-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.nav-icon img {
-    object-fit: contain;
-}
-
-/* Плавающий овал (не круг!) */
-.nav-indicator {
-    position: absolute;
-    bottom: 10px;
-    left: 0;
-    height: 45px;
-    border-radius: 25px;
-    background: var(--forest);
-    opacity: 0.2;
-    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    z-index: 1;
-    pointer-events: none;
-}
-
-body.night-mode .nav-indicator {
-    opacity: 0.3;
-}
-/* ========== ИКОНКА ЧАТОВ ========== */
-#nav-chats .nav-icon img {
-    filter: brightness(0.4);
-}
-
-body.night-mode #nav-chats .nav-icon img {
-    filter: brightness(0.8);
-}
-
-#nav-chats.active .nav-icon img {
-    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
-}
-
-/* ========== ИКОНКА SLICES ========== */
-#reels-icon {
-    filter: none !important;
-}
-
-/* ========== ИКОНКА НАСТРОЕК ========== */
-/* Неактивная вкладка - светлая тема */
-#nav-settings:not(.active) #settings-icon {
-    filter: brightness(0.35);
-}
-
-/* Неактивная вкладка - тёмная тема */
-body.night-mode #nav-settings:not(.active) #settings-icon {
-    filter: brightness(0.8) invert(1);
-}
-
-/* Активная вкладка - цвет темы */
-#nav-settings.active #settings-icon {
-    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
-}
-/* ========== НИЖНЯЯ НАВИГАЦИЯ - СТЕКЛЯННЫЙ ЭФФЕКТ ========== */
+/* ========== НИЖНЯЯ НАВИГАЦИЯ ========== */
 
 .bottom-nav {
-    height: 64px;
-    background: rgba(255, 255, 255, 0.92);
+    height: 76px;
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: space-around;
     flex-shrink: 0;
     position: relative;
     z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom, 8px);
-    transition: all 0.3s ease;
+    padding-bottom: env(safe-area-inset-bottom, 10px);
 }
 
-/* Тёмная тема - тёмный стеклянный эффект */
 body.night-mode .bottom-nav {
-    background: rgba(20, 20, 30, 0.92);
+    background: rgba(20, 20, 30, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -4655,97 +4568,7 @@ body.night-mode .bottom-nav {
     border: none;
     cursor: pointer;
     padding: 8px 0;
-    transition: all 0.2s ease;
-    border-radius: 30px;
-}
-
-.nav-item:active {
-    transform: scale(0.92);
-}
-
-.nav-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.nav-icon img {
-    transition: all 0.2s ease;
-}
-
-/* ========== ИКОНКА ЧАТОВ ========== */
-/* Неактивная - зависит от темы */
-#nav-chats:not(.active) #chats-icon {
-    filter: brightness(0.4);
-}
-
-body.night-mode #nav-chats:not(.active) #chats-icon {
-    filter: brightness(0.8);
-}
-
-/* Активная - цвет темы */
-#nav-chats.active #chats-icon {
-    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
-}
-
-/* ========== ИКОНКА SLICES ========== */
-/* Всегда без фильтров */
-#reels-icon {
-    filter: none !important;
-}
-
-/* ========== ИКОНКА НАСТРОЕК ========== */
-/* Неактивная - светлая тема: тёмно-серая */
-#nav-settings:not(.active) #settings-icon {
-    filter: brightness(0.35);
-}
-
-/* Неактивная - тёмная тема: инвертированная светлая */
-body.night-mode #nav-settings:not(.active) #settings-icon {
-    filter: brightness(0.9) invert(1);
-}
-
-/* Активная вкладка - цвет выбранной темы */
-#nav-settings.active #settings-icon {
-    filter: brightness(0) saturate(100%) invert(39%) sepia(93%) saturate(500%) hue-rotate(80deg) !important;
-}
-/* ========== СТЕКЛЯННАЯ НИЖНЯЯ НАВИГАЦИЯ ========== */
-
-.bottom-nav {
-    height: 70px;
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom, 10px);
-}
-
-/* Тёмная тема */
-body.night-mode .bottom-nav {
-    background: rgba(20, 20, 30, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.nav-item {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 10px 0;
     transition: transform 0.15s ease;
-    border-radius: 40px;
 }
 
 .nav-item:active {
@@ -4759,88 +4582,7 @@ body.night-mode .bottom-nav {
 }
 
 .nav-icon img {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     object-fit: contain;
-    transition: all 0.2s ease;
-}
-#chats-icon {
-    width: 39px;
-    height: 39px;
-}
-/* ========== СТЕКЛЯННАЯ НИЖНЯЯ НАВИГАЦИЯ С АНИМАЦИЕЙ ========== */
-
-.bottom-nav {
-    height: 70px;
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    position: relative;
-    z-index: 10;
-    padding-bottom: env(safe-area-inset-bottom, 10px);
-}
-
-body.night-mode .bottom-nav {
-    background: rgba(20, 20, 30, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.nav-item-wrapper {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 2;
-}
-
-.nav-item {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    transition: transform 0.15s ease;
-    border-radius: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.nav-item:active {
-    transform: scale(0.92);
-}
-
-.nav-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.nav-icon img {
-    object-fit: contain;
-}
-
-/* Плавающий индикатор */
-.nav-indicator {
-    position: absolute;
-    bottom: 12px;
-    left: 0;
-    width: 45px;
-    height: 45px;
-    background: var(--forest);
-    border-radius: 30px;
-    opacity: 0.25;
-    transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-    z-index: 1;
-    pointer-events: none;
-}
-
-body.night-mode .nav-indicator {
-    opacity: 0.35;
 }
