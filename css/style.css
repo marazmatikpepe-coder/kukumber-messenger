@@ -5250,3 +5250,38 @@ body.night-mode #user-profile-modal .profile-close-btn:hover {
         height: 80px !important;
     }
 }
+/* ========== ПРИНУДИТЕЛЬНЫЕ СТИЛИ ДЛЯ ПРОФИЛЯ ========== */
+
+#user-profile-modal .profile-banner {
+    height: 110px !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: -55px !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    border: 4px solid white !important;
+    background-color: var(--sage) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    position: relative !important;
+    z-index: 100 !important;
+    margin: 0 auto !important;
+}
+
+/* Дефолтная аватарка без картинки */
+#user-profile-modal .profile-avatar.default-avatar-user {
+    background-image: url('https://i.ibb.co/3HQYCh1/image.png') !important;
+    background-size: cover !important;
+}
