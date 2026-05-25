@@ -2300,6 +2300,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 // Функция обновления иконок в зависимости от активной вкладки и темы
+// Функция обновления иконок в зависимости от активной вкладки и темы
 function updateBottomIcons(activeTab) {
     var chatsIcon = document.getElementById('chats-icon');
     var settingsIcon = document.getElementById('settings-icon');
@@ -2317,10 +2318,22 @@ function updateBottomIcons(activeTab) {
         turquoise: 'https://i.ibb.co/Tx5pkzFx/image.png'
     };
     
-    // Иконка чатов
+    // Карта иконок для чатов (цветные)
+    var chatsIcons = {
+        green: 'https://i.ibb.co/jqQLgDS/image.png',
+        blue: 'https://i.ibb.co/zWH2jDV0/image.png',
+        red: 'https://i.ibb.co/rGMDRT5V/image.png',
+        orange: 'https://i.ibb.co/zW1q8Fkr/image.png',
+        pink: 'https://i.ibb.co/845jyMh2/image.png',
+        purple: 'https://i.ibb.co/wFm4nt68/image.png',
+        yellow: 'https://i.ibb.co/twC08Pv1/image.png',
+        turquoise: 'https://i.ibb.co/Tx5pkzFx/image.png'
+    };
+    
+    // ИКОНКА ЧАТОВ
     if (activeTab === 'chats') {
-        // Активная вкладка - цветная иконка чатов (зелёная версия)
-        chatsIcon.src = 'https://i.ibb.co/jqQLgDS/image.png';
+        // Активная вкладка - цветная иконка в зависимости от темы
+        chatsIcon.src = chatsIcons[currentTheme] || chatsIcons.green;
     } else {
         // Неактивная - серая версия (дневная/ночная)
         if (document.body.classList.contains('night-mode')) {
@@ -2330,7 +2343,7 @@ function updateBottomIcons(activeTab) {
         }
     }
     
-    // Иконка настроек
+    // ИКОНКА НАСТРОЕК
     if (activeTab === 'settings') {
         // Активная вкладка - цветная иконка в зависимости от темы
         settingsIcon.src = settingsIcons[currentTheme] || settingsIcons.green;
