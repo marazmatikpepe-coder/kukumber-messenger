@@ -5285,3 +5285,57 @@ body.night-mode #user-profile-modal .profile-close-btn:hover {
     background-image: url('https://i.ibb.co/3HQYCh1/image.png') !important;
     background-size: cover !important;
 }
+/* ========== ПРОФИЛЬ - АВАТАР ПОВЕРХ БАННЕРА ========== */
+
+#user-profile-modal .profile-modal-content {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+}
+
+#user-profile-modal .profile-banner {
+    height: 110px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: -55px;
+    position: relative;
+    z-index: 50;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+#user-profile-modal .profile-avatar[style*="background-image"] {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    text-indent: -9999px;
+}
+
+#user-profile-modal .profile-avatar.default-avatar-user {
+    background-image: url('https://i.ibb.co/3HQYCh1/image.png');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Дефолтные аватарки для тёмной темы */
+body.night-mode #user-profile-modal .profile-avatar.default-avatar-user {
+    background-image: url('https://i.ibb.co/8D8SnGQF/image.png');
+}
