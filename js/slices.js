@@ -631,7 +631,30 @@ function openUserProfileFull(userId) {
 `;
             
             document.body.appendChild(modal);
-          modal.classList.remove('hidden');
+            modal.classList.remove('hidden');
+
+// ПРИНУДИТЕЛЬНО СТАВИМ АВАТАРКУ ПОВЕРХ БАННЕРА
+setTimeout(function() {
+    var banner = document.getElementById('profile-banner');
+    var avatarWrapper = document.querySelector('#user-profile-modal .profile-avatar-wrapper');
+    var avatar = document.getElementById('profile-avatar');
+    
+    if (banner) {
+        banner.style.zIndex = '1';
+        banner.style.position = 'relative';
+    }
+    
+    if (avatarWrapper) {
+        avatarWrapper.style.zIndex = '50';
+        avatarWrapper.style.position = 'relative';
+        avatarWrapper.style.marginTop = '-50px';
+    }
+    
+    if (avatar) {
+        avatar.style.zIndex = '100';
+        avatar.style.position = 'relative';
+    }
+}, 10);
 
 // Принудительное применение компактных стилей для вкладок
 setTimeout(function() {
