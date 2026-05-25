@@ -638,23 +638,35 @@ setTimeout(function() {
     var banner = document.getElementById('profile-banner');
     var avatarWrapper = document.querySelector('#user-profile-modal .profile-avatar-wrapper');
     var avatar = document.getElementById('profile-avatar');
+    var scrollable = document.querySelector('#user-profile-modal .profile-scrollable');
     
     if (banner) {
         banner.style.zIndex = '1';
-        banner.style.position = 'relative';
     }
     
     if (avatarWrapper) {
-        avatarWrapper.style.zIndex = '50';
-        avatarWrapper.style.position = 'relative';
-        avatarWrapper.style.marginTop = '-50px';
+        avatarWrapper.style.zIndex = '15';
+        avatarWrapper.style.marginTop = '-45px';
     }
     
     if (avatar) {
-        avatar.style.zIndex = '100';
-        avatar.style.position = 'relative';
+        avatar.style.zIndex = '20';
     }
-}, 10);
+    
+    if (scrollable) {
+        scrollable.style.position = 'relative';
+        scrollable.style.zIndex = '5';
+        scrollable.style.backgroundColor = 'inherit';
+    }
+    
+    // Принудительно ставим картинку аватара
+    if (userAvatar) {
+        avatar.style.backgroundImage = 'url(' + userAvatar + ')';
+        avatar.style.backgroundSize = 'cover';
+        avatar.style.backgroundPosition = 'center';
+        avatar.textContent = '';
+    }
+}, 50);
 
 // Принудительное применение компактных стилей для вкладок
 setTimeout(function() {
