@@ -4876,3 +4876,39 @@ body.night-mode #user-profile-modal .profile-slice-card {
 body.night-mode #user-profile-modal .profile-content {
     background: #121212;
 }
+/* ========== КНОПКА ЗАКРЫТИЯ ПРОФИЛЯ ========== */
+
+#user-profile-modal .profile-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: all 0.2s ease;
+}
+
+#user-profile-modal .profile-close-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.05);
+}
+
+/* Тёмная тема */
+body.night-mode #user-profile-modal .profile-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+body.night-mode #user-profile-modal .profile-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
