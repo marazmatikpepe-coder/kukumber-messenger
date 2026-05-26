@@ -570,12 +570,13 @@ function openUserProfileFull(userId) {
         database.ref('subscriptions/').orderByChild(userId).equalTo(true).once('value').then(function(subsSnap) {
             var subscribersCount = subsSnap.val() ? Object.keys(subsSnap.val()).length : 0;
             
+            // Определяем стиль баннера
             var bannerStyle = '';
             if (userBanner) {
                 if (userBanner.startsWith('#')) {
                     bannerStyle = 'background: ' + userBanner + ';';
                 } else {
-                    bannerStyle = 'background-image: url(' + userBanner + '); background-size: cover; background-position: center;';
+                    bannerStyle = 'background-image: url(' + userBanner + '); background-size: cover; background-position: center; background-repeat: no-repeat;';
                 }
             } else {
                 bannerStyle = 'background: linear-gradient(135deg, #228B22, #556B2F);';
@@ -587,102 +588,57 @@ function openUserProfileFull(userId) {
             modal.id = 'user-profile-modal';
             modal.className = 'modal';
             modal.style.zIndex = '10001';
-           modal.innerHTML = `
-    <div class="profile-modal-content">
-        <div class="profile-banner" id="profile-banner" style="${bannerStyle}">
-            ${canEdit ? '<button class="profile-banner-edit-btn" onclick="editProfileBanner()">✏️</button>' : ''}
-            <button class="profile-close-btn" onclick="closeProfileModal()">×</button>
-        </div>
-        <div class="profile-scrollable">
-            <div class="profile-avatar-wrapper">
-                <div class="profile-avatar" id="profile-avatar">
-                    ${canEdit ? '<button class="profile-avatar-edit-btn" onclick="editProfileAvatar()">✏️</button>' : ''}
-                </div>
-            </div>
-            <div class="profile-info">
-                <div class="profile-name-row">
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <h2 class="profile-name" id="profile-name" ${canEdit ? 'ondblclick="editProfileName()" style="cursor:pointer;"' : ''}>${escapeHtml(userName)}</h2>
-                        ${userVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:16px; height:16px; cursor:pointer;" onclick="showVerifiedInfo()">' : ''}
-                        ${isAdmin ? '<button onclick="toggleUserVerification(\''+userId+'\')" style="background:none; border:none; cursor:pointer; font-size:12px;">🔘 ' + (userVerified ? 'Снять галочку' : 'Выдать галочку') + '</button>' : ''}
+            modal.innerHTML = `
+                <div class="profile-modal-content">
+                    <div class="profile-banner" id="profile-banner" style="${bannerStyle}">
+                        ${canEdit ? '<button class="profile-banner-edit-btn" onclick="editProfileBanner()">✏️</button>' : ''}
+                        <button class="profile-close-btn" onclick="closeProfileModal()">×</button>
                     </div>
-                    ${isOwnProfile ? '' : `
-                        <div style="display: flex; gap: 8px; justify-content: center; margin: 10px 0;">
-                            <button class="profile-subscribe-btn" id="profile-subscribe-btn" onclick="toggleSubscription()">Подписаться</button>
-                            <button class="profile-notify-btn" id="profile-notify-btn" onclick="toggleNotifications()">🔔</button>
-                            <button class="profile-chat-btn" onclick="startPrivateChatFromProfile('${userId}')">💬 Написать</button>
+                    <div class="profile-scrollable">
+                        <div class="profile-avatar-wrapper">
+                            <div class="profile-avatar" id="profile-avatar">
+                                ${canEdit ? '<button class="profile-avatar-edit-btn" onclick="editProfileAvatar()">✏️</button>' : ''}
+                            </div>
                         </div>
-                    `}
+                        <div class="profile-info">
+                            <div class="profile-name-row">
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <h2 class="profile-name" id="profile-name" ${canEdit ? 'ondblclick="editProfileName()" style="cursor:pointer;"' : ''}>${escapeHtml(userName)}</h2>
+                                    ${userVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:16px; height:16px; cursor:pointer;" onclick="showVerifiedInfo()">' : ''}
+                                    ${isAdmin ? '<button onclick="toggleUserVerification(\''+userId+'\')" style="background:none; border:none; cursor:pointer; font-size:12px;">🔘 ' + (userVerified ? 'Снять галочку' : 'Выдать галочку') + '</button>' : ''}
+                                </div>
+                                ${isOwnProfile ? '' : `
+                                    <div style="display: flex; gap: 8px; justify-content: center; margin: 10px 0;">
+                                        <button class="profile-subscribe-btn" id="profile-subscribe-btn" onclick="toggleSubscription()">Подписаться</button>
+                                        <button class="profile-notify-btn" id="profile-notify-btn" onclick="toggleNotifications()">🔔</button>
+                                        <button class="profile-chat-btn" onclick="startPrivateChatFromProfile('${userId}')">💬 Написать</button>
+                                    </div>
+                                `}
+                            </div>
+                            <div class="profile-username" ${canEdit ? 'ondblclick="editProfileUserTag()" style="cursor:pointer;"' : ''}>${escapeHtml(userTag)}</div>
+                            <div class="profile-subscribers">👥 ${subscribersCount} подписчиков</div>
+                            <div class="profile-status">${statusText}</div>
+                            <div class="profile-bio" id="profile-bio" ${canEdit ? 'ondblclick="editProfileBio()" style="cursor:pointer;"' : ''}>${escapeHtml(userBio)}</div>
+                        </div>
+                        <div class="profile-tabs">
+                            <button class="profile-tab-btn active" onclick="switchProfileTab('posts', '${userId}')">📷 Посты</button>
+                            <button class="profile-tab-btn" onclick="switchProfileTab('reposts', '${userId}')">🔄 Репосты</button>
+                        </div>
+                        <div id="profile-content" class="profile-content">
+                            <div class="profile-loading">Загрузка...</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="profile-username" ${canEdit ? 'ondblclick="editProfileUserTag()" style="cursor:pointer;"' : ''}>${escapeHtml(userTag)}</div>
-                <div class="profile-subscribers">👥 ${subscribersCount} подписчиков</div>
-                <div class="profile-status">${statusText}</div>
-                <div class="profile-bio" id="profile-bio" ${canEdit ? 'ondblclick="editProfileBio()" style="cursor:pointer;"' : ''}>${escapeHtml(userBio)}</div>
-            </div>
-            <div class="profile-tabs">
-                <button class="profile-tab-btn active" onclick="switchProfileTab('posts', '${userId}')">📷 Посты</button>
-                <button class="profile-tab-btn" onclick="switchProfileTab('reposts', '${userId}')">🔄 Репосты</button>
-            </div>
-            <div id="profile-content" class="profile-content">
-                <div class="profile-loading">Загрузка...</div>
-            </div>
-        </div>
-    </div>
-`;
+            `;
             
             document.body.appendChild(modal);
             modal.classList.remove('hidden');
-
-// ПРИНУДИТЕЛЬНО СТАВИМ АВАТАРКУ ПОВЕРХ БАННЕРА
-setTimeout(function() {
-    var banner = document.getElementById('profile-banner');
-    var avatarWrapper = document.querySelector('#user-profile-modal .profile-avatar-wrapper');
-    var avatar = document.getElementById('profile-avatar');
-    var scrollable = document.querySelector('#user-profile-modal .profile-scrollable');
-    
-    if (banner) {
-        banner.style.zIndex = '1';
-    }
-    
-    if (avatarWrapper) {
-        avatarWrapper.style.zIndex = '15';
-        avatarWrapper.style.marginTop = '-45px';
-    }
-    
-    if (avatar) {
-        avatar.style.zIndex = '20';
-    }
-    
-    if (scrollable) {
-        scrollable.style.position = 'relative';
-        scrollable.style.zIndex = '5';
-        scrollable.style.backgroundColor = 'inherit';
-    }
-    
-    // Принудительно ставим картинку аватара
-    if (userAvatar) {
-        avatar.style.backgroundImage = 'url(' + userAvatar + ')';
-        avatar.style.backgroundSize = 'cover';
-        avatar.style.backgroundPosition = 'center';
-        avatar.textContent = '';
-    }
-}, 50);
-
-// Принудительное применение компактных стилей для вкладок
-setTimeout(function() {
-    var tabs = document.querySelectorAll('#user-profile-modal .profile-tab-btn');
-    tabs.forEach(function(tab) {
-        tab.style.padding = '8px 4px';
-        tab.style.fontSize = '12px';
-    });
-}, 10);
             
-            
-            // ПРИНУДИТЕЛЬНО УСТАНАВЛИВАЕМ АВАТАРКУ
+            // Устанавливаем аватарку
             setTimeout(function() {
                 var avatarDiv = document.getElementById('profile-avatar');
                 if (avatarDiv) {
-                    if (userAvatar) {
+                    if (userAvatar && userAvatar !== '') {
                         avatarDiv.style.backgroundImage = 'url(' + userAvatar + ')';
                         avatarDiv.style.backgroundSize = 'cover';
                         avatarDiv.style.backgroundPosition = 'center';
@@ -691,24 +647,8 @@ setTimeout(function() {
                         avatarDiv.classList.remove('default-avatar-user');
                     } else {
                         avatarDiv.classList.add('default-avatar-user');
+                        avatarDiv.textContent = '';
                     }
-                }
-                
-                // Устанавливаем баннер на задний план, аватарку на передний
-                var banner = document.getElementById('profile-banner');
-                if (banner) {
-                    banner.style.zIndex = '1';
-                }
-                if (avatarDiv) {
-                    avatarDiv.style.zIndex = '100';
-                    avatarDiv.style.position = 'relative';
-                }
-                
-                var avatarWrapper = document.querySelector('#user-profile-modal .profile-avatar-wrapper');
-                if (avatarWrapper) {
-                    avatarWrapper.style.zIndex = '50';
-                    avatarWrapper.style.position = 'relative';
-                    avatarWrapper.style.marginTop = '-55px';
                 }
             }, 50);
             
