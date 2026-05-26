@@ -5709,3 +5709,40 @@ body.night-mode #user-profile-modal .profile-avatar.default-avatar-user {
 #user-profile-modal .profile-avatar[style*="background-image"]::after {
     display: none !important;
 }
+/* ========== ФИКС АВАТАРКИ В ПРОФИЛЕ ========== */
+
+#user-profile-modal .profile-avatar {
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    border: 4px solid white !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+#user-profile-modal .profile-avatar[style*="background-image"] {
+    text-indent: -9999px !important;
+    color: transparent !important;
+}
+
+#user-profile-modal .profile-avatar[style*="background-image"]::before,
+#user-profile-modal .profile-avatar[style*="background-image"]::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Дефолтная аватарка если нет картинки */
+#user-profile-modal .profile-avatar.default-avatar-user {
+    background-image: url('https://i.ibb.co/3HQYCh1/image.png') !important;
+    background-size: cover !important;
+}
+
+body.night-mode #user-profile-modal .profile-avatar.default-avatar-user {
+    background-image: url('https://i.ibb.co/8D8SnGQF/image.png') !important;
+}
