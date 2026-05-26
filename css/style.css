@@ -5829,3 +5829,61 @@ body.night-mode #user-profile-modal .profile-avatar.default-avatar-user {
 #user-profile-modal .profile-banner[style*="background:"] {
     background-size: auto !important;
 }
+/* ========== ПРИНУДИТЕЛЬНЫЕ СТИЛИ ДЛЯ ПРОФИЛЯ ========== */
+#user-profile-modal {
+    z-index: 10001 !important;
+}
+
+#user-profile-modal .profile-modal-content {
+    position: relative !important;
+    overflow: hidden !important;
+    border-radius: 28px !important;
+}
+
+#user-profile-modal .profile-banner {
+    height: 110px !important;
+    width: 100% !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+#user-profile-modal .profile-scrollable {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: -50px !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 50% !important;
+    border: 4px solid white !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    position: relative !important;
+    z-index: 100 !important;
+    background-color: #9DC183 !important;
+}
+
+#user-profile-modal .profile-info {
+    position: relative !important;
+    z-index: 10 !important;
+    background: white !important;
+}
+
+body.night-mode #user-profile-modal .profile-info {
+    background: #1e1e1e !important;
+}
+
+/* Чтобы аватарка точно отображалась */
+#user-profile-modal .profile-avatar[style*="background-image"] {
+    text-indent: -9999px !important;
+}
