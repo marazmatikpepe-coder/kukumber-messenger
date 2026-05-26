@@ -6074,3 +6074,38 @@ body.night-mode .profile-avatar-edit-btn {
 .profile-avatar-edit-btn::after {
     display: none !important;
 }
+/* ========== ИСПРАВЛЕНИЕ - ПОКАЗЫВАЕМ ЧИСЛО ПРОСМОТРОВ ========== */
+
+.slice-views-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 14px !important;
+}
+
+/* Картинка глаза ДО числа */
+.slice-views-count::before {
+    content: "" !important;
+    display: inline-block !important;
+    width: 35px !important;
+    height: 35px !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Само число - показываем! */
+.slice-views-count span {
+    display: inline !important;
+    font-size: 14px !important;
+}
+
+/* Светлая тема - глаз */
+body:not(.night-mode) .slice-views-count::before {
+    background-image: url('https://i.ibb.co/hR0NRFyq/51610cb658d111f1aa0c0e306a51c3f7-1-no-bg-preview-carve-photos.png') !important;
+}
+
+/* Тёмная тема - глаз */
+body.night-mode .slice-views-count::before {
+    background-image: url('https://i.ibb.co/tpW9Tb8J/bird-result-d27fb1b04bb011f1aa05ee6f7b7a5cce.png') !important;
+}
