@@ -5919,3 +5919,85 @@ body.night-mode #user-profile-modal .profile-info {
 #user-profile-modal .profile-avatar[style*="background-image"]::before {
     display: none !important;
 }
+/* ========== ЗАМЕНА СТИКЕРОВ НА КАРТИНКИ ========== */
+
+/* Иконка просмотров (глаз) */
+.slice-views {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.slice-views .slice-views-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.slice-views .slice-views-count::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Светлая тема - глаз */
+body:not(.night-mode) .slice-views .slice-views-count::before {
+    background-image: url('https://i.ibb.co/hR0NRFyq/51610cb658d111f1aa0c0e306a51c3f7-1-no-bg-preview-carve-photos.png');
+}
+
+/* Тёмная тема - глаз */
+body.night-mode .slice-views .slice-views-count::before {
+    background-image: url('https://i.ibb.co/tpW9Tb8J/bird-result-d27fb1b04bb011f1aa05ee6f7b7a5cce.png');
+}
+
+/* Убираем старый эмодзи глаза */
+.slice-views .slice-views-count {
+    font-size: 0;
+}
+
+.slice-views .slice-views-count {
+    font-size: 13px;
+}
+
+.slice-views .slice-views-count::after {
+    content: attr(data-count);
+    font-size: 13px;
+}
+
+/* Кнопка редактирования (✏️) */
+.profile-banner-edit-btn,
+.profile-avatar-edit-btn {
+    font-size: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    background-size: 16px !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    border-radius: 50% !important;
+}
+
+/* Светлая тема - карандаш */
+body:not(.night-mode) .profile-banner-edit-btn,
+body:not(.night-mode) .profile-avatar-edit-btn {
+    background-image: url('https://i.ibb.co/spHpyYTY/Pen-W.png') !important;
+    background-color: rgba(0,0,0,0.5) !important;
+}
+
+/* Тёмная тема - карандаш */
+body.night-mode .profile-banner-edit-btn,
+body.night-mode .profile-avatar-edit-btn {
+    background-image: url('https://i.ibb.co/ds7QsrRL/paint-D.png') !important;
+    background-color: rgba(255,255,255,0.2) !important;
+}
+
+/* Убираем старый текст/эмодзи */
+.profile-banner-edit-btn::before,
+.profile-banner-edit-btn::after,
+.profile-avatar-edit-btn::before,
+.profile-avatar-edit-btn::after {
+    display: none !important;
+}
