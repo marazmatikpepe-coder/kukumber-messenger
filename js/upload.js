@@ -276,14 +276,15 @@ async function uploadProfileBannerImage() {
         
         try {
             var url = await uploadToImgBB(file);
+            console.log('Загружен URL баннера:', url);
             await setProfileBanner(url);
         } catch (err) {
+            console.error('Ошибка загрузки:', err);
             showNotification('Ошибка загрузки: ' + err.message, 'error');
         }
     };
     input.click();
 }
-
 // ========== РЕДАКТИРОВАНИЕ АВАТАРА ЧЕРЕЗ НАСТРОЙКИ ==========
 function previewEditAvatar(event) {
     var file = event.target.files[0];
