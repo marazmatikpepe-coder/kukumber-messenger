@@ -5887,3 +5887,35 @@ body.night-mode #user-profile-modal .profile-info {
 #user-profile-modal .profile-avatar[style*="background-image"] {
     text-indent: -9999px !important;
 }
+/* ========== БЫСТРОЕ ИСПРАВЛЕНИЕ ПРОФИЛЯ ========== */
+
+/* Аватарка ПОВЕРХ баннера */
+#user-profile-modal .profile-avatar-wrapper {
+    margin-top: -55px !important;
+    position: relative !important;
+    z-index: 999 !important;
+}
+
+#user-profile-modal .profile-avatar {
+    position: relative !important;
+    z-index: 1000 !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+#user-profile-modal .profile-banner {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Чтобы картинка аватара точно отображалась */
+#user-profile-modal .profile-avatar[style*="background-image"] {
+    background-size: cover !important;
+    background-position: center !important;
+    text-indent: -9999px !important;
+}
+
+#user-profile-modal .profile-avatar[style*="background-image"]::before {
+    display: none !important;
+}
