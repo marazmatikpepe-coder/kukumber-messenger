@@ -561,15 +561,16 @@ function openUserProfileFull(userId) {
         database.ref('subscriptions/').orderByChild(userId).equalTo(true).once('value').then(function(subsSnap) {
             var subscribersCount = subsSnap.val() ? Object.keys(subsSnap.val()).length : 0;
             
+            // Стиль баннера
             var bannerStyle = '';
-            if (userBanner) {
+            if (userBanner && userBanner !== '') {
                 if (userBanner.startsWith('#')) {
-                    bannerStyle = 'background: ' + userBanner + ';';
+                    bannerStyle = 'background: ' + userBanner + '; background-image: none;';
                 } else {
                     bannerStyle = 'background-image: url(' + userBanner + '); background-size: cover; background-position: center; background-repeat: no-repeat;';
                 }
             } else {
-                bannerStyle = 'background: linear-gradient(135deg, #228B22, #556B2F);';
+                bannerStyle = 'background: linear-gradient(135deg, #228B22, #556B2F); background-image: none;';
             }
             
             var statusText = isOnline ? '<span style="color: #32CD32;">● В сети</span>' : (lastSeen ? 'Был(а) ' + formatLastSeen(lastSeen) : 'Неизвестно');
@@ -624,22 +625,33 @@ function openUserProfileFull(userId) {
             document.body.appendChild(modal);
             modal.classList.remove('hidden');
             
+            // Устанавливаем аватарку через 100мс (ждём отрисовки DOM)
             setTimeout(function() {
                 var avatarDiv = document.getElementById('profile-avatar');
                 if (avatarDiv) {
                     if (userAvatar && userAvatar !== '') {
-                        avatarDiv.style.backgroundImage = 'url(' + userAvatar + ')';
+                        avatarDiv.style.backgroundImage = 'url(' + userAvatar + '?t=' + Date.now() + ')';
                         avatarDiv.style.backgroundSize = 'cover';
                         avatarDiv.style.backgroundPosition = 'center';
                         avatarDiv.style.backgroundRepeat = 'no-repeat';
                         avatarDiv.textContent = '';
                         avatarDiv.classList.remove('default-avatar-user');
+                        console.log('Аватар установлен:', userAvatar);
                     } else {
                         avatarDiv.classList.add('default-avatar-user');
                         avatarDiv.textContent = '';
+                        console.log('Аватар дефолтный');
                     }
                 }
-            }, 50);
+            }, 100);
+            
+            // Проверяем баннер
+            setTimeout(function() {
+                var bannerDiv = document.getElementById('profile-banner');
+                if (bannerDiv && userBanner && userBanner !== '' && !userBanner.startsWith('#')) {
+                    console.log('Баннер установлен:', userBanner);
+                }
+            }, 100);
             
             if (!isOwnProfile) {
                 checkSubscriptionStatus(userId);
@@ -650,7 +662,6 @@ function openUserProfileFull(userId) {
         });
     });
 }
-
 function checkSubscriptionStatus(userId) {
     database.ref('subscriptions/' + currentUser.uid + '/' + userId).once('value').then(function(snap) {
         var isSubscribed = snap.exists();
@@ -1495,8 +1506,10 @@ window.setProfileBanner = async function(colorOrUrl) {
         var updateData = {};
         if (colorOrUrl && colorOrUrl !== '') {
             updateData.banner = colorOrUrl;
+            console.log('Сохраняем баннер:', colorOrUrl);
         } else {
             updateData.banner = null;
+            console.log('Сбрасываем баннер');
         }
         
         await database.ref('users/' + userId).update(updateData);
@@ -1504,6 +1517,7 @@ window.setProfileBanner = async function(colorOrUrl) {
         showNotification('Баннер обновлён!', 'success');
         window.closeColorPickerModal();
         
+        // Обновляем баннер в открытом профиле
         var bannerDiv = document.getElementById('profile-banner');
         if (bannerDiv) {
             if (colorOrUrl && colorOrUrl !== '') {
@@ -1511,7 +1525,7 @@ window.setProfileBanner = async function(colorOrUrl) {
                     bannerDiv.style.background = colorOrUrl;
                     bannerDiv.style.backgroundImage = 'none';
                 } else {
-                    bannerDiv.style.backgroundImage = 'url(' + colorOrUrl + ')';
+                    bannerDiv.style.backgroundImage = 'url(' + colorOrUrl + '?t=' + Date.now() + ')';
                     bannerDiv.style.backgroundSize = 'cover';
                     bannerDiv.style.backgroundPosition = 'center';
                     bannerDiv.style.background = 'none';
@@ -1520,8 +1534,10 @@ window.setProfileBanner = async function(colorOrUrl) {
                 bannerDiv.style.background = 'linear-gradient(135deg, #228B22, #556B2F)';
                 bannerDiv.style.backgroundImage = 'none';
             }
+            console.log('Баннер обновлён в DOM');
         }
         
+        // Обновляем данные в памяти
         if (window.viewingProfileUserData) {
             window.viewingProfileUserData.banner = colorOrUrl || null;
         }
@@ -1529,8 +1545,6 @@ window.setProfileBanner = async function(colorOrUrl) {
         if (userId === currentUser?.uid && currentUserData) {
             currentUserData.banner = colorOrUrl || null;
         }
-        
-        console.log('Баннер обновлён:', colorOrUrl);
         
     } catch (err) {
         console.error('Ошибка сохранения баннера:', err);
