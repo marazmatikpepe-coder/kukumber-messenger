@@ -183,7 +183,7 @@ function createSliceCard(sliceId, sliceData) {
                 </div>
             </div>
             <div class="slice-views">
-                <span class="slice-views-count">👁️ ${sliceData.viewsCount || 0}</span>
+                <span class="slice-views-count" data-count="${sliceData.viewsCount || 0}"></span>
             </div>
         </div>
         ${pinnedBadge}
