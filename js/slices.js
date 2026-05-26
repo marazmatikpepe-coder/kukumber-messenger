@@ -1,5 +1,5 @@
 console.log('slices.js загружен');
-// SLICES (Слайсы) - ПОЛНАЯ РАБОЧАЯ ВЕРСИЯ 5.1
+// SLICES (Слайсы) - ПОЛНАЯ РАБОЧАЯ ВЕРСИЯ 6.0
 // Лайки, репосты, комментарии, профиль (только посты и репосты)
 // Баннер (цвета, картинка, GIF) - ИСПРАВЛЕН
 // Подписчики, колокольчик, верификация
@@ -70,11 +70,6 @@ function loadSlices() {
             return (b.data.createdAt || 0) - (a.data.createdAt || 0);
         });
         
-        var pendingImages = slicesArray.length;
-        if (pendingImages === 0) {
-            feed.innerHTML = '<div class="empty-slices"><span>🍕</span><p>Нет постов</p></div>';
-        }
-        
         slicesArray.forEach(function(slice) {
             database.ref('sliceLikes/' + slice.id + '/' + currentUser.uid).once('value').then(function(snap) {
                 slice.data.userLiked = snap.exists();
@@ -94,7 +89,6 @@ function createSliceCard(sliceId, sliceData) {
     div.className = 'slice-card';
     div.setAttribute('data-slice-id', sliceId);
 
-    // Контекстное меню
     div.addEventListener('contextmenu', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -110,11 +104,10 @@ function createSliceCard(sliceId, sliceData) {
     div.addEventListener('touchend', function() { if (touchTimer) clearTimeout(touchTimer); });
     div.addEventListener('touchmove', function() { if (touchTimer) clearTimeout(touchTimer); });
     
-   // Шапка с кликабельной аватаркой
-var avatarStyle = sliceData.authorAvatar ? 'background-image:url('+sliceData.authorAvatar+');background-size:cover;' : '';
-var avatarClass = (!sliceData.authorAvatar) ? 'default-avatar-user' : '';
-var avatarContent = '';
-    // Медиа контент
+    var avatarStyle = sliceData.authorAvatar ? 'background-image:url('+sliceData.authorAvatar+');background-size:cover;' : '';
+    var avatarClass = (!sliceData.authorAvatar) ? 'default-avatar-user' : '';
+    var avatarContent = '';
+    
     var mediaHtml = '';
     if (sliceData.mediaType === 'multiple' && sliceData.mediaUrls && sliceData.mediaUrls.length > 0) {
         mediaHtml = '<div class="slice-media-multiple" id="slice-media-'+sliceId+'">';
@@ -161,7 +154,6 @@ var avatarContent = '';
     
     var pinnedBadge = sliceData.pinned ? '<span class="slice-pinned-badge">📌 Закреплено</span>' : '';
     
-    // Получаем данные о верификации автора
     database.ref('users/' + sliceData.authorId + '/verified').once('value').then(function(snap) {
         if (snap.val() === true) {
             var badgeSpan = div.querySelector('.verified-badge-placeholder');
@@ -381,15 +373,15 @@ function loadComments(sliceId) {
 function renderComment(commentId, comment, sliceId, level) {
     if (!level) level = 0;
     
-   var avatarStyle = comment.authorAvatar ? 'background-image:url('+comment.authorAvatar+');background-size:cover;' : '';
-var avatarClass = (!comment.authorAvatar) ? 'default-avatar-user' : '';
-var avatarContent = '';
+    var avatarStyle = comment.authorAvatar ? 'background-image:url('+comment.authorAvatar+');background-size:cover;' : '';
+    var avatarClass = (!comment.authorAvatar) ? 'default-avatar-user' : '';
+    var avatarContent = '';
     var marginLeft = level * 40;
     
     return `
         <div class="comment-item" data-comment-id="${commentId}" style="margin-left: ${marginLeft}px;">
             <div class="comment-header">
-                <div class="comment-author-avatar" style="${avatarStyle}">${avatarContent}</div>
+                <div class="comment-author-avatar ${avatarClass}" style="${avatarStyle}">${avatarContent}</div>
                 <div class="comment-author-info">
                     <span class="comment-author-name">${escapeHtml(comment.authorName)}</span>
                     <span class="comment-date">${formatSliceDate(comment.createdAt)}</span>
@@ -489,7 +481,7 @@ function loadReplies(sliceId, parentId) {
             repliesHtml += `
                 <div class="comment-item reply-item">
                     <div class="comment-header">
-                      <div class="comment-author-avatar ${avatarClass}" style="${avatarStyle}">${avatarContent}</div>
+                        <div class="comment-author-avatar" style="${avatarStyle}">${avatarContent}</div>
                         <div class="comment-author-info">
                             <span class="comment-author-name">${escapeHtml(reply.data.authorName)}</span>
                             <span class="comment-date">${formatSliceDate(reply.data.createdAt)}</span>
@@ -537,11 +529,10 @@ function likeComment(sliceId, commentId) {
     });
 }
 
-// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (ИСПРАВЛЕН - БАННЕР РАБОТАЕТ) ==========
+// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==========
 function openUserProfileFull(userId) {
     window.viewingProfileUserId = userId;
     
-    // Закрываем предыдущее окно профиля
     var oldModal = document.getElementById('user-profile-modal');
     if (oldModal) oldModal.remove();
     
@@ -570,7 +561,6 @@ function openUserProfileFull(userId) {
         database.ref('subscriptions/').orderByChild(userId).equalTo(true).once('value').then(function(subsSnap) {
             var subscribersCount = subsSnap.val() ? Object.keys(subsSnap.val()).length : 0;
             
-            // Определяем стиль баннера
             var bannerStyle = '';
             if (userBanner) {
                 if (userBanner.startsWith('#')) {
@@ -591,7 +581,7 @@ function openUserProfileFull(userId) {
             modal.innerHTML = `
                 <div class="profile-modal-content">
                     <div class="profile-banner" id="profile-banner" style="${bannerStyle}">
-                        ${canEdit ? '<button class="profile-banner-edit-btn" onclick="editProfileBanner()">✏️</button>' : ''}
+                        ${canEdit ? '<button class="profile-banner-edit-btn" onclick="window.editProfileBanner()">✏️</button>' : ''}
                         <button class="profile-close-btn" onclick="closeProfileModal()">×</button>
                     </div>
                     <div class="profile-scrollable">
@@ -634,7 +624,6 @@ function openUserProfileFull(userId) {
             document.body.appendChild(modal);
             modal.classList.remove('hidden');
             
-            // Устанавливаем аватарку
             setTimeout(function() {
                 var avatarDiv = document.getElementById('profile-avatar');
                 if (avatarDiv) {
@@ -661,6 +650,7 @@ function openUserProfileFull(userId) {
         });
     });
 }
+
 function checkSubscriptionStatus(userId) {
     database.ref('subscriptions/' + currentUser.uid + '/' + userId).once('value').then(function(snap) {
         var isSubscribed = snap.exists();
@@ -769,9 +759,9 @@ function createProfileSliceCard(sliceId, sliceData) {
     div.className = 'slice-card profile-slice-card';
     div.setAttribute('data-slice-id', sliceId);
     
- var avatarStyle = sliceData.authorAvatar ? 'background-image:url('+sliceData.authorAvatar+');background-size:cover;' : '';
-var avatarClass = (!sliceData.authorAvatar) ? 'default-avatar-user' : '';
-var avatarContent = '';
+    var avatarStyle = sliceData.authorAvatar ? 'background-image:url('+sliceData.authorAvatar+');background-size:cover;' : '';
+    var avatarClass = (!sliceData.authorAvatar) ? 'default-avatar-user' : '';
+    var avatarContent = '';
     
     var mediaHtml = '';
     if (sliceData.mediaUrl) {
@@ -786,7 +776,7 @@ var avatarContent = '';
     div.innerHTML = `
         <div class="slice-header">
             <div class="slice-author">
-               <div class="avatar ${avatarClass}" style="${avatarStyle}">${avatarContent}</div>
+                <div class="avatar ${avatarClass}" style="${avatarStyle}">${avatarContent}</div>
                 <div class="slice-author-info">
                     <span class="slice-author-name">${escapeHtml(sliceData.authorName)}</span>
                     <span class="slice-date">${formatSliceDate(sliceData.createdAt)}</span>
@@ -809,122 +799,9 @@ var avatarContent = '';
 function closeProfileModal() {
     var modal = document.getElementById('user-profile-modal');
     if (modal) modal.remove();
-    // Закрываем палитру цветов, если она открыта
-    closeColorPickerModal();
+    window.closeColorPickerModal();
 }
 
-// ========== РЕДАКТИРОВАНИЕ ПРОФИЛЯ (ИСПРАВЛЕНО - МОДАЛКИ НЕ ПЕРЕКРЫВАЮТСЯ) ==========
-function editProfileBanner() {
-    var userId = window.viewingProfileUserId;
-    var isOwnProfile = (userId === currentUser.uid);
-    var isAdmin = window.isSuperAdmin === true;
-    
-    if (!isOwnProfile && !isAdmin) return;
-    
-    var colors = ['#228B22', '#556B2F', '#1a5c1a', '#32CD32', '#6b8e6b', '#000000', '#1E90FF', '#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#9370DB'];
-    
-    // Закрываем предыдущее окно выбора цвета
-    var oldColorModal = document.getElementById('color-picker-modal');
-    if (oldColorModal) oldColorModal.remove();
-    
-    var modal = document.createElement('div');
-    modal.id = 'color-picker-modal';
-    modal.className = 'modal';
-    modal.style.zIndex = '10002';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 350px;">
-            <div class="modal-header">
-                <h3>Выберите баннер</h3>
-                <button onclick="closeColorPickerModal()" class="btn-close">×</button>
-            </div>
-            <div class="banner-color-picker" style="display:flex; flex-wrap:wrap; gap:10px; padding:15px; justify-content:center;">
-                ${colors.map(c => `<div class="banner-color-option" style="background:${c}; width:40px; height:40px; border-radius:50%; cursor:pointer; border:2px solid white; box-shadow:0 1px 3px rgba(0,0,0,0.2);" onclick="setProfileBanner('${c}')"></div>`).join('')}
-            </div>
-            <div style="padding:10px; text-align:center;">
-                <button onclick="uploadProfileBannerImage()" class="btn-primary" style="width: auto; padding: 8px 20px;">📷 Загрузить картинку/GIF</button>
-            </div>
-            <div style="padding:10px; text-align:center;">
-                <button onclick="setProfileBanner('')" class="btn-secondary">Сбросить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    modal.classList.remove('hidden');
-}
-
-function closeColorPickerModal() {
-    var modal = document.getElementById('color-picker-modal');
-    if (modal) modal.remove();
-}
-
-function setProfileBanner(colorOrUrl) {
-    var userId = window.viewingProfileUserId;
-    if (!userId) return;
-    
-    var updateData = {};
-    if (colorOrUrl) {
-        updateData.banner = colorOrUrl;
-    } else {
-        updateData.banner = null;
-    }
-    
-    database.ref('users/' + userId).update(updateData).then(function() {
-        showNotification('Баннер обновлён', 'success');
-        closeColorPickerModal();
-        
-        // ОБНОВЛЯЕМ БАННЕР В ОТКРЫТОМ ПРОФИЛЕ
-        var bannerDiv = document.getElementById('profile-banner');
-        if (bannerDiv) {
-            if (colorOrUrl) {
-                if (colorOrUrl.startsWith('#')) {
-                    bannerDiv.style.background = colorOrUrl;
-                    bannerDiv.style.backgroundImage = 'none';
-                } else {
-                    bannerDiv.style.backgroundImage = 'url(' + colorOrUrl + ')';
-                    bannerDiv.style.backgroundSize = 'cover';
-                    bannerDiv.style.backgroundPosition = 'center';
-                    bannerDiv.style.background = 'none';
-                }
-            } else {
-                bannerDiv.style.background = 'linear-gradient(135deg, #228B22, #556B2F)';
-                bannerDiv.style.backgroundImage = 'none';
-            }
-        }
-        
-        // ОБНОВЛЯЕМ ДАННЫЕ В ПАМЯТИ
-        if (window.viewingProfileUserData) {
-            window.viewingProfileUserData.banner = colorOrUrl || null;
-        }
-        
-        // ОБНОВЛЯЕМ ВСЕ КАРТОЧКИ ПОСТОВ (если баннер пользователя виден где-то ещё)
-        var allCards = document.querySelectorAll('.slice-card');
-        // Не перезагружаем всю ленту, просто обновляем данные
-    }).catch(function(err) {
-        showNotification('Ошибка: ' + err.message, 'error');
-        closeColorPickerModal();
-    });
-}
-function uploadProfileBannerImage() {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*,image/gif';
-    input.onchange = function(e) {
-        var file = e.target.files[0];
-        if (!file) return;
-        showNotification('Загрузка баннера...', 'info');
-        
-        if (typeof uploadToImgBB === 'function') {
-            uploadToImgBB(file).then(function(data) {
-                setProfileBanner(data.url);
-            }).catch(function(err) {
-                showNotification('Ошибка загрузки: ' + err.message, 'error');
-            });
-        } else {
-            showNotification('Функция загрузки не найдена, проверьте upload.js', 'error');
-        }
-    };
-    input.click();
-}
 function editProfileAvatar() {
     var userId = window.viewingProfileUserId;
     var isOwnProfile = (userId === currentUser.uid);
@@ -945,80 +822,18 @@ function editProfileAvatar() {
                 var avatarUrl = data.url;
                 database.ref('users/' + userId + '/avatar').set(avatarUrl).then(function() {
                     showNotification('Аватар обновлён', 'success');
-                    
-                    // ОБНОВЛЯЕМ АВАТАР В ОТКРЫТОМ ПРОФИЛЕ
                     var avatarDiv = document.getElementById('profile-avatar');
                     if (avatarDiv) {
                         avatarDiv.style.backgroundImage = 'url(' + avatarUrl + ')';
                         avatarDiv.style.backgroundSize = 'cover';
                         avatarDiv.textContent = '';
                     }
-                    
-                    // ОБНОВЛЯЕМ АВАТАР В БОКОВОЙ ПАНЕЛИ
                     if (userId === currentUser.uid && typeof updateUserDisplay === 'function') {
                         updateUserDisplay();
                     }
-                    
-                    // ОБНОВЛЯЕМ АВАТАР В ЛЕНТЕ (ВСЕ ПОСТЫ ПОЛЬЗОВАТЕЛЯ)
-                    var allCards = document.querySelectorAll('.slice-card');
-                    allCards.forEach(function(card) {
-                        var authorId = card.querySelector('.slice-author')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-                        if (authorId === userId) {
-                            var avatarElement = card.querySelector('.slice-author .avatar');
-                            if (avatarElement) {
-                                avatarElement.style.backgroundImage = 'url(' + avatarUrl + ')';
-                                avatarElement.style.backgroundSize = 'cover';
-                                avatarElement.textContent = '';
-                            }
-                        }
-                    });
-                    
-                    // ОБНОВЛЯЕМ АВАТАР В ЧАТАХ (если чат открыт)
-                    var chatAvatar = document.getElementById('chat-avatar');
-                    if (chatAvatar && userId === currentChatUser?.otherUserId) {
-                        chatAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
-                        chatAvatar.style.backgroundSize = 'cover';
-                        chatAvatar.textContent = '';
-                    }
-                    
-                    // ОБНОВЛЯЕМ АВАТАР В СПИСКЕ ЧАТОВ
-                    var chatItems = document.querySelectorAll('.chat-item');
-                    chatItems.forEach(function(item) {
-                        // Проверяем, относится ли этот чат к пользователю
-                        var chatName = item.querySelector('.chat-item-name')?.textContent;
-                        if (chatName === window.viewingProfileUserName) {
-                            var chatAvatarEl = item.querySelector('.avatar');
-                            if (chatAvatarEl) {
-                                chatAvatarEl.style.backgroundImage = 'url(' + avatarUrl + ')';
-                                chatAvatarEl.style.backgroundSize = 'cover';
-                                chatAvatarEl.textContent = '';
-                            }
-                        }
-                    });
-                    
-                    // ОБНОВЛЯЕМ АВАТАР В НАСТРОЙКАХ
-                    if (userId === currentUser.uid) {
-                        var settingsAvatar = document.getElementById('settings-avatar');
-                        if (settingsAvatar) {
-                            settingsAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
-                            settingsAvatar.style.backgroundSize = 'cover';
-                            settingsAvatar.textContent = '';
-                        }
-                    }
-                    
-                    // ОБНОВЛЯЕМ АВАТАР В SLICES-ПАНЕЛИ
-                    var slicesUserAvatar = document.getElementById('slices-user-avatar');
-                    if (slicesUserAvatar && userId === currentUser.uid) {
-                        slicesUserAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
-                        slicesUserAvatar.style.backgroundSize = 'cover';
-                        slicesUserAvatar.textContent = '';
-                    }
-                    
-                    // ПЕРЕЗАГРУЖАЕМ ПРОФИЛЬ, ЧТОБЫ ОБНОВИТЬ ВСЁ
                     setTimeout(function() {
                         openUserProfileFull(userId);
                     }, 500);
-                    
                 }).catch(function(err) {
                     showNotification('Ошибка обновления аватара: ' + err.message, 'error');
                 });
@@ -1031,38 +846,7 @@ function editProfileAvatar() {
     };
     input.click();
 }
-function updateAllAvatars(userId, avatarUrl) {
-    // Обновляем аватары во всех постах пользователя в ленте
-    var allCards = document.querySelectorAll('.slice-card');
-    allCards.forEach(function(card) {
-        var authorLink = card.querySelector('.slice-author');
-        if (authorLink) {
-            var onclickAttr = authorLink.getAttribute('onclick');
-            if (onclickAttr && onclickAttr.includes(userId)) {
-                var avatarEl = card.querySelector('.slice-author .avatar');
-                if (avatarEl) {
-                    avatarEl.style.backgroundImage = 'url(' + avatarUrl + ')';
-                    avatarEl.style.backgroundSize = 'cover';
-                    avatarEl.textContent = '';
-                }
-            }
-        }
-    });
-    
-    // Обновляем в списке чатов
-    var chatItems = document.querySelectorAll('.chat-item');
-    chatItems.forEach(function(item) {
-        var nameEl = item.querySelector('.chat-item-name');
-        if (nameEl && nameEl.textContent === window.viewingProfileUserName) {
-            var chatAvatar = item.querySelector('.avatar');
-            if (chatAvatar) {
-                chatAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
-                chatAvatar.style.backgroundSize = 'cover';
-                chatAvatar.textContent = '';
-            }
-        }
-    });
-}
+
 function editProfileName() {
     var userId = window.viewingProfileUserId;
     var isOwnProfile = (userId === currentUser.uid);
@@ -1077,7 +861,7 @@ function editProfileName() {
             if (window.viewingProfileUserId === currentUser.uid && typeof updateUserDisplay === 'function') {
                 updateUserDisplay();
             }
-          openUserProfileFull(userId);
+            openUserProfileFull(userId);
         });
     }
 }
@@ -1094,9 +878,65 @@ function editProfileBio() {
     if (newBio !== null) {
         database.ref('users/' + userId + '/bio').set(newBio.trim()).then(function() {
             showNotification('Описание обновлено', 'success');
-           openUserProfileFull(userId);
+            openUserProfileFull(userId);
         });
     }
+}
+
+function editProfileUserTag() {
+    var userId = window.viewingProfileUserId;
+    var isOwnProfile = (userId === currentUser.uid);
+    var isAdmin = window.isSuperAdmin === true;
+    
+    if (!isOwnProfile && !isAdmin) return;
+    
+    var currentTag = window.viewingProfileUserData?.userTag || '';
+    var newTag = prompt('Введите новый юзернейм (только латиница, цифры и _):', currentTag.replace('@', ''));
+    if (!newTag) return;
+    
+    var tagPattern = /^[a-zA-Z0-9_]+$/;
+    if (!tagPattern.test(newTag)) {
+        showNotification('Юзернейм может содержать только латиницу, цифры и _', 'error');
+        return;
+    }
+    
+    var formattedTag = '@' + newTag.toLowerCase();
+    
+    database.ref('userTags/' + formattedTag).once('value').then(function(snap) {
+        if (snap.exists() && snap.val() !== userId) {
+            showNotification('Юзернейм ' + formattedTag + ' уже занят', 'error');
+            return;
+        }
+        
+        var oldTag = window.viewingProfileUserData?.userTag;
+        var updates = { userTag: formattedTag };
+        
+        database.ref('users/' + userId).update(updates).then(function() {
+            if (oldTag && oldTag !== formattedTag) {
+                database.ref('userTags/' + oldTag).remove();
+            }
+            database.ref('userTags/' + formattedTag).set(userId);
+            
+            showNotification('Юзернейм обновлён!', 'success');
+            
+            var usernameDiv = document.querySelector('.profile-username');
+            if (usernameDiv) usernameDiv.textContent = formattedTag;
+            
+            if (window.viewingProfileUserData) {
+                window.viewingProfileUserData.userTag = formattedTag;
+            }
+            
+            if (userId === currentUser.uid && typeof updateUserDisplay === 'function') {
+                updateUserDisplay();
+            }
+            
+            setTimeout(function() {
+                openUserProfileFull(userId);
+            }, 500);
+        }).catch(function(err) {
+            showNotification('Ошибка: ' + err.message, 'error');
+        });
+    });
 }
 
 function toggleUserVerification(userId) {
@@ -1116,6 +956,65 @@ function toggleUserVerification(userId) {
 
 function showVerifiedInfo() {
     alert('Этот пользователь имеет подтверждённый, верифицированный аккаунт, подтверждённый администрацией Kukumber 🌟');
+}
+
+function startPrivateChatFromProfile(userId) {
+    if (!currentUser || !currentUser.uid) {
+        showNotification('Авторизуйтесь', 'error');
+        return;
+    }
+    
+    closeProfileModal();
+    
+    if (typeof switchToTab === 'function') {
+        switchToTab('chats');
+    }
+    
+    var chatId = currentUser.uid < userId ? 
+        currentUser.uid + '_' + userId : 
+        userId + '_' + currentUser.uid;
+    
+    database.ref('chats/' + chatId).once('value').then(function(chatSnap) {
+        if (!chatSnap.exists()) {
+            database.ref('chats/' + chatId).set({
+                type: 'private',
+                participants: [currentUser.uid, userId],
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                lastMessage: 'Чат создан',
+                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+            }).then(function() {
+                return Promise.all([
+                    database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true),
+                    database.ref('userChats/' + userId + '/' + chatId).set(true)
+                ]);
+            }).then(function() {
+                showNotification('Чат создан!', 'success');
+                setTimeout(function() {
+                    database.ref('chats/' + chatId).once('value').then(function(newSnap) {
+                        if (typeof openChatById === 'function') {
+                            openChatById(chatId);
+                        } else if (typeof openChatWithData === 'function') {
+                            openChatWithData(chatId, newSnap.val());
+                        }
+                    });
+                }, 500);
+            });
+        } else {
+            showNotification('Открываем чат...', 'info');
+            setTimeout(function() {
+                if (typeof openChatById === 'function') {
+                    openChatById(chatId);
+                } else if (typeof openChatWithData === 'function') {
+                    database.ref('chats/' + chatId).once('value').then(function(newSnap) {
+                        openChatWithData(chatId, newSnap.val());
+                    });
+                }
+            }, 300);
+        }
+    }).catch(function(err) {
+        console.error('Ошибка создания чата:', err);
+        showNotification('Ошибка создания чата', 'error');
+    });
 }
 
 // ========== СЛАЙДЕР ==========
@@ -1183,6 +1082,19 @@ function formatSliceDate(timestamp) {
     if (diff < 86400) return 'сегодня в ' + date.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
     if (diff < 172800) return 'вчера в ' + date.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
     return date.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'});
+}
+
+function formatLastSeen(timestamp) {
+    if (!timestamp) return 'неизвестно';
+    var date = new Date(timestamp);
+    var now = new Date();
+    var diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'только что';
+    if (diff < 3600) return Math.floor(diff / 60) + ' минут назад';
+    if (diff < 86400) {
+        return 'сегодня в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString('ru-RU') + ' в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
 // ========== ПОИСК ==========
@@ -1260,7 +1172,7 @@ function openSliceLightbox(url) {
 
 function openSlicesProfile() {
     if (currentUser) {
-       openUserProfileFull(currentUser.uid);
+        openUserProfileFull(currentUser.uid);
     }
 }
 
@@ -1383,7 +1295,6 @@ function showCreateSliceModal() {
     if (previewContainer) previewContainer.classList.add('hidden');
     updateSlicePreviewCounter();
     
-    // ЗАГРУЖАЕМ КАНАЛЫ ДЛЯ ВЫБОРА
     loadUserChannelsForPublish();
 }
 
@@ -1416,7 +1327,6 @@ function updateSlicePreviewCounter() {
     if (counter) counter.textContent = pendingSliceFiles.length; 
 }
 
-// ========== ОБНОВЛЕНИЕ ПРЕДПРОСМОТРА ФАЙЛОВ ==========
 function updateSlicePreview() {
     var previewContainer = document.getElementById('slice-preview-container');
     var uploadArea = document.getElementById('slice-upload-area');
@@ -1426,19 +1336,16 @@ function updateSlicePreview() {
     if (!previewArea) return;
     
     if (pendingSliceFiles.length === 0) {
-        // Нет файлов — показываем область загрузки
         if (uploadArea) uploadArea.style.display = '';
         if (previewContainer) previewContainer.classList.add('hidden');
         if (counterSpan) counterSpan.textContent = '0';
         return;
     }
     
-    // Есть файлы — показываем предпросмотр
     if (uploadArea) uploadArea.style.display = 'none';
     if (previewContainer) previewContainer.classList.remove('hidden');
     if (counterSpan) counterSpan.textContent = pendingSliceFiles.length;
     
-    // Очищаем и перерисовываем предпросмотр
     previewArea.innerHTML = '';
     
     pendingSliceFiles.forEach(function(file, idx) {
@@ -1458,6 +1365,7 @@ function updateSlicePreview() {
         reader.readAsDataURL(file);
     });
 }
+
 function removeSliceMedia(index) { 
     pendingSliceFiles.splice(index, 1); 
     updateSlicePreview(); 
@@ -1515,7 +1423,6 @@ async function publishSlice() {
             createdAt: firebase.database.ServerValue.TIMESTAMP
         };
         
-        // Если выбран канал
         if (publishAs !== 'self') {
             var channelSnap = await database.ref('chats/' + publishAs).once('value');
             var channel = channelSnap.val();
@@ -1539,7 +1446,6 @@ async function publishSlice() {
     }
 }
 
-// ========== ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА СОЗДАНИЯ СЛАЙСА ==========
 function closeCreateSliceModal() {
     var modal = document.getElementById('create-slice-modal');
     if (modal) modal.classList.add('hidden');
@@ -1556,7 +1462,6 @@ function closeCreateSliceModal() {
     if (previewContainer) previewContainer.classList.add('hidden');
 }
 
-// ========== ДОБАВЛЕНИЕ МЕДИА В СЛАЙС ==========
 function addSliceMedia() {
     var input = document.createElement('input');
     input.type = 'file';
@@ -1576,7 +1481,138 @@ function addSliceMedia() {
     input.click();
 }
 
-// Инициализация звуков
+// ========== ФУНКЦИИ ДЛЯ БАННЕРА ПРОФИЛЯ ==========
+window.setProfileBanner = async function(colorOrUrl) {
+    var userId = window.viewingProfileUserId || currentUser?.uid;
+    if (!userId) {
+        console.error('Нет userId для установки баннера');
+        return;
+    }
+    
+    showNotification('Сохранение баннера...', 'info');
+    
+    try {
+        var updateData = {};
+        if (colorOrUrl && colorOrUrl !== '') {
+            updateData.banner = colorOrUrl;
+        } else {
+            updateData.banner = null;
+        }
+        
+        await database.ref('users/' + userId).update(updateData);
+        
+        showNotification('Баннер обновлён!', 'success');
+        window.closeColorPickerModal();
+        
+        var bannerDiv = document.getElementById('profile-banner');
+        if (bannerDiv) {
+            if (colorOrUrl && colorOrUrl !== '') {
+                if (colorOrUrl.startsWith('#')) {
+                    bannerDiv.style.background = colorOrUrl;
+                    bannerDiv.style.backgroundImage = 'none';
+                } else {
+                    bannerDiv.style.backgroundImage = 'url(' + colorOrUrl + ')';
+                    bannerDiv.style.backgroundSize = 'cover';
+                    bannerDiv.style.backgroundPosition = 'center';
+                    bannerDiv.style.background = 'none';
+                }
+            } else {
+                bannerDiv.style.background = 'linear-gradient(135deg, #228B22, #556B2F)';
+                bannerDiv.style.backgroundImage = 'none';
+            }
+        }
+        
+        if (window.viewingProfileUserData) {
+            window.viewingProfileUserData.banner = colorOrUrl || null;
+        }
+        
+        if (userId === currentUser?.uid && currentUserData) {
+            currentUserData.banner = colorOrUrl || null;
+        }
+        
+        console.log('Баннер обновлён:', colorOrUrl);
+        
+    } catch (err) {
+        console.error('Ошибка сохранения баннера:', err);
+        showNotification('Ошибка: ' + err.message, 'error');
+    }
+};
+
+window.closeColorPickerModal = function() {
+    var modal = document.getElementById('color-picker-modal');
+    if (modal) modal.remove();
+};
+
+window.uploadProfileBannerImage = async function() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,image/gif';
+    input.onchange = async function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        
+        showNotification('Загрузка баннера...', 'info');
+        
+        try {
+            var url = await uploadToImgBB(file);
+            console.log('Загружен URL баннера:', url);
+            await window.setProfileBanner(url);
+        } catch (err) {
+            console.error('Ошибка загрузки:', err);
+            showNotification('Ошибка загрузки: ' + err.message, 'error');
+        }
+    };
+    input.click();
+};
+
+window.editProfileBanner = function() {
+    var userId = window.viewingProfileUserId || currentUser?.uid;
+    if (!userId) return;
+    
+    var isOwnProfile = (userId === currentUser?.uid);
+    var isAdmin = window.isSuperAdmin === true;
+    
+    if (!isOwnProfile && !isAdmin) {
+        showNotification('Вы не можете редактировать чужой профиль', 'error');
+        return;
+    }
+    
+    var colors = ['#228B22', '#556B2F', '#1a5c1a', '#32CD32', '#6b8e6b', '#000000', '#1E90FF', '#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#9370DB'];
+    
+    var oldColorModal = document.getElementById('color-picker-modal');
+    if (oldColorModal) oldColorModal.remove();
+    
+    var modal = document.createElement('div');
+    modal.id = 'color-picker-modal';
+    modal.className = 'modal';
+    modal.style.zIndex = '10002';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 350px;">
+            <div class="modal-header">
+                <h3>Выберите баннер</h3>
+                <button onclick="window.closeColorPickerModal()" class="btn-close">×</button>
+            </div>
+            <div class="banner-color-picker" style="display:flex; flex-wrap:wrap; gap:10px; padding:15px; justify-content:center;">
+                ${colors.map(c => `<div class="banner-color-option" style="background:${c}; width:40px; height:40px; border-radius:50%; cursor:pointer; border:2px solid white; box-shadow:0 1px 3px rgba(0,0,0,0.2);" onclick="window.setProfileBanner('${c}')"></div>`).join('')}
+            </div>
+            <div style="padding:10px; text-align:center;">
+                <button onclick="window.uploadProfileBannerImage()" class="btn-primary" style="width: auto; padding: 8px 20px;">📷 Загрузить картинку/GIF</button>
+            </div>
+            <div style="padding:10px; text-align:center;">
+                <button onclick="window.setProfileBanner('')" class="btn-secondary">Сбросить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.classList.remove('hidden');
+};
+
+window.openChannelProfile = function(chatId) {
+    console.log('openChannelProfile вызван для:', chatId);
+};
+
+window.openUserProfile = openUserProfileFull;
+
 if (typeof initSliceSound === 'function') initSliceSound();
 
 // Экспорт в глобальную область
@@ -1585,228 +1621,8 @@ window.addSliceMedia = addSliceMedia;
 window.removeSliceMedia = removeSliceMedia;
 window.showCreateSliceModal = showCreateSliceModal;
 window.publishSlice = publishSlice;
-// slices.js - в самый конец файла
-window.openChannelProfile = openChannelProfile;
-function openChannelProfile(chatId) {
-    console.log('openChannelProfile вызван для:', chatId);
-}
-// ========== ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ПРОФИЛЯ ==========
-
-// Форматирование последнего посещения
-function formatLastSeen(timestamp) {
-    if (!timestamp) return 'неизвестно';
-    var date = new Date(timestamp);
-    var now = new Date();
-    var diff = Math.floor((now - date) / 1000);
-    if (diff < 60) return 'только что';
-    if (diff < 3600) return Math.floor(diff / 60) + ' минут назад';
-    if (diff < 86400) {
-        return 'сегодня в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    }
-    return date.toLocaleDateString('ru-RU') + ' в ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-}
-
-// Функция для начала чата из профиля
-function startPrivateChatFromProfile(userId) {
-    if (!currentUser || !currentUser.uid) {
-        showNotification('Авторизуйтесь', 'error');
-        return;
-    }
-    
-    // Закрываем профиль
-    closeProfileModal();
-    
-    // Переключаемся на вкладку чатов
-    if (typeof switchToTab === 'function') {
-        switchToTab('chats');
-    }
-    
-    // Создаём или открываем чат
-    var chatId = currentUser.uid < userId ? 
-        currentUser.uid + '_' + userId : 
-        userId + '_' + currentUser.uid;
-    
-    database.ref('chats/' + chatId).once('value').then(function(chatSnap) {
-        if (!chatSnap.exists()) {
-            database.ref('chats/' + chatId).set({
-                type: 'private',
-                participants: [currentUser.uid, userId],
-                createdAt: firebase.database.ServerValue.TIMESTAMP,
-                lastMessage: 'Чат создан',
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-            }).then(function() {
-                return Promise.all([
-                    database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true),
-                    database.ref('userChats/' + userId + '/' + chatId).set(true)
-                ]);
-            }).then(function() {
-                showNotification('Чат создан!', 'success');
-                // Открываем чат после создания
-                setTimeout(function() {
-                    database.ref('chats/' + chatId).once('value').then(function(newSnap) {
-                        if (typeof openChatById === 'function') {
-                            openChatById(chatId);
-                        } else if (typeof openChatWithData === 'function') {
-                            openChatWithData(chatId, newSnap.val());
-                        }
-                    });
-                }, 500);
-            });
-        } else {
-            // Чат уже существует, открываем его
-            showNotification('Открываем чат...', 'info');
-            setTimeout(function() {
-                if (typeof openChatById === 'function') {
-                    openChatById(chatId);
-                } else if (typeof openChatWithData === 'function') {
-                    database.ref('chats/' + chatId).once('value').then(function(newSnap) {
-                        openChatWithData(chatId, newSnap.val());
-                    });
-                }
-            }, 300);
-        }
-    }).catch(function(err) {
-        console.error('Ошибка создания чата:', err);
-        showNotification('Ошибка создания чата', 'error');
-    });
-}
-
-// Редактирование юзернейма (добавляем в профиль)
-function editProfileUserTag() {
-    var userId = window.viewingProfileUserId;
-    var isOwnProfile = (userId === currentUser.uid);
-    var isAdmin = window.isSuperAdmin === true;
-    
-    if (!isOwnProfile && !isAdmin) return;
-    
-    var currentTag = window.viewingProfileUserData?.userTag || '';
-    var newTag = prompt('Введите новый юзернейм (только латиница, цифры и _):', currentTag.replace('@', ''));
-    if (!newTag) return;
-    
-    // Проверка формата
-    var tagPattern = /^[a-zA-Z0-9_]+$/;
-    if (!tagPattern.test(newTag)) {
-        showNotification('Юзернейм может содержать только латиницу, цифры и _', 'error');
-        return;
-    }
-    
-    var formattedTag = '@' + newTag.toLowerCase();
-    
-    // Проверяем уникальность
-    database.ref('userTags/' + formattedTag).once('value').then(function(snap) {
-        if (snap.exists() && snap.val() !== userId) {
-            showNotification('Юзернейм ' + formattedTag + ' уже занят', 'error');
-            return;
-        }
-        
-        var oldTag = window.viewingProfileUserData?.userTag;
-        var updates = { userTag: formattedTag };
-        
-        database.ref('users/' + userId).update(updates).then(function() {
-            if (oldTag && oldTag !== formattedTag) {
-                database.ref('userTags/' + oldTag).remove();
-            }
-            database.ref('userTags/' + formattedTag).set(userId);
-            
-            showNotification('Юзернейм обновлён!', 'success');
-            
-            // Обновляем отображение в профиле
-            var usernameDiv = document.querySelector('.profile-username');
-            if (usernameDiv) usernameDiv.textContent = formattedTag;
-            
-            if (window.viewingProfileUserData) {
-                window.viewingProfileUserData.userTag = formattedTag;
-            }
-            
-            // Обновляем в настройках, если это свой профиль
-            if (userId === currentUser.uid && typeof updateUserDisplay === 'function') {
-                updateUserDisplay();
-            }
-            
-            // Перезагружаем профиль
-            setTimeout(function() {
-               openUserProfileFull(userId);
-            }, 500);
-        }).catch(function(err) {
-            showNotification('Ошибка: ' + err.message, 'error');
-        });
-    });
-}
-
-// Переопределяем HTML профиля, чтобы добавить редактирование юзернейма и кнопку "Написать"
-// Обновляем функцию openUserProfile (замените существующую или добавьте эти строки)
-// ВНИМАНИЕ: В existing openUserProfile найдите строку с .profile-username и замените её на:
-// <div class="profile-username" ${canEdit ? 'ondblclick="editProfileUserTag()" style="cursor:pointer;"' : ''}>${escapeHtml(userTag)}</div>
-// И добавьте кнопку "Написать" после кнопок подписки/уведомлений
-
-// Добавляем глобальные функции
 window.startPrivateChatFromProfile = startPrivateChatFromProfile;
 window.editProfileUserTag = editProfileUserTag;
+window.openUserProfileFull = openUserProfileFull;
 
-// ... весь ваш код ...
-
-console.log('✅ Дополнительные функции профиля добавлены');
-
-// ===== ЭТО САМОЕ ВАЖНОЕ - ДОБАВЬТЕ ЭТУ СТРОКУ =====
-window.openUserProfile = openUserProfileFull;
-// ========== ФОРСИРОВАННОЕ ИСПРАВЛЕНИЕ АВАТАРОК НА ТЕЛЕФОНЕ ==========
-(function fixAvatarsOnMobile() {
-    console.log('🔧 Запуск фикса аватарок');
-    
-    // Функция принудительного обновления всех аватарок
-    function forceFixAllAvatars() {
-        // Все аватарки на странице
-        var allAvatars = document.querySelectorAll('.avatar, .profile-avatar, .settings-avatar, #profile-avatar, #user-avatar, #chat-avatar, #slices-user-avatar');
-        
-        allAvatars.forEach(function(avatar) {
-            // Получаем текущий style
-            var currentStyle = avatar.getAttribute('style') || '';
-            
-            // Если есть background-image, форсируем правильные стили
-            if (currentStyle.includes('background-image') && !currentStyle.includes('background-size: cover')) {
-                avatar.style.backgroundSize = 'cover';
-                avatar.style.backgroundPosition = 'center';
-                avatar.style.backgroundRepeat = 'no-repeat';
-                avatar.style.textIndent = '-9999px';
-                avatar.style.color = 'transparent';
-                
-                // Очищаем текстовое содержимое
-                if (avatar.textContent && avatar.textContent !== '') {
-                    avatar.textContent = '';
-                }
-            }
-        });
-    }
-    
-    // Запускаем сразу
-    setTimeout(forceFixAllAvatars, 100);
-    
-    // Запускаем снова через 1 секунду
-    setTimeout(forceFixAllAvatars, 1000);
-    
-    // Запускаем снова через 3 секунды (когда профиль может открыться)
-    setTimeout(forceFixAllAvatars, 3000);
-    
-    // Наблюдаем за изменениями на странице
-    var observer = new MutationObserver(function() {
-        forceFixAllAvatars();
-    });
-    
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class']
-    });
-    
-    console.log('✅ Фикс аватарок активирован');
-    // ========== ПЕРЕОПРЕДЕЛЕНИЕ ФУНКЦИИ openUserProfileFull ==========
-window.openUserProfile = openUserProfileFull;
-
-// Заменяем существующую функцию на исправленную версию
-if (typeof openUserProfileFull !== 'undefined') {
-    window.openUserProfileFull = openUserProfileFull;
-}
-
-console.log('✅ Профиль с прокруткой активирован');
-})();
+console.log('✅ slices.js полностью загружен');
