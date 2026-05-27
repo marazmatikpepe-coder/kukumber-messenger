@@ -529,7 +529,7 @@ function likeComment(sliceId, commentId) {
     });
 }
 
-// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==========
+// ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (ИСПРАВЛЕННЫЙ) ==========
 function openUserProfileFull(userId) {
     window.viewingProfileUserId = userId;
     
@@ -587,7 +587,7 @@ function openUserProfileFull(userId) {
                     </div>
                     <div class="profile-scrollable">
                         <div class="profile-avatar-wrapper">
-                            <div class="profile-avatar" id="profile-avatar">
+                            <div class="profile-avatar default-avatar-user" id="profile-avatar">
                                 ${canEdit ? '<button class="profile-avatar-edit-btn" onclick="editProfileAvatar()">✏️</button>' : ''}
                             </div>
                         </div>
@@ -595,7 +595,7 @@ function openUserProfileFull(userId) {
                             <div class="profile-name-row">
                                 <div style="display: flex; align-items: center; gap: 5px;">
                                     <h2 class="profile-name" id="profile-name" ${canEdit ? 'ondblclick="editProfileName()" style="cursor:pointer;"' : ''}>${escapeHtml(userName)}</h2>
-                                    ${userVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:16px; height:16px; cursor:pointer;" onclick="showVerifiedInfo()">' : ''}
+                                    ${userVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:18px; height:18px; cursor:pointer;" onclick="showVerifiedInfo()">' : ''}
                                     ${isAdmin ? '<button onclick="toggleUserVerification(\''+userId+'\')" style="background:none; border:none; cursor:pointer; font-size:12px;">🔘 ' + (userVerified ? 'Снять галочку' : 'Выдать галочку') + '</button>' : ''}
                                 </div>
                                 ${isOwnProfile ? '' : `
@@ -625,7 +625,7 @@ function openUserProfileFull(userId) {
             document.body.appendChild(modal);
             modal.classList.remove('hidden');
             
-            // Устанавливаем аватарку через 100мс (ждём отрисовки DOM)
+            // Устанавливаем аватарку
             setTimeout(function() {
                 var avatarDiv = document.getElementById('profile-avatar');
                 if (avatarDiv) {
@@ -636,20 +636,10 @@ function openUserProfileFull(userId) {
                         avatarDiv.style.backgroundRepeat = 'no-repeat';
                         avatarDiv.textContent = '';
                         avatarDiv.classList.remove('default-avatar-user');
-                        console.log('Аватар установлен:', userAvatar);
                     } else {
                         avatarDiv.classList.add('default-avatar-user');
                         avatarDiv.textContent = '';
-                        console.log('Аватар дефолтный');
                     }
-                }
-            }, 100);
-            
-            // Проверяем баннер
-            setTimeout(function() {
-                var bannerDiv = document.getElementById('profile-banner');
-                if (bannerDiv && userBanner && userBanner !== '' && !userBanner.startsWith('#')) {
-                    console.log('Баннер установлен:', userBanner);
                 }
             }, 100);
             
