@@ -183,8 +183,10 @@ function createSliceCard(sliceId, sliceData) {
                 </div>
             </div>
             <div class="slice-views">
-                <span class="slice-views-count" data-count="${sliceData.viewsCount || 0}"></span>
-            </div>
+    <span class="slice-views-count">
+        <span class="slice-views-number">${sliceData.viewsCount || 0}</span>
+    </span>
+</div>
         </div>
         ${pinnedBadge}
         ${mediaHtml}
@@ -321,7 +323,11 @@ function repostSlice(sliceId) {
     }).catch(function() { delete pendingRepostRequests[sliceId]; });
 }
 
-// ========== КОММЕНТАРИИ ==========
+// ========== КОММЕНТАРИИ С ВЛОЖЕННЫМИ ОТВЕТАМИ ==========
+
+// Глобальный объект для хранения состояния открытых ответов
+var openRepliesState = {};
+
 function toggleComments(sliceId) {
     var commentsBlock = document.getElementById('comments-block-' + sliceId);
     if (!commentsBlock) return;
@@ -342,61 +348,161 @@ function loadComments(sliceId) {
     
     database.ref('sliceComments/' + sliceId).orderByChild('createdAt').once('value').then(function(snapshot) {
         var comments = snapshot.val();
-        var commentsHtml = '<div class="comments-list">';
         
         if (!comments) {
-            commentsHtml += '<div class="no-comments">Комментариев пока нет. Будьте первым!</div>';
-        } else {
-            var commentsArray = [];
-            for (var id in comments) {
-                if (!comments[id].parentId) {
-                    commentsArray.push({ id: id, data: comments[id] });
-                }
-            }
-            commentsArray.sort(function(a, b) { return (a.data.createdAt || 0) - (b.data.createdAt || 0); });
+            container.innerHTML = `
+                <div class="comments-list">
+                    <div class="no-comments">Комментариев пока нет. Будьте первым!</div>
+                </div>
+                <div class="add-comment">
+                    <textarea id="comment-text-${sliceId}" placeholder="Написать комментарий..." rows="2"></textarea>
+                    <button onclick="addComment('${sliceId}')">Отправить</button>
+                </div>
+            `;
+            return;
+        }
+        
+        // Группируем комментарии по parentId
+        var commentsByParent = {};
+        var topLevelComments = [];
+        
+        for (var id in comments) {
+            var comment = comments[id];
+            comment.id = id;
+            var parentId = comment.parentId || 'root';
             
-            commentsArray.forEach(function(comment) {
-                commentsHtml += renderComment(comment.id, comment.data, sliceId);
+            if (!commentsByParent[parentId]) {
+                commentsByParent[parentId] = [];
+            }
+            commentsByParent[parentId].push(comment);
+            
+            if (parentId === 'root') {
+                topLevelComments.push(comment);
+            }
+        }
+        
+        // Сортируем по дате
+        for (var key in commentsByParent) {
+            commentsByParent[key].sort(function(a, b) {
+                return (a.createdAt || 0) - (b.createdAt || 0);
             });
+        }
+        topLevelComments.sort(function(a, b) {
+            return (a.createdAt || 0) - (b.createdAt || 0);
+        });
+        
+        // Рендерим
+        var commentsHtml = '<div class="comments-list">';
+        
+        for (var i = 0; i < topLevelComments.length; i++) {
+            commentsHtml += renderCommentThread(topLevelComments[i], commentsByParent, sliceId);
         }
         
         commentsHtml += '</div>';
-        commentsHtml += '<div class="add-comment">';
-        commentsHtml += '<textarea id="comment-text-' + sliceId + '" placeholder="Написать комментарий..." rows="2"></textarea>';
-        commentsHtml += '<button onclick="addComment(\'' + sliceId + '\')">Отправить</button>';
-        commentsHtml += '</div>';
+        commentsHtml += `
+            <div class="add-comment">
+                <textarea id="comment-text-${sliceId}" placeholder="Написать комментарий..." rows="2"></textarea>
+                <button onclick="addComment('${sliceId}')">Отправить</button>
+            </div>
+        `;
         
         container.innerHTML = commentsHtml;
+        
+        // Восстанавливаем состояния открытых ответов
+        for (var commentId in openRepliesState) {
+            if (openRepliesState[commentId]) {
+                var repliesDiv = document.getElementById('replies-container-' + commentId);
+                if (repliesDiv) {
+                    repliesDiv.style.display = 'block';
+                    var toggleBtn = document.querySelector(`.toggle-replies-btn[data-comment-id="${commentId}"]`);
+                    if (toggleBtn) {
+                        toggleBtn.innerHTML = '▲ Скрыть ответы';
+                    }
+                }
+            }
+        }
     });
 }
 
-function renderComment(commentId, comment, sliceId, level) {
+function renderCommentThread(comment, commentsByParent, sliceId, level) {
     if (!level) level = 0;
+    var marginLeft = level * 36;
+    var hasReplies = commentsByParent[comment.id] && commentsByParent[comment.id].length > 0;
+    var isOpen = openRepliesState[comment.id] === true;
     
     var avatarStyle = comment.authorAvatar ? 'background-image:url('+comment.authorAvatar+');background-size:cover;' : '';
     var avatarClass = (!comment.authorAvatar) ? 'default-avatar-user' : '';
-    var avatarContent = '';
-    var marginLeft = level * 40;
+    
+    var repliesHtml = '';
+    if (hasReplies && isOpen) {
+        repliesHtml = '<div id="replies-container-' + comment.id + '" class="replies-container" style="display:block;">';
+        var replies = commentsByParent[comment.id];
+        for (var i = 0; i < replies.length; i++) {
+            repliesHtml += renderCommentThread(replies[i], commentsByParent, sliceId, level + 1);
+        }
+        repliesHtml += '</div>';
+    } else if (hasReplies && !isOpen) {
+        repliesHtml = '<div id="replies-container-' + comment.id + '" class="replies-container" style="display:none;"></div>';
+    } else {
+        repliesHtml = '<div id="replies-container-' + comment.id + '" class="replies-container" style="display:none;"></div>';
+    }
+    
+    var replyButtonHtml = '';
+    if (hasReplies) {
+        var toggleIcon = isOpen ? '▲' : '▼';
+        var toggleText = isOpen ? 'Скрыть ответы' : 'Показать ответы';
+        replyButtonHtml = `
+            <button class="comment-toggle-replies-btn toggle-replies-btn" data-comment-id="${comment.id}" onclick="toggleReplies('${sliceId}', '${comment.id}')">
+                ${toggleIcon} ${toggleText} (${commentsByParent[comment.id].length})
+            </button>
+        `;
+    }
     
     return `
-        <div class="comment-item" data-comment-id="${commentId}" style="margin-left: ${marginLeft}px;">
+        <div class="comment-item" data-comment-id="${comment.id}" style="margin-left: ${marginLeft}px;">
             <div class="comment-header">
-                <div class="comment-author-avatar ${avatarClass}" style="${avatarStyle}">${avatarContent}</div>
+                <div class="comment-author-avatar ${avatarClass}" style="${avatarStyle}">${comment.authorAvatar ? '' : ''}</div>
                 <div class="comment-author-info">
                     <span class="comment-author-name">${escapeHtml(comment.authorName)}</span>
                     <span class="comment-date">${formatSliceDate(comment.createdAt)}</span>
                 </div>
-                <button class="comment-like-btn" onclick="likeComment('${sliceId}', '${commentId}')">
-                    🤍 <span class="comment-like-count">${comment.likesCount || 0}</span>
+                <button class="comment-like-btn" onclick="likeComment('${sliceId}', '${comment.id}')">
+                    ${comment.userLiked ? '❤️' : '🤍'} <span class="comment-like-count">${comment.likesCount || 0}</span>
                 </button>
             </div>
             <div class="comment-text">${escapeHtml(comment.text)}</div>
             <div class="comment-actions">
-                <button class="comment-reply-btn" onclick="showReplyForm('${sliceId}', '${commentId}')">Ответить</button>
+                <button class="comment-reply-btn" onclick="showReplyForm('${sliceId}', '${comment.id}')">Ответить</button>
+                ${replyButtonHtml}
             </div>
-            <div id="replies-container-${commentId}" class="replies-container"></div>
+            ${repliesHtml}
         </div>
     `;
+}
+
+function toggleReplies(sliceId, commentId) {
+    var repliesContainer = document.getElementById('replies-container-' + commentId);
+    var toggleBtn = document.querySelector(`.toggle-replies-btn[data-comment-id="${commentId}"]`);
+    
+    if (!repliesContainer) return;
+    
+    if (repliesContainer.style.display === 'none') {
+        repliesContainer.style.display = 'block';
+        if (toggleBtn) {
+            var countMatch = toggleBtn.innerHTML.match(/\((\d+)\)/);
+            var count = countMatch ? countMatch[1] : '';
+            toggleBtn.innerHTML = '▲ Скрыть ответы (' + count + ')';
+        }
+        openRepliesState[commentId] = true;
+    } else {
+        repliesContainer.style.display = 'none';
+        if (toggleBtn) {
+            var countMatch = toggleBtn.innerHTML.match(/\((\d+)\)/);
+            var count = countMatch ? countMatch[1] : '';
+            toggleBtn.innerHTML = '▼ Показать ответы (' + count + ')';
+        }
+        openRepliesState[commentId] = false;
+    }
 }
 
 function addComment(sliceId, parentId) {
@@ -429,6 +535,11 @@ function addComment(sliceId, parentId) {
     newCommentRef.set(commentData).then(function() {
         if (textInput) textInput.value = '';
         database.ref('slices/' + sliceId + '/commentsCount').transaction(function(c) { return (c || 0) + 1; });
+        
+        if (parentId) {
+            openRepliesState[parentId] = true;
+        }
+        
         loadComments(sliceId);
         showNotification('Комментарий добавлен', 'success');
     });
@@ -438,72 +549,36 @@ function showReplyForm(sliceId, parentId) {
     var container = document.getElementById('replies-container-' + parentId);
     if (!container) return;
     
-    if (container.querySelector('.reply-form')) {
-        container.innerHTML = '';
-        return;
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        openRepliesState[parentId] = true;
+        
+        var toggleBtn = document.querySelector(`.toggle-replies-btn[data-comment-id="${parentId}"]`);
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '▲ Скрыть ответы';
+        }
     }
     
-    container.innerHTML = `
+    var existingForm = container.querySelector('.reply-form');
+    if (existingForm) existingForm.remove();
+    
+    var formHtml = `
         <div class="reply-form">
             <textarea id="reply-text-${parentId}" placeholder="Написать ответ..." rows="2"></textarea>
-            <button onclick="addComment('${sliceId}', '${parentId}')">Ответить</button>
-            <button onclick="cancelReply('${parentId}')" class="cancel-reply-btn">Отмена</button>
+            <div style="display: flex; gap: 8px; margin-top: 5px;">
+                <button onclick="addComment('${sliceId}', '${parentId}')">Ответить</button>
+                <button onclick="cancelReply('${parentId}')" class="cancel-reply-btn">Отмена</button>
+            </div>
         </div>
     `;
     
-    loadReplies(sliceId, parentId);
+    container.insertAdjacentHTML('beforeend', formHtml);
+    document.getElementById('reply-text-' + parentId).focus();
 }
 
 function cancelReply(parentId) {
-    var container = document.getElementById('replies-container-' + parentId);
-    if (container) container.innerHTML = '';
-}
-
-function loadReplies(sliceId, parentId) {
-    var container = document.getElementById('replies-container-' + parentId);
-    if (!container) return;
-    
-    database.ref('sliceComments/' + sliceId).orderByChild('parentId').equalTo(parentId).once('value').then(function(snapshot) {
-        var replies = snapshot.val();
-        if (!replies) return;
-        
-        var repliesHtml = '<div class="replies-list">';
-        var repliesArray = [];
-        for (var id in replies) {
-            repliesArray.push({ id: id, data: replies[id] });
-        }
-        repliesArray.sort(function(a, b) { return (a.data.createdAt || 0) - (b.data.createdAt || 0); });
-        
-        repliesArray.forEach(function(reply) {
-            var avatarStyle = reply.data.authorAvatar ? 'background-image:url('+reply.data.authorAvatar+');background-size:cover;' : '';
-            var avatarContent = reply.data.authorAvatar ? '' : '';
-            
-            repliesHtml += `
-                <div class="comment-item reply-item">
-                    <div class="comment-header">
-                        <div class="comment-author-avatar" style="${avatarStyle}">${avatarContent}</div>
-                        <div class="comment-author-info">
-                            <span class="comment-author-name">${escapeHtml(reply.data.authorName)}</span>
-                            <span class="comment-date">${formatSliceDate(reply.data.createdAt)}</span>
-                        </div>
-                        <button class="comment-like-btn" onclick="likeComment('${sliceId}', '${reply.id}')">
-                            🤍 <span>${reply.data.likesCount || 0}</span>
-                        </button>
-                    </div>
-                    <div class="comment-text">${escapeHtml(reply.data.text)}</div>
-                </div>
-            `;
-        });
-        repliesHtml += '</div>';
-        
-        var existingForm = container.querySelector('.reply-form');
-        if (existingForm) {
-            container.innerHTML = repliesHtml;
-            container.appendChild(existingForm);
-        } else {
-            container.innerHTML = repliesHtml;
-        }
-    });
+    var form = document.querySelector(`#replies-container-${parentId} .reply-form`);
+    if (form) form.remove();
 }
 
 function likeComment(sliceId, commentId) {
@@ -513,22 +588,29 @@ function likeComment(sliceId, commentId) {
     var likeBtn = commentElement ? commentElement.querySelector('.comment-like-btn') : null;
     
     likeRef.once('value').then(function(snap) {
-        if (snap.exists()) {
+        var isLiked = snap.exists();
+        
+        if (isLiked) {
             likeRef.remove();
             commentRef.child('likesCount').transaction(function(c) { return Math.max((c || 1) - 1, 0); });
             if (likeBtn) {
-                likeBtn.innerHTML = '🤍 <span>' + (parseInt(likeBtn.querySelector('span').textContent) - 1) + '</span>';
+                var countSpan = likeBtn.querySelector('.comment-like-count');
+                var newCount = Math.max((parseInt(countSpan.textContent) || 1) - 1, 0);
+                countSpan.textContent = newCount;
+                likeBtn.innerHTML = '🤍 <span class="comment-like-count">' + newCount + '</span>';
             }
         } else {
             likeRef.set(true);
             commentRef.child('likesCount').transaction(function(c) { return (c || 0) + 1; });
             if (likeBtn) {
-                likeBtn.innerHTML = '❤️ <span>' + (parseInt(likeBtn.querySelector('span').textContent) + 1) + '</span>';
+                var countSpan = likeBtn.querySelector('.comment-like-count');
+                var newCount = (parseInt(countSpan.textContent) || 0) + 1;
+                countSpan.textContent = newCount;
+                likeBtn.innerHTML = '❤️ <span class="comment-like-count">' + newCount + '</span>';
             }
         }
     });
 }
-
 // ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ (ИСПРАВЛЕННЫЙ) ==========
 function openUserProfileFull(userId) {
     window.viewingProfileUserId = userId;
