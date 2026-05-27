@@ -6109,3 +6109,355 @@ body:not(.night-mode) .slice-views-count::before {
 body.night-mode .slice-views-count::before {
     background-image: url('https://i.ibb.co/tpW9Tb8J/bird-result-d27fb1b04bb011f1aa05ee6f7b7a5cce.png') !important;
 }
+/* ========== ИСПРАВЛЕНИЕ ПРОФИЛЯ (ПК + ТЕЛЕФОН) ========== */
+
+/* Модальное окно профиля */
+#user-profile-modal {
+    z-index: 10001 !important;
+}
+
+#user-profile-modal .profile-modal-content {
+    max-width: 500px;
+    width: 90%;
+    background: white;
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    margin: auto;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* БАННЕР - правильное позиционирование */
+#user-profile-modal .profile-banner {
+    height: 130px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    border-radius: 28px 28px 0 0;
+}
+
+/* АВАТАР - ПОВЕРХ баннера */
+#user-profile-modal .profile-avatar-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: -55px !important;
+    margin-bottom: 0 !important;
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+#user-profile-modal .profile-avatar {
+    width: 100px !important;
+    height: 100px !important;
+    border-radius: 50% !important;
+    border: 4px solid white !important;
+    background: var(--sage, #9DC183) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    z-index: 200 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    overflow: hidden !important;
+}
+
+/* Кнопка редактирования аватара */
+#user-profile-modal .profile-avatar-edit-btn {
+    position: absolute !important;
+    bottom: 4px !important;
+    right: 4px !important;
+    background: var(--forest, #228B22) !important;
+    border: none !important;
+    color: white !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 250 !important;
+}
+
+/* Информация о пользователе */
+#user-profile-modal .profile-info {
+    text-align: center;
+    padding: 16px 20px 20px;
+    position: relative;
+    z-index: 10;
+    background: inherit;
+}
+
+#user-profile-modal .profile-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-dark, #2c3e2c);
+}
+
+#user-profile-modal .profile-username {
+    font-size: 14px;
+    color: var(--text-muted, #94a894);
+    margin: 4px 0;
+}
+
+#user-profile-modal .profile-subscribers {
+    font-size: 13px;
+    color: var(--text-light, #6b8e6b);
+    margin: 6px 0;
+}
+
+#user-profile-modal .profile-status {
+    font-size: 13px;
+    margin: 6px 0;
+}
+
+#user-profile-modal .profile-bio {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--background, #f5f7f5);
+    border-radius: 16px;
+    text-align: left;
+    font-size: 14px;
+    color: var(--text-light, #6b8e6b);
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+/* Кнопки действий */
+#user-profile-modal .profile-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+#user-profile-modal .profile-subscribe-btn,
+#user-profile-modal .profile-notify-btn,
+#user-profile-modal .profile-chat-btn {
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+#user-profile-modal .profile-subscribe-btn {
+    background: var(--forest, #228B22);
+    color: white;
+}
+
+#user-profile-modal .profile-chat-btn {
+    background: var(--forest, #228B22);
+    color: white;
+}
+
+#user-profile-modal .profile-notify-btn {
+    background: var(--background, #f5f7f5);
+    border: 1px solid var(--border, #d4e4d4);
+    font-size: 18px;
+    padding: 8px 16px;
+}
+
+/* Вкладки */
+#user-profile-modal .profile-tabs {
+    display: flex;
+    border-top: 1px solid var(--border, #d4e4d4);
+    border-bottom: 1px solid var(--border, #d4e4d4);
+    background: inherit;
+}
+
+#user-profile-modal .profile-tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: var(--text-light, #6b8e6b);
+}
+
+#user-profile-modal .profile-tab-btn.active {
+    color: var(--forest, #228B22);
+    border-bottom: 2px solid var(--forest, #228B22);
+}
+
+/* Контент вкладок */
+#user-profile-modal .profile-content {
+    padding: 15px;
+    max-height: 380px;
+    overflow-y: auto;
+    background: var(--background, #f5f7f5);
+}
+
+/* Карточки постов в профиле */
+#user-profile-modal .profile-slice-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Кнопка закрытия */
+#user-profile-modal .profile-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    transition: all 0.2s;
+}
+
+#user-profile-modal .profile-close-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.05);
+}
+
+/* Кнопка редактирования баннера */
+#user-profile-modal .profile-banner-edit-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: white;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: all 0.2s;
+}
+
+/* ========== ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ========== */
+@media (max-width: 768px) {
+    #user-profile-modal .profile-modal-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    #user-profile-modal .profile-banner {
+        height: 100px;
+    }
+    
+    #user-profile-modal .profile-avatar-wrapper {
+        margin-top: -45px !important;
+    }
+    
+    #user-profile-modal .profile-avatar {
+        width: 80px !important;
+        height: 80px !important;
+    }
+    
+    #user-profile-modal .profile-name {
+        font-size: 18px;
+    }
+    
+    #user-profile-modal .profile-content {
+        max-height: 350px;
+        padding: 10px;
+    }
+    
+    #user-profile-modal .profile-subscribe-btn,
+    #user-profile-modal .profile-chat-btn {
+        padding: 6px 16px;
+        font-size: 13px;
+    }
+}
+
+/* ========== ТЁМНАЯ ТЕМА ========== */
+body.night-mode #user-profile-modal .profile-modal-content {
+    background: #1e1e1e;
+}
+
+body.night-mode #user-profile-modal .profile-bio {
+    background: #2a2a2a;
+    color: #aaa;
+}
+
+body.night-mode #user-profile-modal .profile-name {
+    color: white;
+}
+
+body.night-mode #user-profile-modal .profile-username {
+    color: #888;
+}
+
+body.night-mode #user-profile-modal .profile-subscribers {
+    color: #888;
+}
+
+body.night-mode #user-profile-modal .profile-slice-card {
+    background: #2a2a2a;
+}
+
+body.night-mode #user-profile-modal .profile-content {
+    background: #121212;
+}
+
+body.night-mode #user-profile-modal .profile-tab-btn {
+    color: #aaa;
+}
+
+body.night-mode #user-profile-modal .profile-tab-btn.active {
+    color: var(--forest);
+}
+
+body.night-mode #user-profile-modal .profile-notify-btn {
+    background: #2a2a2a;
+    border-color: #3a3a3a;
+    color: white;
+}
+
+/* Исправление для аватарки с картинкой */
+#user-profile-modal .profile-avatar[style*="background-image"] {
+    text-indent: -9999px !important;
+    color: transparent !important;
+}
+
+#user-profile-modal .profile-avatar[style*="background-image"]::before,
+#user-profile-modal .profile-avatar[style*="background-image"]::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Дефолтные аватарки */
+#user-profile-modal .profile-avatar.default-avatar-user {
+    background-image: url('https://i.ibb.co/3HQYCh1/image.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+body.night-mode #user-profile-modal .profile-avatar.default-avatar-user {
+    background-image: url('https://i.ibb.co/8D8SnGQF/image.png') !important;
+}
