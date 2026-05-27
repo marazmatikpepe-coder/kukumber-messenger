@@ -36,6 +36,7 @@ setTimeout(function() {
         if (mainScreen) mainScreen.classList.add('hidden');
     }
 }, 3000);
+
 window.addEventListener('load', function() {
     setTimeout(function() {
         var loading = document.getElementById('loading-screen');
@@ -73,6 +74,7 @@ function checkAuthState() {
         }
     });
 }
+
 function loadUserData() {
     console.log('loadUserData вызвана для:', currentUser.uid);
     
@@ -143,12 +145,14 @@ function loadUserData() {
         showNotification('Ошибка загрузки данных пользователя', 'error');
     });
 }
+
 function checkSuperAdmin() {
     database.ref('users/' + currentUser.uid + '/isSuperAdmin').once('value').then(function(snap) {
         isSuperAdmin = snap.val() === true;
         window.isSuperAdmin = isSuperAdmin;
     });
 }
+
 function updateUserDisplay() {
     if (!currentUserData) return;
     var username = currentUserData.username || 'Пользователь';
@@ -214,6 +218,7 @@ function showMainScreen() {
         }
     }, 300);
 }
+
 function switchToTab(tabName) {
     currentTab = tabName;
     
@@ -231,8 +236,19 @@ function switchToTab(tabName) {
     // Обновляем иконки
     updateBottomIcons(tabName);
     
-    if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
-    if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
+    // ДОБАВЛЕНО: очистка кэшей при переключении вкладок для избежания дублей
+    if (tabName === 'reels' && typeof loadSlices === 'function') {
+        if (typeof loadedSliceIds !== 'undefined') {
+            loadedSliceIds.clear();
+        }
+        loadSlices();
+    }
+    if (tabName === 'chats' && typeof loadChats === 'function') {
+        if (typeof loadedChatIds !== 'undefined') {
+            loadedChatIds.clear();
+        }
+        loadChats();
+    }
     if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
     
     closeSidebar();
@@ -244,6 +260,7 @@ window.addEventListener('load', function() {
         if (currentTab) updateBottomIcons(currentTab);
     }, 500);
 });
+
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
@@ -343,9 +360,6 @@ function closeAllModals() {
 }
 
 // Функции для настроек (чтобы не падали ошибки)
-//function showNotificationSettings() { showNotification('Уведомления: в разработке', 'info'); }
-//function showPrivacySettings() { showNotification('Конфиденциальность: в разработке', 'info'); }
-//function showThemeSettings() { showNotification('Тема: в разработке', 'info'); }
 function showLanguageSettings() { 
     if (typeof window.showLanguageSettings === 'function') {
         window.showLanguageSettings();
@@ -370,6 +384,7 @@ function logout() {
         showNotification('Ошибка выхода', 'error'); 
     });
 }
+
 // ========== PUSH-УВЕДОМЛЕНИЯ ==========
 async function requestNotificationPermission() {
     if (!('Notification' in window)) {
@@ -478,10 +493,6 @@ function setupForegroundMessages() {
     });
 }
 
-// Вызови эти функции после входа пользователя
-// Например, в loadUserData() добавь:
-// requestNotificationPermission();
-// setupForegroundMessages();
 // ========== СВАЙПЫ МЕЖДУ ВКЛАДКАМИ ==========
 let touchStartX = 0;
 let touchEndX = 0;
@@ -534,6 +545,7 @@ document.getElementById('main-screen').addEventListener('touchend', function(e) 
     
     isSwiping = false;
 }, { passive: true });
+
 // ========== СВАЙП ДЛЯ ЗАКРЫТИЯ МОДАЛЬНЫХ ОКОН ==========
 document.querySelectorAll('.modal').forEach(modal => {
     let modalStartY = 0;
@@ -554,6 +566,7 @@ document.querySelectorAll('.modal').forEach(modal => {
         }
     }, { passive: true });
 });
+
 // ========== СВАЙП ДЛЯ БОКОВОЙ ПАНЕЛИ ==========
 let sidebarStartX = 0;
 let sidebarEndX = 0;
@@ -580,6 +593,7 @@ document.getElementById('chat-area').addEventListener('touchend', function(e) {
 function openSidebar() {
     document.getElementById('sidebar').classList.add('open');
 }
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const menuBtn = document.querySelector('.mobile-menu-btn');
@@ -601,6 +615,7 @@ function closeSidebar() {
     sidebar.classList.remove('open');
     if (menuBtn) menuBtn.style.opacity = '1';
 }
+
 // ========== СВАЙП ВЛЕВО ДЛЯ ЗАКРЫТИЯ ПАНЕЛИ ==========
 const sidebarElement = document.getElementById('sidebar');
 let sidebarSwipeStartX = 0;
@@ -618,6 +633,7 @@ sidebarElement.addEventListener('touchend', function(e) {
         closeSidebar();
     }
 }, { passive: true });
+
 // ===== ФИКС ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК =====
 var originalSwitchToTab = window.switchToTab;
 window.switchToTab = function(tabName) {
@@ -632,12 +648,20 @@ window.switchToTab = function(tabName) {
     document.getElementById(tabName + '-tab').classList.remove('hidden');
     document.getElementById('nav-' + tabName).classList.add('active');
     
-    if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
-    if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
+    // ДОБАВЛЕНО: очистка кэшей при переключении
+    if (tabName === 'reels' && typeof loadSlices === 'function') {
+        if (typeof loadedSliceIds !== 'undefined') loadedSliceIds.clear();
+        loadSlices();
+    }
+    if (tabName === 'chats' && typeof loadChats === 'function') {
+        if (typeof loadedChatIds !== 'undefined') loadedChatIds.clear();
+        loadChats();
+    }
     if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
     
     closeSidebar();
 };
+
 // Глобальная функция для открытия профиля пользователя
 window.openUserProfile = function(userId) {
     if (typeof openUserProfileFromChat === 'function') {
@@ -646,6 +670,8 @@ window.openUserProfile = function(userId) {
         openUserProfile(userId);
     } else if (typeof window.openUserProfileModal === 'function') {
         window.openUserProfileModal(userId);
+    } else if (typeof window.openUserProfileFull === 'function') {
+        window.openUserProfileFull(userId);
     } else {
         console.warn('Функция профиля не найдена, загружаем slices.js');
         if (typeof loadSlices === 'function') {
@@ -653,6 +679,7 @@ window.openUserProfile = function(userId) {
         }
     }
 };
+
 // ========== ПРИНУДИТЕЛЬНАЯ АВТОРИЗАЦИЯ ==========
 // Перехватываем ошибки Firebase
 window.addEventListener('load', function() {
@@ -717,6 +744,7 @@ window.forceRegister = function(username, email, password) {
         });
     });
 };
+
 // ========== PUSH-УВЕДОМЛЕНИЯ ==========
 async function sendPushNotification(recipientId, title, body, chatId) {
     try {
@@ -758,6 +786,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
         console.error('Ошибка отправки push:', err);
     }
 }
+
 // ========== НОВАЯ ВКЛАДКА "ПЕРЕПИСКИ" ==========
 (function() {
     console.log('Переписки: инициализация');
@@ -1298,6 +1327,7 @@ async function sendPushNotification(recipientId, title, body, chatId) {
     
     console.log('Переписки: готово');
 })();
+
 // Функция для открытия/закрытия боковой панели в Переписках на мобильных
 window.toggleMessagesSidebar = function() {
     var sidebar = document.querySelector('#messages-tab .messages-sidebar');
@@ -1313,6 +1343,7 @@ window.closeMessagesSidebar = function() {
         sidebar.classList.remove('open');
     }
 };
+
 // ========== ПРОСТАЯ И НАДЁЖНАЯ ВКЛАДКА "ПЕРЕПИСКИ" ==========
 (function() {
     console.log('🔥 Переписки: простая версия загружается');
@@ -1685,6 +1716,7 @@ window.toggleMessagesSidebar = function() {
     const sidebar = document.getElementById('messages-sidebar');
     if (sidebar) sidebar.classList.toggle('open');
 };
+
 // ===== ЖЕСТКИЙ ФИКС: ПРИНУДИТЕЛЬНОЕ СКРЫТИЕ ВКЛАДКИ ПЕРЕПИСКИ =====
 (function() {
     // Сохраняем оригинальную функцию
@@ -1721,8 +1753,14 @@ window.toggleMessagesSidebar = function() {
         if (activeBtn) activeBtn.classList.add('active');
         
         // Загружаем данные
-        if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
-        if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
+        if (tabName === 'reels' && typeof loadSlices === 'function') {
+            if (typeof loadedSliceIds !== 'undefined') loadedSliceIds.clear();
+            loadSlices();
+        }
+        if (tabName === 'chats' && typeof loadChats === 'function') {
+            if (typeof loadedChatIds !== 'undefined') loadedChatIds.clear();
+            loadChats();
+        }
         if (tabName === 'messages' && typeof window.loadMessagesChats === 'function') {
             setTimeout(() => window.loadMessagesChats(), 100);
         }
@@ -1753,6 +1791,7 @@ window.toggleMessagesSidebar = function() {
         });
     }, 1000);
 })();
+
 // ========== ГЛОБАЛЬНЫЙ ПОИСК ==========
 window.searchGlobalNew = async function() {
     const query = document.getElementById('global-search-input').value.trim().toLowerCase();
@@ -1838,6 +1877,7 @@ async function startPrivateChatFromGlobalSearch(userId) {
     if (typeof switchToTab === 'function') switchToTab('chats');
     setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
 }
+
 // ========== КНОПКА ПЛЮС И СОЗДАНИЕ ==========
 window.openCreateMenu = function() {
     const modal = document.getElementById('create-menu-modal');
@@ -2255,6 +2295,7 @@ async function createChannel() {
     if (typeof switchToTab === 'function') switchToTab('chats');
     setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
 }
+
 // ========== ФИКС БЕСКОНЕЧНОЙ ЗАГРУЗКИ НА ТЕЛЕФОНЕ ==========
 (function fixLoadingOnMobile() {
     // Отключаем загрузку если прошло слишком много времени
@@ -2291,6 +2332,7 @@ async function createChannel() {
         }
     }, 2000);
 })();
+
 // ========== РЕГИСТРАЦИЯ SERVICE WORKER ДЛЯ PWA ==========
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
@@ -2321,9 +2363,8 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-// Функция обновления иконок в зависимости от активной вкладки и темы
-// Функция обновления иконок в зависимости от активной вкладки и темы
-// Обновление иконок в зависимости от темы
+
+// Функция обновления иконок в зависимости от темы
 function updateBottomIcons() {
     var chatsIcon = document.getElementById('chats-icon');
     var settingsIcon = document.getElementById('settings-icon');
@@ -2342,55 +2383,10 @@ function updateBottomIcons() {
     }
 }
 
-// Вызов при загрузке
 window.addEventListener('load', function() {
     setTimeout(function() {
         updateBottomIcons();
     }, 100);
 });
-function updateBottomIcons() {
-    var chatsIcon = document.getElementById('chats-icon');
-    var settingsIcon = document.getElementById('settings-icon');
-    var isNightMode = document.body.classList.contains('night-mode');
-    
-    // Иконка чатов: светлая/тёмная тема
-    if (chatsIcon) {
-        chatsIcon.src = isNightMode 
-            ? 'https://i.ibb.co/n8PNWgTB/image.png' 
-            : 'https://i.ibb.co/DP3FSmvR/image.png';
-    }
-    
-    // Иконка настроек: светлая/тёмная тема
-    if (settingsIcon) {
-        settingsIcon.src = isNightMode 
-            ? 'https://i.ibb.co/9389n86D/image.png' 
-            : 'https://i.ibb.co/jk3xSxs6/image.png';
-    }
-}
 
-// Функция переключения вкладок с анимацией
-function switchToTab(tabName) {
-    currentTab = tabName;
-    
-    var tabs = ['chats', 'reels', 'settings'];
-    tabs.forEach(function(tab) {
-        var tabEl = document.getElementById(tab + '-tab');
-        var navBtn = document.getElementById('nav-' + tab);
-        if (tabEl) tabEl.classList.add('hidden');
-        if (navBtn) navBtn.classList.remove('active');
-    });
-    
-    document.getElementById(tabName + '-tab').classList.remove('hidden');
-    document.getElementById('nav-' + tabName).classList.add('active');
-    
-    // Анимируем индикатор
-    moveNavIndicator(tabName);
-    
-    if (tabName === 'reels' && typeof loadSlices === 'function') loadSlices();
-    if (tabName === 'chats' && typeof loadChats === 'function') loadChats();
-    if (tabName === 'settings' && typeof updateUserDisplay === 'function') updateUserDisplay();
-    
-    closeSidebar();
-}
-
-// Обновление цвета индикатора при смене темы
+console.log('✅ app.js полностью загружен');
