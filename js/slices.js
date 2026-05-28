@@ -1968,6 +1968,121 @@ async function publishSlice() {
         pendingSliceFiles = [];
     }
 }
+// ========== ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ МОДАЛЬНОГО ОКНА ==========
+
+function closeCreateSliceModal() {
+    var modal = document.getElementById('create-slice-modal');
+    if (modal) modal.classList.add('hidden');
+    pendingSliceFiles = [];
+    var previewArea = document.getElementById('slice-preview-area');
+    if (previewArea) previewArea.innerHTML = '';
+    var textInput = document.getElementById('slice-text');
+    if (textInput) textInput.value = '';
+    var hashtagsInput = document.getElementById('slice-hashtags-input');
+    if (hashtagsInput) hashtagsInput.value = '';
+    var uploadArea = document.getElementById('slice-upload-area');
+    if (uploadArea) uploadArea.style.display = '';
+    var previewContainer = document.getElementById('slice-preview-container');
+    if (previewContainer) previewContainer.classList.add('hidden');
+}
+
+function addSliceMedia() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,image/gif';
+    input.multiple = true;
+    input.onchange = function(e) {
+        var files = Array.from(e.target.files);
+        files.forEach(function(file) {
+            if (file.size > 15 * 1024 * 1024) { 
+                showNotification('Файл слишком большой (макс. 15MB)', 'error'); 
+                return; 
+            }
+            pendingSliceFiles.push(file);
+        });
+        updateSlicePreview();
+    };
+    input.click();
+}
+
+function updateSlicePreview() {
+    var previewContainer = document.getElementById('slice-preview-container');
+    var uploadArea = document.getElementById('slice-upload-area');
+    var previewArea = document.getElementById('slice-preview-area');
+    var counterSpan = document.getElementById('slice-preview-counter');
+    
+    if (!previewArea) return;
+    
+    if (pendingSliceFiles.length === 0) {
+        if (uploadArea) uploadArea.style.display = '';
+        if (previewContainer) previewContainer.classList.add('hidden');
+        if (counterSpan) counterSpan.textContent = '0';
+        return;
+    }
+    
+    if (uploadArea) uploadArea.style.display = 'none';
+    if (previewContainer) previewContainer.classList.remove('hidden');
+    if (counterSpan) counterSpan.textContent = pendingSliceFiles.length;
+    
+    previewArea.innerHTML = '';
+    
+    pendingSliceFiles.forEach(function(file, idx) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
+            var div = document.createElement('div');
+            div.className = 'slice-preview-item';
+            div.setAttribute('data-index', idx);
+            div.innerHTML = `
+                <img src="${e.target.result}" class="slice-preview-img">
+                <button class="slice-preview-remove" onclick="removeSliceMedia(${idx})">×</button>
+                ${isGif ? '<span class="slice-preview-gif-badge">GIF</span>' : ''}
+            `;
+            previewArea.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removeSliceMedia(index) { 
+    pendingSliceFiles.splice(index, 1); 
+    updateSlicePreview(); 
+}
+
+function updateSlicePreviewCounter() { 
+    var counter = document.getElementById('slice-preview-counter'); 
+    if (counter) counter.textContent = pendingSliceFiles.length; 
+}
+
+function loadUserChannelsForPublish() {
+    var select = document.getElementById('publish-as-select');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="self">🥒 ' + (currentUserData?.username || 'Я') + '</option>';
+    
+    database.ref('userChats/' + currentUser.uid).once('value').then(function(snapshot) {
+        var userChats = snapshot.val();
+        if (!userChats) return;
+        
+        for (var chatId in userChats) {
+            database.ref('chats/' + chatId).once('value').then(function(chatSnap) {
+                var chat = chatSnap.val();
+                if (chat && chat.type === 'channel' && chat.admins && chat.admins[currentUser.uid]) {
+                    var option = document.createElement('option');
+                    option.value = chatId;
+                    option.textContent = '📢 ' + (chat.name || 'Канал');
+                    select.appendChild(option);
+                }
+            });
+        }
+    });
+}
+
+function extractHashtags(text) { 
+    var hashtags = text.match(/#[а-яА-Яa-zA-Z0-9_]+/g); 
+    if (!hashtags) return []; 
+    return hashtags.map(function(tag) { return tag.substring(1); }); 
+}
 // ========== ФУНКЦИИ ДЛЯ БАННЕРА ПРОФИЛЯ ==========
 window.setProfileBanner = async function(colorOrUrl) {
     var userId = window.viewingProfileUserId || currentUser?.uid;
