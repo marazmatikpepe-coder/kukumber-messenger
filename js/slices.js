@@ -347,7 +347,7 @@ function loadComments(sliceId) {
     container.innerHTML = '<div class="comments-loading">Загрузка комментариев...</div>';
     
     // Загружаем ВСЕ комментарии к этому посту
-    database.ref('sliceComments/' + sliceId).once('value').then(function(snapshot) {
+    database.ref('sliceComments/' + sliceId).once('value').then(async function(snapshot) {
         var comments = snapshot.val();
         
         if (!comments || Object.keys(comments).length === 0) {
@@ -365,10 +365,32 @@ function loadComments(sliceId) {
         
         // Преобразуем объект в массив и добавляем id
         var commentsArray = [];
+        var authorIds = [];
+        
         for (var id in comments) {
             var comment = comments[id];
             comment.id = id;
             commentsArray.push(comment);
+            if (comment.authorId && !authorIds.includes(comment.authorId)) {
+                authorIds.push(comment.authorId);
+            }
+        }
+        
+        // Загружаем статус верификации для всех авторов комментариев
+        var verifiedStatus = {};
+        for (var i = 0; i < authorIds.length; i++) {
+            var uid = authorIds[i];
+            try {
+                var userSnap = await database.ref('users/' + uid + '/verified').once('value');
+                verifiedStatus[uid] = userSnap.val() === true;
+            } catch(e) {
+                verifiedStatus[uid] = false;
+            }
+        }
+        
+        // Добавляем статус верификации к каждому комментарию
+        for (var i = 0; i < commentsArray.length; i++) {
+            commentsArray[i].authorVerified = verifiedStatus[commentsArray[i].authorId] === true;
         }
         
         // Сортируем по дате создания (старые сверху)
@@ -417,7 +439,6 @@ function loadComments(sliceId) {
         container.innerHTML = commentsHtml;
     });
 }
-
 // Функция для отрисовки одного комментария и всех его ответов
 function renderCommentItem(comment, sliceId, level) {
     var marginLeft = level * 36;
