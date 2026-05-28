@@ -7045,3 +7045,85 @@ body.night-mode .member-menu-item {
 body.night-mode .member-menu-item:hover {
     background: #2a2a2a;
 }
+/* ========== СТИЛИ ДЛЯ ПРОГРЕССА ЗАГРУЗКИ ========== */
+
+.uploading-media {
+    position: relative;
+    background: rgba(0,0,0,0.05);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.upload-progress-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.progress-ring {
+    width: 80px;
+    height: 80px;
+}
+
+.progress-ring-fill {
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-percent {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--text-dark);
+}
+
+.progress-size {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.cancel-upload-btn {
+    margin-top: 15px;
+    padding: 8px 20px;
+    background: var(--error, #dc3545);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.cancel-upload-btn:hover {
+    transform: scale(1.02);
+    background: #ff4757;
+}
+
+.uploaded-media {
+    opacity: 0.7;
+    filter: blur(2px);
+}
+
+.temp-slice-card {
+    opacity: 0.95;
+}
+
+/* Тёмная тема */
+body.night-mode .uploading-media {
+    background: rgba(255,255,255,0.05);
+}
+
+body.night-mode .progress-percent {
+    color: white;
+}
+
+body.night-mode .progress-size {
+    color: #aaa;
+}
