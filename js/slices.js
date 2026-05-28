@@ -681,15 +681,8 @@ function toggleReplies(sliceId, commentId) {
 }
 
 function addComment(sliceId, parentId) {
-    var textInput, text;
-    
-    if (parentId) {
-        textInput = document.getElementById('reply-text-' + parentId);
-        text = textInput ? textInput.value.trim() : '';
-    } else {
-        textInput = document.getElementById('comment-text-' + sliceId);
-        text = textInput ? textInput.value.trim() : '';
-    }
+    var textarea = document.getElementById('comment-text-' + sliceId);
+    var text = textarea ? textarea.value.trim() : '';
     
     if (!text) {
         showNotification('Введите текст комментария', 'error');
@@ -706,20 +699,13 @@ function addComment(sliceId, parentId) {
         likesCount: 0
     };
     
-    var newCommentRef = database.ref('sliceComments/' + sliceId).push();
-    newCommentRef.set(commentData).then(function() {
-        if (textInput) textInput.value = '';
+    database.ref('sliceComments/' + sliceId).push(commentData).then(function() {
+        textarea.value = '';
         database.ref('slices/' + sliceId + '/commentsCount').transaction(function(c) { return (c || 0) + 1; });
-        
-        if (parentId) {
-            openRepliesState[parentId] = true;
-        }
-        
         loadComments(sliceId);
         showNotification('Комментарий добавлен', 'success');
     });
 }
-
 function showReplyForm(sliceId, parentId) {
     var container = document.getElementById('replies-container-' + parentId);
     if (!container) return;
