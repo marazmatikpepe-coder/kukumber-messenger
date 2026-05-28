@@ -434,6 +434,12 @@ function renderCommentItem(comment, sliceId, level) {
     
     var likeIcon = isLiked ? '❤️' : '🤍';
     
+    // ПОЛУЧАЕМ СТАТУС ВЕРИФИКАЦИИ АВТОРА КОММЕНТАРИЯ
+    var verifiedBadge = '';
+    if (comment.authorVerified === true) {
+        verifiedBadge = '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" class="comment-verified-badge" style="width:14px; height:14px; margin-left:4px; vertical-align:middle; cursor:pointer;" onclick="event.stopPropagation(); showVerifiedInfo()">';
+    }
+    
     // HTML для ответов (если есть)
     var repliesHtml = '';
     if (hasReplies) {
@@ -462,7 +468,10 @@ function renderCommentItem(comment, sliceId, level) {
             <div class="comment-header">
                 <div class="comment-author-avatar ${avatarClass}" style="${avatarStyle}"></div>
                 <div class="comment-author-info">
-                    <span class="comment-author-name">${escapeHtml(comment.authorName)}</span>
+                    <span class="comment-author-name">
+                        ${escapeHtml(comment.authorName)}
+                        ${verifiedBadge}
+                    </span>
                     <span class="comment-date">${formatSliceDate(comment.createdAt)}</span>
                 </div>
                 <button class="comment-like-btn" onclick="likeComment('${sliceId}', '${comment.id}')">
@@ -477,7 +486,6 @@ function renderCommentItem(comment, sliceId, level) {
         </div>
     `;
 }
-
 // Функция для показа/скрытия ответов
 function toggleRepliesVisibility(sliceId, commentId) {
     var container = document.getElementById('replies-container-' + commentId);
