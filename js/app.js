@@ -263,30 +263,24 @@ window.addEventListener('load', function() {
 
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const isMobile = window.innerWidth <= 768;
-    
-    if (!isMobile) return; // На ПК не переключаем
+    const menuBtn = document.querySelector('.mobile-menu-btn');
     
     sidebar.classList.toggle('open');
     
-    // Блокируем прокрутку body при открытой панели
     if (sidebar.classList.contains('open')) {
-        document.body.style.overflow = 'hidden';
+        if (menuBtn) menuBtn.innerHTML = '✕';
     } else {
-        document.body.style.overflow = '';
+        if (menuBtn) menuBtn.innerHTML = '☰';
     }
 }
 
 function closeSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const isMobile = window.innerWidth <= 768;
-    
-    if (!isMobile) return; // На ПК не закрываем
+    const menuBtn = document.querySelector('.mobile-menu-btn');
     
     sidebar.classList.remove('open');
-    document.body.style.overflow = '';
+    if (menuBtn) menuBtn.innerHTML = '☰';
 }
-
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
     const isMobile = window.innerWidth <= 768;
