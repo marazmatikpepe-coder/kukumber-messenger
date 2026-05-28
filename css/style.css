@@ -6572,3 +6572,115 @@ body.night-mode .comment-toggle-replies-btn:hover {
 body.night-mode .comment-toggle-replies-btn:active {
     transform: scale(0.98);
 }
+/* ========== ФОРСИРОВАННАЯ ТЁМНАЯ ТЕМА ДЛЯ КОММЕНТАРИЕВ ========== */
+
+/* Переопределяем все элементы комментариев для тёмной темы */
+body.night-mode .comments-block,
+body.night-mode .comments-list,
+body.night-mode .comments-loading,
+body.night-mode .no-comments {
+    background-color: #121212 !important;
+}
+
+body.night-mode .comment-item {
+    background-color: #1e1e1e !important;
+    border-bottom: 1px solid #2c2c2c !important;
+    box-shadow: none !important;
+}
+
+body.night-mode .comment-header {
+    background-color: #1e1e1e !important;
+}
+
+body.night-mode .comment-author-name {
+    color: #ffffff !important;
+}
+
+body.night-mode .comment-date {
+    color: #888888 !important;
+}
+
+body.night-mode .comment-text {
+    color: #cccccc !important;
+}
+
+/* Кнопки */
+body.night-mode .comment-reply-btn,
+body.night-mode .comment-toggle-replies-btn {
+    background: transparent !important;
+    color: #32CD32 !important;
+    border: none !important;
+}
+
+body.night-mode .comment-reply-btn:hover,
+body.night-mode .comment-toggle-replies-btn:hover {
+    background: #2a2a2a !important;
+    border-radius: 16px !important;
+}
+
+/* Кнопка лайка */
+body.night-mode .comment-like-btn {
+    background: transparent !important;
+    color: #cccccc !important;
+    border: none !important;
+}
+
+body.night-mode .comment-like-btn:hover {
+    background: #2a2a2a !important;
+}
+
+/* Контейнер ответов */
+body.night-mode .replies-container {
+    border-left-color: #3a3a3a !important;
+}
+
+/* Форма ответа */
+body.night-mode .reply-form {
+    background-color: #2a2a2a !important;
+}
+
+body.night-mode .reply-form textarea {
+    background-color: #1e1e1e !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+}
+
+body.night-mode .reply-form textarea::placeholder {
+    color: #888888 !important;
+}
+
+body.night-mode .reply-form button {
+    background: linear-gradient(135deg, #228B22, #32CD32) !important;
+    color: white !important;
+    border: none !important;
+}
+
+body.night-mode .reply-form .cancel-reply-btn {
+    background: #dc3545 !important;
+}
+
+/* Форма добавления комментария */
+body.night-mode .add-comment {
+    background-color: #121212 !important;
+}
+
+body.night-mode .add-comment textarea {
+    background-color: #2a2a2a !important;
+    border: 1px solid #3a3a3a !important;
+    color: #ffffff !important;
+}
+
+body.night-mode .add-comment textarea::placeholder {
+    color: #888888 !important;
+}
+
+body.night-mode .add-comment button {
+    background: linear-gradient(135deg, #228B22, #32CD32) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* Аватарки */
+body.night-mode .comment-author-avatar {
+    background-color: #2a4a2a !important;
+}
