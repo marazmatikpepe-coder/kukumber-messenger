@@ -650,11 +650,15 @@ function appendMessage(message) {
     else if (message.type === 'file') {
         content += `<div class="file-message"><span style="font-size:24px;">📎</span><a href="${message.fileUrl}" target="_blank">${escapeHtml(message.fileName)}</a></div>`;
     }
-    else {
-        var textContent = escapeHtml(message.text || '');
-        if (message.edited) textContent += ' <span style="font-size:10px; opacity:0.6;">(ред.)</span>';
-        content = '<div class="message-text" style="word-break:break-word; white-space:normal;">' + textContent + '</div>';
-    }
+   else {
+    var textContent = escapeHtml(message.text || '');
+    // Делаем ссылки кликабельными
+    textContent = textContent.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$1</a>');
+    // Делаем кликабельными ссылки без http (www.example.com)
+    textContent = textContent.replace(/(^|\s)(www\.[^\s]+)/g, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$2</a>');
+    if (message.edited) textContent += ' <span style="font-size:10px; opacity:0.6;">(ред.)</span>';
+    content = '<div class="message-text" style="word-break:break-word; white-space:normal;">' + textContent + '</div>';
+}
     
     var senderNameHtml = '';
     if (window.currentChatData && window.currentChatData.type !== 'private' && !isSent && message.senderId) {
@@ -1206,4 +1210,14 @@ function initChat() {
 }
 
 setTimeout(initChat, 1000);
+// Функция для преобразования текста с ссылками в HTML
+function linkifyText(text) {
+    if (!text) return '';
+    var escaped = escapeHtml(text);
+    // Ссылки http:// и https://
+    escaped = escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$1</a>');
+    // Ссылки вида www.example.com
+    escaped = escaped.replace(/(^|\s)(www\.[^\s]+)/g, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$2</a>');
+    return escaped;
+}
 console.log('✅ chat.js исправлен (контекстное меню + верификация)');
