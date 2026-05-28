@@ -1551,7 +1551,11 @@ function reportSlice(sliceId) {
 
 function closeSliceContextMenu() { var menu = document.getElementById('slice-context-menu'); if (menu) menu.remove(); }
 
-// ========== СОЗДАНИЕ ПОСТА ==========
+// ========== СОЗДАНИЕ ПОСТА С ПРОГРЕССОМ ЗАГРУЗКИ ==========
+
+// Глобальный объект для отслеживания текущих загрузок
+var activeUploads = {};
+
 function showCreateSliceModal() {
     var modal = document.getElementById('create-slice-modal');
     if (modal) modal.classList.remove('hidden');
@@ -1571,85 +1575,156 @@ function showCreateSliceModal() {
     loadUserChannelsForPublish();
 }
 
-function loadUserChannelsForPublish() {
-    var select = document.getElementById('publish-as-select');
-    if (!select) return;
+// Функция для создания временного поста с прогрессом
+function createTempSliceCard(sliceId, sliceData, fileIndex, totalFiles, currentFileProgress) {
+    var div = document.createElement('div');
+    div.className = 'slice-card temp-slice-card';
+    div.setAttribute('data-slice-id', sliceId);
+    div.setAttribute('data-uploading', 'true');
     
-    select.innerHTML = '<option value="self">🥒 ' + (currentUserData?.username || 'Я') + '</option>';
+    var avatarStyle = sliceData.authorAvatar ? 'background-image:url('+sliceData.authorAvatar+');background-size:cover;' : '';
+    var avatarClass = (!sliceData.authorAvatar) ? 'default-avatar-user' : '';
     
-    database.ref('userChats/' + currentUser.uid).once('value').then(function(snapshot) {
-        var userChats = snapshot.val();
-        if (!userChats) return;
-        
-        for (var chatId in userChats) {
-            database.ref('chats/' + chatId).once('value').then(function(chatSnap) {
-                var chat = chatSnap.val();
-                if (chat && chat.type === 'channel' && chat.admins && chat.admins[currentUser.uid]) {
-                    var option = document.createElement('option');
-                    option.value = chatId;
-                    option.textContent = ' ' + (chat.name || 'Канал');
-                    select.appendChild(option);
-                }
-            });
+    var progressPercent = Math.round(currentFileProgress);
+    
+    // Для нескольких файлов показываем общий прогресс
+    var overallProgress = Math.round(((fileIndex) / totalFiles) * 100);
+    var displayProgress = totalFiles > 1 ? overallProgress : progressPercent;
+    var displayText = totalFiles > 1 ? `Файл ${fileIndex + 1} из ${totalFiles}: ${progressPercent}%` : `Загрузка: ${progressPercent}%`;
+    
+    var mediaHtml = '';
+    if (sliceData.mediaUrls && sliceData.mediaUrls.length > 0) {
+        // Показываем уже загруженные изображения
+        for (var i = 0; i <= fileIndex; i++) {
+            if (sliceData.mediaUrls[i]) {
+                mediaHtml += `<div class="slice-media uploaded-media"><img src="${sliceData.mediaUrls[i]}" class="slice-image" style="opacity:0.7;"></div>`;
+            }
         }
-    });
-}
-
-function updateSlicePreviewCounter() { 
-    var counter = document.getElementById('slice-preview-counter'); 
-    if (counter) counter.textContent = pendingSliceFiles.length; 
-}
-
-function updateSlicePreview() {
-    var previewContainer = document.getElementById('slice-preview-container');
-    var uploadArea = document.getElementById('slice-upload-area');
-    var previewArea = document.getElementById('slice-preview-area');
-    var counterSpan = document.getElementById('slice-preview-counter');
-    
-    if (!previewArea) return;
-    
-    if (pendingSliceFiles.length === 0) {
-        if (uploadArea) uploadArea.style.display = '';
-        if (previewContainer) previewContainer.classList.add('hidden');
-        if (counterSpan) counterSpan.textContent = '0';
-        return;
     }
     
-    if (uploadArea) uploadArea.style.display = 'none';
-    if (previewContainer) previewContainer.classList.remove('hidden');
-    if (counterSpan) counterSpan.textContent = pendingSliceFiles.length;
+    // Если текущий файл еще не загружен, показываем прогресс
+    if (currentFileProgress < 100) {
+        mediaHtml = `
+            <div class="slice-media uploading-media">
+                <div class="upload-progress-container">
+                    <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
+                        <circle class="progress-ring-bg" cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
+                        <circle class="progress-ring-fill" cx="40" cy="40" r="35" fill="none" stroke="var(--forest)" stroke-width="4" 
+                            stroke-dasharray="${2 * Math.PI * 35}" stroke-dashoffset="${2 * Math.PI * 35 * (1 - currentFileProgress / 100)}"
+                            stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                    </svg>
+                    <div class="progress-percent">${Math.round(currentFileProgress)}%</div>
+                    <div class="progress-size">${formatFileSize(sliceData.currentFileSize || 0)}</div>
+                </div>
+                <button class="cancel-upload-btn" onclick="cancelSliceUpload('${sliceId}')">⏹️ Отмена</button>
+            </div>
+        `;
+    }
     
-    previewArea.innerHTML = '';
+    var textHtml = sliceData.text ? '<div class="slice-text">'+escapeHtml(sliceData.text)+'</div>' : '';
     
-    pendingSliceFiles.forEach(function(file, idx) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
-            var div = document.createElement('div');
-            div.className = 'slice-preview-item';
-            div.setAttribute('data-index', idx);
-            div.innerHTML = `
-                <img src="${e.target.result}" class="slice-preview-img">
-                <button class="slice-preview-remove" onclick="removeSliceMedia(${idx})">×</button>
-                ${isGif ? '<span class="slice-preview-gif-badge">GIF</span>' : ''}
-            `;
-            previewArea.appendChild(div);
+    div.innerHTML = `
+        <div class="slice-header">
+            <div class="slice-author" onclick="openUserProfile('${sliceData.authorId}')" style="cursor:pointer;">
+                <div class="avatar ${avatarClass}" style="${avatarStyle}">${sliceData.authorAvatar ? '' : ''}</div>
+                <div class="slice-author-info">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span class="slice-author-name">${escapeHtml(sliceData.authorName)}</span>
+                    </div>
+                    <span class="slice-date">Только что</span>
+                </div>
+            </div>
+            <div class="slice-views">
+                <span class="slice-views-count">0</span>
+            </div>
+        </div>
+        ${mediaHtml}
+        ${textHtml}
+        <div class="slice-actions" style="opacity:0.5;">
+            <button class="slice-action-btn">❤️ 0</button>
+            <button class="slice-action-btn">💬 0</button>
+            <button class="slice-action-btn">🔄 0</button>
+        </div>
+    `;
+    
+    return div;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    var k = 1024;
+    var sizes = ['B', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// Отмена загрузки слайса
+window.cancelSliceUpload = function(tempSliceId) {
+    if (activeUploads[tempSliceId]) {
+        if (activeUploads[tempSliceId].cancel) {
+            activeUploads[tempSliceId].cancel();
+        }
+        delete activeUploads[tempSliceId];
+    }
+    
+    // Удаляем временный пост из ленты
+    var tempCard = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
+    if (tempCard) tempCard.remove();
+    
+    // Очищаем pending файлы
+    pendingSliceFiles = [];
+    
+    showNotification('Загрузка отменена', 'info');
+};
+
+// Функция загрузки файла с прогрессом
+function uploadFileWithProgress(file, onProgress) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        var formData = new FormData();
+        formData.append('image', file);
+        
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                var percent = (e.loaded / e.total) * 100;
+                onProgress(percent, e.loaded, e.total);
+            }
+        });
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.success && response.data && response.data.url) {
+                        resolve(response.data.url);
+                    } else {
+                        reject(new Error('Ошибка загрузки'));
+                    }
+                } catch(e) {
+                    reject(e);
+                }
+            } else {
+                reject(new Error('Ошибка HTTP: ' + xhr.status));
+            }
         };
-        reader.readAsDataURL(file);
+        
+        xhr.onerror = function() {
+            reject(new Error('Ошибка сети'));
+        };
+        
+        xhr.open('POST', `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`);
+        xhr.send(formData);
+        
+        // Сохраняем функцию отмены
+        if (activeUploads.cancelCurrent) return;
+        activeUploads.cancelCurrent = function() {
+            xhr.abort();
+            reject(new Error('Отменено пользователем'));
+        };
     });
 }
 
-function removeSliceMedia(index) { 
-    pendingSliceFiles.splice(index, 1); 
-    updateSlicePreview(); 
-}
-
-function extractHashtags(text) { 
-    var hashtags = text.match(/#[а-яА-Яa-zA-Z0-9_]+/g); 
-    if (!hashtags) return []; 
-    return hashtags.map(function(tag) { return tag.substring(1); }); 
-}
-
+// ОСНОВНАЯ ФУНКЦИЯ ПУБЛИКАЦИИ С ПРОГРЕССОМ
 async function publishSlice() {
     var text = document.getElementById('slice-text').value.trim();
     var hashtagsInput = document.getElementById('slice-hashtags-input').value.trim();
@@ -1659,6 +1734,7 @@ async function publishSlice() {
         showNotification('Добавьте текст или фото', 'error'); 
         return; 
     }
+    
     if (hashtagsInput) {
         var extraTags = hashtagsInput.split(/[ ,]+/).filter(function(t) { return t; });
         if (text) text += ' ' + extraTags.map(function(t) { return '#' + t; }).join(' ');
@@ -1666,46 +1742,165 @@ async function publishSlice() {
     }
     var hashtags = extractHashtags(text);
     
-    // Показываем индикатор загрузки
-    showNotification('⏳ Публикация...', 'info');
-    var publishBtn = document.querySelector('#create-slice-modal .btn-primary');
-    var originalText = publishBtn?.textContent;
-    if (publishBtn) {
-        publishBtn.disabled = true;
-        publishBtn.textContent = '⏳ Загрузка...';
+    // Генерируем временный ID для поста
+    var tempSliceId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    
+    // Создаём временные данные поста
+    var tempSliceData = {
+        authorId: currentUser.uid,
+        authorName: currentUserData.username || 'Пользователь',
+        authorAvatar: currentUserData.avatar || '',
+        text: text,
+        hashtags: hashtags,
+        mediaType: pendingSliceFiles.length > 0 ? 'uploading' : 'none',
+        mediaUrls: [],
+        likesCount: 0,
+        commentsCount: 0,
+        repostsCount: 0,
+        viewsCount: 0,
+        pinned: false,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        isTemp: true
+    };
+    
+    // Добавляем временный пост в начало ленты
+    var feed = document.getElementById('slices-feed');
+    var tempCard = createTempSliceCard(tempSliceId, tempSliceData, -1, pendingSliceFiles.length, 0);
+    if (feed) {
+        if (feed.firstChild) {
+            feed.insertBefore(tempCard, feed.firstChild);
+        } else {
+            feed.appendChild(tempCard);
+        }
     }
+    
+    showNotification('📤 Загрузка...', 'info');
     
     try {
         var mediaUrls = [];
+        var totalFiles = pendingSliceFiles.length;
+        var cancelRequested = false;
         
-        if (pendingSliceFiles.length > 0) {
-            showNotification(`📤 Загрузка ${pendingSliceFiles.length} файлов...`, 'info');
+        // Сохраняем отмену
+        activeUploads[tempSliceId] = {
+            cancel: function() { cancelRequested = true; }
+        };
+        
+        for (var i = 0; i < pendingSliceFiles.length; i++) {
+            if (cancelRequested) {
+                throw new Error('Отменено пользователем');
+            }
             
-            // ПАРАЛЛЕЛЬНАЯ ЗАГРУЗКА (быстрее)
-            var uploadPromises = pendingSliceFiles.map(async function(file) {
-                try {
-                    return await uploadToImgBB(file);
-                } catch(e) {
-                    console.error('Ошибка загрузки файла:', e);
-                    return null;
+            var file = pendingSliceFiles[i];
+            var fileSize = file.size;
+            
+            // Обновляем прогресс для текущего файла
+            var updateProgress = function(percent, loaded, total) {
+                if (cancelRequested) return;
+                // Обновляем карточку с прогрессом
+                var card = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
+                if (card) {
+                    var progressPercent = Math.round(percent);
+                    var progressRing = card.querySelector('.progress-ring-fill');
+                    if (progressRing) {
+                        var circumference = 2 * Math.PI * 35;
+                        var offset = circumference * (1 - percent / 100);
+                        progressRing.style.strokeDashoffset = offset;
+                    }
+                    var percentDiv = card.querySelector('.progress-percent');
+                    if (percentDiv) percentDiv.textContent = progressPercent + '%';
+                    var sizeDiv = card.querySelector('.progress-size');
+                    if (sizeDiv) sizeDiv.textContent = formatFileSize(loaded) + ' / ' + formatFileSize(total);
+                }
+            };
+            
+            // Функция загрузки с прогрессом
+            var uploadPromise = new Promise(function(resolve, reject) {
+                var xhr = new XMLHttpRequest();
+                var formData = new FormData();
+                formData.append('image', file);
+                
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable && !cancelRequested) {
+                        var percent = (e.loaded / e.total) * 100;
+                        updateProgress(percent, e.loaded, e.total);
+                    }
+                });
+                
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success && response.data && response.data.url) {
+                                resolve(response.data.url);
+                            } else {
+                                reject(new Error('Ошибка загрузки'));
+                            }
+                        } catch(e) {
+                            reject(e);
+                        }
+                    } else {
+                        reject(new Error('Ошибка HTTP: ' + xhr.status));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    reject(new Error('Ошибка сети'));
+                };
+                
+                xhr.open('POST', `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`);
+                xhr.send(formData);
+                
+                // Сохраняем xhr для отмены
+                if (activeUploads[tempSliceId]) {
+                    activeUploads[tempSliceId].xhr = xhr;
                 }
             });
             
-            var results = await Promise.all(uploadPromises);
-            mediaUrls = results.filter(url => url !== null);
+            var url = await uploadPromise;
+            mediaUrls.push(url);
             
-            if (mediaUrls.length !== pendingSliceFiles.length) {
-                showNotification(`⚠️ Загружено ${mediaUrls.length} из ${pendingSliceFiles.length} файлов`, 'warning');
+            // Обновляем карточку - показываем загруженное изображение
+            var card = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
+            if (card && i < totalFiles - 1) {
+                // Если есть еще файлы, показываем следующий прогресс
+                var uploadingDiv = card.querySelector('.uploading-media');
+                if (uploadingDiv) {
+                    var nextProgressHtml = `
+                        <div class="slice-media uploading-media">
+                            <div class="upload-progress-container">
+                                <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
+                                    <circle class="progress-ring-bg" cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
+                                    <circle class="progress-ring-fill" cx="40" cy="40" r="35" fill="none" stroke="var(--forest)" stroke-width="4" 
+                                        stroke-dasharray="${2 * Math.PI * 35}" stroke-dashoffset="${2 * Math.PI * 35}"
+                                        stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                                </svg>
+                                <div class="progress-percent">0%</div>
+                                <div class="progress-size">Загрузка файла ${i + 2} из ${totalFiles}</div>
+                            </div>
+                            <button class="cancel-upload-btn" onclick="cancelSliceUpload('${tempSliceId}')">⏹️ Отмена</button>
+                        </div>
+                    `;
+                    uploadingDiv.outerHTML = nextProgressHtml;
+                }
             }
         }
         
-        var sliceData = {
+        if (cancelRequested) {
+            throw new Error('Отменено пользователем');
+        }
+        
+        // Определяем тип медиа
+        var mediaType = mediaUrls.length > 1 ? 'multiple' : (mediaUrls.length === 1 ? 'single' : 'none');
+        
+        // Создаём финальные данные
+        var finalSliceData = {
             authorId: currentUser.uid,
             authorName: currentUserData.username || 'Пользователь',
             authorAvatar: currentUserData.avatar || '',
             text: text,
             hashtags: hashtags,
-            mediaType: mediaUrls.length > 1 ? 'multiple' : (mediaUrls.length === 1 ? 'single' : 'none'),
+            mediaType: mediaType,
             mediaUrls: mediaUrls.length > 0 ? mediaUrls : null,
             mediaUrl: mediaUrls.length === 1 ? mediaUrls[0] : null,
             likesCount: 0,
@@ -1720,68 +1915,59 @@ async function publishSlice() {
             var channelSnap = await database.ref('chats/' + publishAs).once('value');
             var channel = channelSnap.val();
             if (channel && channel.type === 'channel') {
-                sliceData.authorId = publishAs;
-                sliceData.authorName = channel.name || 'Канал';
-                sliceData.authorAvatar = channel.avatar || '';
-                sliceData.authorType = 'channel';
-                sliceData.channelId = publishAs;
+                finalSliceData.authorId = publishAs;
+                finalSliceData.authorName = channel.name || 'Канал';
+                finalSliceData.authorAvatar = channel.avatar || '';
+                finalSliceData.authorType = 'channel';
+                finalSliceData.channelId = publishAs;
             }
         }
         
-        await database.ref('slices/').push(sliceData);
+        // Сохраняем в Firebase
+        var newSliceRef = await database.ref('slices/').push(finalSliceData);
+        var realSliceId = newSliceRef.key;
+        
+        // Удаляем временный пост
+        var tempCardElement = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
+        if (tempCardElement) tempCardElement.remove();
+        
+        // Добавляем настоящий пост в начало ленты
+        finalSliceData.userLiked = false;
+        var realCard = createSliceCard(realSliceId, finalSliceData);
+        if (feed) {
+            if (feed.firstChild) {
+                feed.insertBefore(realCard, feed.firstChild);
+            } else {
+                feed.appendChild(realCard);
+            }
+        }
+        
+        // Добавляем ID в загруженные
+        if (typeof loadedSliceIds !== 'undefined') {
+            loadedSliceIds.add(realSliceId);
+        }
+        
         playSliceCreateSound();
-        showNotification('✅ Пост опубликован!', 'success');
+        showNotification('Пост опубликован! 🍕', 'success');
         closeCreateSliceModal();
         
-        // Очищаем Set и перезагружаем ленту
-        if (typeof loadedSliceIds !== 'undefined') loadedSliceIds.clear();
-        loadSlices();
+    } catch (error) {
+        console.error('Ошибка публикации:', error);
         
-    } catch (error) { 
-        console.error(error); 
-        showNotification('❌ Ошибка публикации: ' + error.message, 'error'); 
-    } finally {
-        if (publishBtn) {
-            publishBtn.disabled = false;
-            publishBtn.textContent = originalText || '🍕 Опубликовать';
+        // Удаляем временный пост при ошибке
+        var tempCardElement = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
+        if (tempCardElement) tempCardElement.remove();
+        
+        if (error.message === 'Отменено пользователем') {
+            showNotification('Публикация отменена', 'info');
+        } else {
+            showNotification('Ошибка публикации: ' + error.message, 'error');
         }
+    } finally {
+        delete activeUploads[tempSliceId];
+        pendingSliceFiles = [];
     }
 }
-function closeCreateSliceModal() {
-    var modal = document.getElementById('create-slice-modal');
-    if (modal) modal.classList.add('hidden');
-    pendingSliceFiles = [];
-    var previewArea = document.getElementById('slice-preview-area');
-    if (previewArea) previewArea.innerHTML = '';
-    var textInput = document.getElementById('slice-text');
-    if (textInput) textInput.value = '';
-    var hashtagsInput = document.getElementById('slice-hashtags-input');
-    if (hashtagsInput) hashtagsInput.value = '';
-    var uploadArea = document.getElementById('slice-upload-area');
-    if (uploadArea) uploadArea.style.display = '';
-    var previewContainer = document.getElementById('slice-preview-container');
-    if (previewContainer) previewContainer.classList.add('hidden');
-}
-
-function addSliceMedia() {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*,image/gif';
-    input.multiple = true;
-    input.onchange = function(e) {
-        var files = Array.from(e.target.files);
-        files.forEach(function(file) {
-            if (file.size > 15 * 1024 * 1024) { 
-                showNotification('Файл слишком большой (макс. 15MB)', 'error'); 
-                return; 
-            }
-            pendingSliceFiles.push(file);
-        });
-        updateSlicePreview();
-    };
-    input.click();
-}
-
 // ========== ФУНКЦИИ ДЛЯ БАННЕРА ПРОФИЛЯ ==========
 window.setProfileBanner = async function(colorOrUrl) {
     var userId = window.viewingProfileUserId || currentUser?.uid;
