@@ -1,5 +1,5 @@
 // ЕДИНЫЙ КЛЮЧ ДЛЯ ImgBB
-var IMGBB_API_KEY = '03a5a914cba6f919ff317ebb6d9ed4f9';
+var IMGBB_API_KEY = 'ec0a0f24ab99ee5dbb0efab97e127310';
 
 // ========== ОСНОВНАЯ ФУНКЦИЯ ЗАГРУЗКИ ==========
 async function uploadToImgBB(file) {
