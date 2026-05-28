@@ -2415,6 +2415,138 @@ window.addEventListener('load', function() {
         updateBottomIcons();
     }, 100);
 });
-
+// ========== ТЕЛЕФОН: УПРАВЛЕНИЕ ЧАТОМ КАК В TELEGRAM ==========
+(function() {
+    const isMobile = () => window.innerWidth <= 768;
+    
+    // Функция открытия чата на телефоне
+    const originalOpenChatWithData = window.openChatWithData;
+    if (originalOpenChatWithData) {
+        window.openChatWithData = function(chatId, chatData) {
+            if (isMobile()) {
+                // Показываем область чата
+                const chatArea = document.getElementById('chat-area');
+                if (chatArea) {
+                    chatArea.classList.add('chat-open');
+                }
+                // Убираем выделение с чата в списке?
+            }
+            return originalOpenChatWithData(chatId, chatData);
+        };
+    }
+    
+    // Функция закрытия чата (возврат к списку)
+    window.closeChatView = function() {
+        if (isMobile()) {
+            const chatArea = document.getElementById('chat-area');
+            if (chatArea) {
+                chatArea.classList.remove('chat-open');
+            }
+        }
+        if (typeof closeChat === 'function') {
+            closeChat();
+        }
+    };
+    
+    // Обработчик для кнопки "Назад"
+    document.addEventListener('click', function(e) {
+        const backBtn = e.target.closest('.back-btn');
+        if (backBtn && isMobile()) {
+            e.preventDefault();
+            window.closeChatView();
+        }
+    });
+    
+    // СВАЙП СПРАВА НАЛЕВО (для перехода между вкладками)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+    let isSwipingTab = false;
+    
+    const tabsOrder = ['chats', 'reels', 'settings'];
+    let currentTabIndex = 0;
+    
+    function getCurrentTabIndexMobile() {
+        const activeTab = document.querySelector('.tab-content:not(.hidden)');
+        if (!activeTab) return 0;
+        const id = activeTab.id;
+        return tabsOrder.indexOf(id.replace('-tab', ''));
+    }
+    
+    function switchToTabBySwipeMobile(direction) {
+        let currentIdx = getCurrentTabIndexMobile();
+        let newIdx = currentIdx + direction;
+        
+        if (newIdx >= 0 && newIdx < tabsOrder.length) {
+            if (typeof switchToTab === 'function') {
+                switchToTab(tabsOrder[newIdx]);
+            }
+        }
+    }
+    
+    // СВАЙП СЛЕВА НАПРАВО (открыть список чатов, если чат открыт)
+    document.getElementById('main-screen').addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        isSwipingTab = true;
+    }, { passive: true });
+    
+    document.getElementById('main-screen').addEventListener('touchend', function(e) {
+        if (!isSwipingTab) return;
+        
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        
+        // Горизонтальный свайп (игнорируем вертикальные)
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            
+            // НА ТЕЛЕФОНЕ: проверяем, открыт ли чат
+            const chatArea = document.getElementById('chat-area');
+            const isChatOpen = chatArea && chatArea.classList.contains('chat-open');
+            
+            if (deltaX > 0) {
+                // Свайп вправо
+                if (isMobile() && isChatOpen) {
+                    // Закрываем чат (возврат к списку)
+                    window.closeChatView();
+                } else {
+                    // Иначе переключаем вкладку влево
+                    switchToTabBySwipeMobile(-1);
+                }
+            } else if (deltaX < 0) {
+                // Свайп влево - переключаем вкладку вправо
+                if (!isChatOpen) {
+                    switchToTabBySwipeMobile(1);
+                }
+            }
+        }
+        
+        isSwipingTab = false;
+    }, { passive: true });
+    
+    // При открытии чата на телефоне - показываем стрелку назад
+    const originalUpdateChatHeader = window.updateChatHeader;
+    if (originalUpdateChatHeader) {
+        window.updateChatHeader = async function(chatId, chatData) {
+            await originalUpdateChatHeader(chatId, chatData);
+            
+            if (isMobile()) {
+                const backBtn = document.querySelector('.chat-header .back-btn');
+                if (backBtn) {
+                    backBtn.onclick = function(e) {
+                        e.preventDefault();
+                        window.closeChatView();
+                    };
+                }
+            }
+        };
+    }
+    
+    console.log('📱 Мобильная навигация как в Telegram активирована');
+})();
 console.log('✅ app.js полностью загружен');
 // Закрытие панели при клике вне её на телефоне
