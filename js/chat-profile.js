@@ -668,3 +668,483 @@ window.openChannelProfile = async function(chatId) {
 };
 
 console.log('✅ chat-profile.js загружен полностью');
+// ========== ПРОФИЛЬ КАНАЛА ==========
+window.openChannelProfile = async function(chatId) {
+    console.log('openChannelProfile вызван для:', chatId);
+    
+    if (!chatId) {
+        showNotification('ID канала не указан', 'error');
+        return;
+    }
+    
+    try {
+        const chatSnap = await database.ref('chats/' + chatId).once('value');
+        const channelData = chatSnap.val();
+        
+        if (!channelData || channelData.type !== 'channel') {
+            showNotification('Канал не найден', 'error');
+            return;
+        }
+        
+        const oldModal = document.getElementById('channel-profile-modal');
+        if (oldModal) oldModal.remove();
+        
+        const isSubscribed = channelData.subscribers && channelData.subscribers[currentUser?.uid];
+        const isAdmin = channelData.admins && channelData.admins[currentUser?.uid];
+        const isOwner = channelData.createdBy === currentUser?.uid;
+        const isSuperAdmin = window.isSuperAdmin === true;
+        const canEdit = isOwner || isSuperAdmin;
+        
+        const subscribersCount = channelData.subscribers ? Object.keys(channelData.subscribers).length : 0;
+        
+        const bannerStyle = channelData.banner ? 
+            `background-image: url(${channelData.banner}); background-size: cover; background-position: center;` : 
+            'background: linear-gradient(135deg, #228B22, #556B2F);';
+        
+        const modal = document.createElement('div');
+        modal.id = 'channel-profile-modal';
+        modal.className = 'modal';
+        modal.style.zIndex = '10002';
+        modal.innerHTML = `
+            <div class="channel-profile-container">
+                <div class="channel-banner" id="channel-banner" style="${bannerStyle}">
+                    ${canEdit ? '<button class="channel-banner-edit-btn" onclick="editChannelBanner(\''+chatId+'\')">✏️</button>' : ''}
+                    <button class="profile-close-btn" onclick="closeChannelProfileModal()">×</button>
+                </div>
+                
+                <div class="channel-avatar-wrapper">
+                    <div class="channel-avatar" id="channel-avatar" style="${channelData.avatar ? 'background-image: url('+channelData.avatar+');' : ''}">
+                        ${canEdit ? '<button class="channel-avatar-edit-btn" onclick="editChannelAvatar(\''+chatId+'\')">✏️</button>' : ''}
+                    </div>
+                </div>
+                
+                <div class="channel-info">
+                    <div class="channel-name-row">
+                        <h2 class="channel-name" id="channel-name">${escapeHtml(channelData.name || 'Канал')}</h2>
+                        ${canEdit ? '<button class="channel-name-edit-btn" onclick="editChannelName(\''+chatId+'\')">✏️</button>' : ''}
+                        ${isSuperAdmin ? `<button class="channel-verify-btn" onclick="toggleChannelVerification('${chatId}')">${channelData.verified ? '✅' : '🔘'}</button>` : ''}
+                    </div>
+                    <div class="channel-kname">
+                        ${channelData.kname ? '@' + channelData.kname : 'Нет ссылки'}
+                        ${canEdit ? '<button class="channel-kname-edit-btn" onclick="editChannelKname(\''+chatId+'\')">✏️</button>' : ''}
+                    </div>
+                    
+                    <div class="channel-actions-row">
+                        <button class="channel-subscribe-btn" onclick="toggleChannelSubscription('${chatId}')">
+                            ${isSubscribed ? 'Отписаться' : 'Подписаться'}
+                        </button>
+                        <button class="channel-chat-btn" onclick="openChannelChat('${chatId}')">💬 Чат</button>
+                        <button class="channel-notify-btn" onclick="toggleChannelNotifications('${chatId}')">🔔</button>
+                    </div>
+                    
+                    <div class="channel-description" id="channel-description" ${canEdit ? 'ondblclick="editChannelDescription(\''+chatId+'\')"' : ''}>
+                        ${channelData.description || 'Нет описания'}
+                    </div>
+                </div>
+                
+                <div class="channel-tabs">
+                    <button class="channel-tab-btn active" onclick="switchChannelTab('posts', '${chatId}')">📷 Посты</button>
+                    <button class="channel-tab-btn" onclick="switchChannelTab('reposts', '${chatId}')">🔄 Репосты</button>
+                    <button class="channel-tab-btn" onclick="switchChannelTab('info', '${chatId}')">ℹ️ Инфо</button>
+                    ${isAdmin ? '<button class="channel-tab-btn" onclick="switchChannelTab(\'members\', \''+chatId+'\')">👥 Участники</button>' : ''}
+                </div>
+                
+                <div id="channel-tab-content" class="channel-tab-content">
+                    <div class="profile-loading">Загрузка...</div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        
+        // Загружаем посты
+        await loadChannelPosts(chatId);
+        
+        // Если админ - загружаем участников
+        if (isAdmin) {
+            await loadChannelMembers(chatId, channelData);
+        } else {
+            loadChannelInfo(chatId, channelData);
+        }
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        showNotification('Ошибка загрузки профиля канала', 'error');
+    }
+};
+
+// Закрытие профиля канала
+window.closeChannelProfileModal = function() {
+    const modal = document.getElementById('channel-profile-modal');
+    if (modal) modal.remove();
+};
+
+// Загрузка постов канала
+async function loadChannelPosts(chatId) {
+    const container = document.getElementById('channel-tab-content');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="profile-loading">Загрузка постов...</div>';
+    
+    const slicesSnap = await database.ref('slices').orderByChild('channelId').equalTo(chatId).once('value');
+    const slices = slicesSnap.val();
+    
+    if (!slices) {
+        container.innerHTML = '<div class="profile-empty">Нет постов</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    const slicesArray = Object.entries(slices);
+    slicesArray.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+    
+    for (const [id, slice] of slicesArray) {
+        const card = createSliceCard(id, slice);
+        container.appendChild(card);
+    }
+}
+
+// Загрузка информации о канале
+async function loadChannelInfo(chatId, channelData) {
+    const container = document.getElementById('channel-tab-content');
+    if (!container) return;
+    
+    const isOwner = channelData.createdBy === currentUser?.uid;
+    const isAdmin = channelData.admins && channelData.admins[currentUser?.uid];
+    
+    let ownerName = 'Неизвестно';
+    if (channelData.createdBy) {
+        const userSnap = await database.ref('users/' + channelData.createdBy + '/username').once('value');
+        ownerName = userSnap.val() || 'Неизвестно';
+    }
+    
+    container.innerHTML = `
+        <div style="background: var(--background); border-radius: 16px; padding: 15px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>👑 Владелец</span>
+                <span>${escapeHtml(ownerName)}</span>
+            </div>
+        </div>
+        <div style="background: var(--background); border-radius: 16px; padding: 15px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>📅 Дата создания</span>
+                <span>${new Date(channelData.createdAt).toLocaleDateString()}</span>
+            </div>
+        </div>
+        <div style="background: var(--background); border-radius: 16px; padding: 15px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>👥 Подписчиков</span>
+                <span>${channelData.subscribersCount || 0}</span>
+            </div>
+        </div>
+        <button onclick="shareChannel('${chatId}')" style="width: 100%; padding: 12px; background: var(--forest); color: white; border: none; border-radius: 16px; cursor: pointer;">🔗 Поделиться каналом</button>
+        ${(isOwner || isAdmin) ? '<button onclick="editChannelSettings(\''+chatId+'\')" style="width: 100%; padding: 12px; background: var(--background); border: 1px solid var(--border); border-radius: 16px; margin-top: 10px; cursor: pointer;">⚙️ Настройки канала</button>' : ''}
+        ${isOwner ? '<button onclick="deleteChannel(\''+chatId+'\')" style="width: 100%; padding: 12px; background: var(--error); color: white; border: none; border-radius: 16px; margin-top: 10px; cursor: pointer;">🗑️ Удалить канал</button>' : ''}
+    `;
+}
+
+// Загрузка участников (для админов)
+async function loadChannelMembers(chatId, channelData) {
+    const container = document.getElementById('channel-tab-content');
+    if (!container) return;
+    
+    const members = channelData.subscribers || {};
+    const admins = channelData.admins || {};
+    const ownerId = channelData.createdBy;
+    const isOwner = ownerId === currentUser?.uid;
+    
+    let membersHtml = '<div style="margin-bottom: 15px;"><div style="font-weight: 600; margin-bottom: 10px;">👑 Владелец</div>';
+    
+    for (const uid in members) {
+        const userSnap = await database.ref('users/' + uid).once('value');
+        const userData = userSnap.val();
+        const isUserOwner = uid === ownerId;
+        const isUserAdmin = admins[uid] === true;
+        
+        if (isUserOwner) {
+            membersHtml += `
+                <div class="channel-member-item" data-member-id="${uid}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border);">
+                    <div class="member-avatar" style="${userData?.avatar ? 'background-image: url('+userData.avatar+');' : 'background: var(--sage);'}"></div>
+                    <div class="member-info">
+                        <div class="member-name">${escapeHtml(userData?.username || 'Пользователь')}</div>
+                        <div class="member-role">👑 Владелец</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    membersHtml += '</div><div style="margin-bottom: 15px;"><div style="font-weight: 600; margin-bottom: 10px;">⭐ Администраторы</div>';
+    
+    for (const uid in admins) {
+        if (uid === ownerId) continue;
+        const userSnap = await database.ref('users/' + uid).once('value');
+        const userData = userSnap.val();
+        
+        membersHtml += `
+            <div class="channel-member-item" data-member-id="${uid}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border);">
+                <div class="member-avatar" style="${userData?.avatar ? 'background-image: url('+userData.avatar+');' : 'background: var(--sage);'}"></div>
+                <div class="member-info">
+                    <div class="member-name">${escapeHtml(userData?.username || 'Пользователь')}</div>
+                    <div class="member-role">⭐ Администратор</div>
+                </div>
+                <button class="member-edit-btn" onclick="openMemberEditMenu('${uid}', '${chatId}')">⚙️</button>
+            </div>
+        `;
+    }
+    
+    membersHtml += '</div><div style="margin-bottom: 15px;"><div style="font-weight: 600; margin-bottom: 10px;">👥 Участники</div>';
+    
+    for (const uid in members) {
+        if (uid === ownerId || admins[uid]) continue;
+        const userSnap = await database.ref('users/' + uid).once('value');
+        const userData = userSnap.val();
+        
+        membersHtml += `
+            <div class="channel-member-item" data-member-id="${uid}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border);">
+                <div class="member-avatar" style="${userData?.avatar ? 'background-image: url('+userData.avatar+');' : 'background: var(--sage);'}"></div>
+                <div class="member-info">
+                    <div class="member-name">${escapeHtml(userData?.username || 'Пользователь')}</div>
+                    <div class="member-role">👤 Участник</div>
+                </div>
+                ${(isOwner || channelData.admins?.[currentUser?.uid]?.manageMembers) ? '<button class="member-edit-btn" onclick="openMemberEditMenu(\''+uid+'\', \''+chatId+'\')">⚙️</button>' : ''}
+            </div>
+        `;
+    }
+    
+    membersHtml += '</div>';
+    container.innerHTML = membersHtml;
+}
+
+// Меню редактирования участника
+window.openMemberEditMenu = function(memberId, chatId, event) {
+    event?.stopPropagation();
+    
+    const oldMenu = document.getElementById('member-edit-menu');
+    if (oldMenu) oldMenu.remove();
+    
+    const isOwner = window.currentChannelOwnerId === currentUser?.uid;
+    const isAdmin = window.currentChannelAdmins?.[currentUser?.uid];
+    
+    let menuHtml = '';
+    
+    if (!isOwner && !isAdmin) return;
+    
+    if (isOwner) {
+        menuHtml += '<div class="member-menu-item" onclick="changeMemberRole(\''+memberId+'\', \''+chatId+'\', \'admin\')">⭐ Сделать администратором</div>';
+        menuHtml += '<div class="member-menu-item" onclick="changeMemberRole(\''+memberId+'\', \''+chatId+'\', \'member\')">👤 Сделать участником</div>';
+        menuHtml += '<div class="member-menu-item" onclick="transferChannelOwnership(\''+memberId+'\', \''+chatId+'\')">👑 Передать права владельца</div>';
+        menuHtml += '<div class="member-menu-item danger" onclick="kickChannelMember(\''+memberId+'\', \''+chatId+'\')">🚫 Исключить из канала</div>';
+    }
+    
+    if (isAdmin && !isOwner) {
+        menuHtml += '<div class="member-menu-item danger" onclick="kickChannelMember(\''+memberId+'\', \''+chatId+'\')">🚫 Исключить из канала</div>';
+    }
+    
+    const menu = document.createElement('div');
+    menu.id = 'member-edit-menu';
+    menu.innerHTML = menuHtml;
+    document.body.appendChild(menu);
+    
+    const x = event?.clientX || window.innerWidth/2;
+    const y = event?.clientY || window.innerHeight/2;
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu() {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        });
+    }, 10);
+};
+
+// Функции редактирования канала
+window.editChannelBanner = async function(chatId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,image/gif';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        showNotification('Загрузка...', 'info');
+        try {
+            const url = await uploadToImgBB(file);
+            await database.ref('chats/' + chatId + '/banner').set(url);
+            showNotification('Баннер обновлён', 'success');
+            document.getElementById('channel-banner').style.backgroundImage = `url(${url})`;
+        } catch(err) {
+            showNotification('Ошибка', 'error');
+        }
+    };
+    input.click();
+};
+
+window.editChannelAvatar = async function(chatId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        showNotification('Загрузка...', 'info');
+        try {
+            const url = await uploadToImgBB(file);
+            await database.ref('chats/' + chatId + '/avatar').set(url);
+            showNotification('Аватар обновлён', 'success');
+            document.getElementById('channel-avatar').style.backgroundImage = `url(${url})`;
+        } catch(err) {
+            showNotification('Ошибка', 'error');
+        }
+    };
+    input.click();
+};
+
+window.editChannelName = async function(chatId) {
+    const currentName = document.getElementById('channel-name')?.textContent || '';
+    const newName = prompt('Название канала:', currentName);
+    if (newName && newName.trim()) {
+        await database.ref('chats/' + chatId + '/name').set(newName.trim());
+        showNotification('Название обновлено', 'success');
+        document.getElementById('channel-name').textContent = newName.trim();
+    }
+};
+
+window.editChannelDescription = async function(chatId) {
+    const currentDesc = document.getElementById('channel-description')?.textContent || '';
+    const newDesc = prompt('Описание канала:', currentDesc === 'Нет описания' ? '' : currentDesc);
+    if (newDesc !== null) {
+        await database.ref('chats/' + chatId + '/description').set(newDesc.trim());
+        showNotification('Описание обновлено', 'success');
+        document.getElementById('channel-description').textContent = newDesc.trim() || 'Нет описания';
+    }
+};
+
+window.editChannelKname = async function(chatId) {
+    const channelSnap = await database.ref('chats/' + chatId).once('value');
+    const channel = channelSnap.val();
+    const currentKname = channel.kname || '';
+    const newKname = prompt('Ссылка канала (только латиница, например: mychannel):', currentKname);
+    
+    if (newKname !== null) {
+        const pattern = /^[a-z0-9_]+$/;
+        if (newKname && !pattern.test(newKname)) {
+            showNotification('Только латиница, цифры и _', 'error');
+            return;
+        }
+        if (newKname !== currentKname) {
+            if (currentKname) await database.ref('channelKnames/' + currentKname).remove();
+            if (newKname) await database.ref('channelKnames/' + newKname).set(chatId);
+            await database.ref('chats/' + chatId + '/kname').set(newKname || null);
+            showNotification('Ссылка обновлена', 'success');
+            document.querySelector('.channel-kname').innerHTML = (newKname ? '@' + newKname : 'Нет ссылки') + '<button class="channel-kname-edit-btn" onclick="editChannelKname(\''+chatId+'\')">✏️</button>';
+        }
+    }
+};
+
+window.toggleChannelVerification = async function(chatId) {
+    if (!window.isSuperAdmin) {
+        showNotification('Только администратор K Messenger может выдавать галочки', 'error');
+        return;
+    }
+    const channelSnap = await database.ref('chats/' + chatId).once('value');
+    const isVerified = channelSnap.val()?.verified === true;
+    await database.ref('chats/' + chatId + '/verified').set(!isVerified);
+    showNotification(isVerified ? 'Галочка снята' : 'Галочка выдана', 'success');
+};
+
+window.toggleChannelSubscription = async function(chatId) {
+    const channelSnap = await database.ref('chats/' + chatId).once('value');
+    const channel = channelSnap.val();
+    const isSubscribed = channel.subscribers && channel.subscribers[currentUser?.uid];
+    
+    if (isSubscribed) {
+        await database.ref('chats/' + chatId + '/subscribers/' + currentUser.uid).remove();
+        await database.ref('userChats/' + currentUser.uid + '/' + chatId).remove();
+        showNotification('Вы отписались от канала', 'info');
+    } else {
+        await database.ref('chats/' + chatId + '/subscribers/' + currentUser.uid).set(true);
+        await database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
+        showNotification('Вы подписались на канал', 'success');
+    }
+    
+    const newCount = await database.ref('chats/' + chatId + '/subscribersCount').transaction(c => (c || 0) + (isSubscribed ? -1 : 1));
+};
+
+window.openChannelChat = function(chatId) {
+    closeChannelProfileModal();
+    if (typeof switchToTab === 'function') switchToTab('chats');
+    setTimeout(() => {
+        if (typeof openChatById === 'function') openChatById(chatId);
+    }, 300);
+};
+
+window.toggleChannelNotifications = async function(chatId) {
+    const notifRef = database.ref('channelNotifications/' + currentUser.uid + '/' + chatId);
+    const snap = await notifRef.once('value');
+    const isEnabled = snap.val() === true;
+    
+    if (isEnabled) {
+        await notifRef.remove();
+        showNotification('Уведомления выключены', 'info');
+    } else {
+        await notifRef.set(true);
+        showNotification('Уведомления включены', 'success');
+    }
+};
+
+window.shareChannel = function(chatId) {
+    const url = `${window.location.origin}${window.location.pathname}?channel=${chatId}`;
+    if (navigator.share) {
+        navigator.share({ title: 'Присоединяйся к каналу!', url: url });
+    } else {
+        navigator.clipboard.writeText(url);
+        showNotification('Ссылка скопирована!', 'success');
+    }
+};
+
+window.kickChannelMember = async function(memberId, chatId) {
+    if (!confirm('Исключить участника из канала?')) return;
+    await database.ref('chats/' + chatId + '/subscribers/' + memberId).remove();
+    await database.ref('userChats/' + memberId + '/' + chatId).remove();
+    showNotification('Участник исключён', 'success');
+    openChannelProfile(chatId);
+};
+
+window.changeMemberRole = async function(memberId, chatId, role) {
+    if (role === 'admin') {
+        await database.ref('chats/' + chatId + '/admins/' + memberId).set(true);
+        showNotification('Участник стал администратором', 'success');
+    } else if (role === 'member') {
+        await database.ref('chats/' + chatId + '/admins/' + memberId).remove();
+        showNotification('Администратор стал участником', 'success');
+    }
+    openChannelProfile(chatId);
+};
+
+window.transferChannelOwnership = async function(memberId, chatId) {
+    if (!confirm('Передать права владельца? Вы станете обычным администратором.')) return;
+    await database.ref('chats/' + chatId + '/createdBy').set(memberId);
+    await database.ref('chats/' + chatId + '/admins/' + memberId).set(true);
+    showNotification('Права владельца переданы', 'success');
+    openChannelProfile(chatId);
+};
+
+window.deleteChannel = async function(chatId) {
+    if (!confirm('УДАЛИТЬ канал навсегда? Это необратимо!')) return;
+    await database.ref('chats/' + chatId).remove();
+    await database.ref('messages/' + chatId).remove();
+    showNotification('Канал удалён', 'success');
+    closeChannelProfileModal();
+};
+
+window.switchChannelTab = function(tab, chatId) {
+    document.querySelectorAll('.channel-tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    if (tab === 'posts') loadChannelPosts(chatId);
+    else if (tab === 'reposts') loadChannelReposts(chatId);
+    else if (tab === 'info') database.ref('chats/' + chatId).once('value').then(snap => loadChannelInfo(chatId, snap.val()));
+    else if (tab === 'members') database.ref('chats/' + chatId).once('value').then(snap => loadChannelMembers(chatId, snap.val()));
+};
