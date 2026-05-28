@@ -142,21 +142,20 @@
                     </div>
                     
                     <div id="active-chat" class="active-chat hidden">
-                        <div class="chat-header">
-                            <button class="back-btn" onclick="closeChat()">←</button>
-                            <div class="chat-user-info" style="cursor: pointer;">
-                                <div class="avatar" id="chat-avatar">👤</div>
-                                <div>
-                                    <h3 id="chat-username">Пользователь</h3>
-                                    <span id="chat-status">был(а) недавно</span>
-                                </div>
-                            </div>
-                            <div class="chat-actions">
-                                <button onclick="startVoiceCall()" class="call-btn">📞</button>
-                                <button onclick="startVideoCall()" class="call-btn">📹</button>
-                            </div>
-                        </div>
-                        
+                     <div class="chat-header">
+    <button class="back-btn" onclick="closeChatView()">←</button>
+    <div class="chat-user-info" style="cursor: pointer;">
+        <div class="avatar" id="chat-avatar">👤</div>
+        <div>
+            <h3 id="chat-username">Пользователь</h3>
+            <span id="chat-status">был(а) недавно</span>
+        </div>
+    </div>
+    <div class="chat-actions">
+        <button onclick="startVoiceCall()" class="call-btn">📞</button>
+        <button onclick="startVideoCall()" class="call-btn">📹</button>
+    </div>
+</div>
                         <div class="messages-container" id="messages-container"></div>
                         
                         <div class="message-input-area">
