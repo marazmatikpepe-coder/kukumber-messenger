@@ -262,13 +262,40 @@ window.addEventListener('load', function() {
 });
 
 function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
+    const sidebar = document.getElementById('sidebar');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile) return; // На ПК не переключаем
+    
+    sidebar.classList.toggle('open');
+    
+    // Блокируем прокрутку body при открытой панели
+    if (sidebar.classList.contains('open')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
 }
 
 function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
+    const sidebar = document.getElementById('sidebar');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile) return; // На ПК не закрываем
+    
+    sidebar.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile) return;
+    
+    sidebar.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
 function escapeHtml(text) {
     if (!text) return '';
     var div = document.createElement('div');
@@ -2390,3 +2417,4 @@ window.addEventListener('load', function() {
 });
 
 console.log('✅ app.js полностью загружен');
+// Закрытие панели при клике вне её на телефоне
