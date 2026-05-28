@@ -1431,15 +1431,22 @@ html {
         transform: translateX(0);
     }
     
+  /* ========== БУРГЕР МЕНЮ - ВСЕГДА ВИДИМ НА МОБИЛЬНЫХ ========== */
+.mobile-menu-btn {
+    display: none !important;
+}
+
+/* На мобильных устройствах - показываем бургер */
+@media (max-width: 768px) {
     .mobile-menu-btn {
         display: flex !important;
         position: fixed;
         top: 12px;
         left: 12px;
-        z-index: 100;
+        z-index: 1000;
         width: 44px;
         height: 44px;
-        background: var(--forest);
+        background: var(--forest, #228B22);
         color: white;
         border: none;
         border-radius: 12px;
@@ -1447,14 +1454,17 @@ html {
         cursor: pointer;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     
-    .message {
-        max-width: 85%;
+    /* Кнопка всегда поверх всего */
+    .mobile-menu-btn:hover {
+        background: var(--lime, #32CD32);
     }
     
-    .messages-container {
-        padding: 10px;
+    /* Когда открыта боковая панель - бургер не скрываем, просто меняем иконку */
+    .sidebar.open ~ .chat-area .mobile-menu-btn {
+        opacity: 0.7;
     }
 }
 /* ========== ИСПРАВЛЕНИЕ СООБЩЕНИЙ - НЕ СПЛЮСНУТЫЕ ========== */
