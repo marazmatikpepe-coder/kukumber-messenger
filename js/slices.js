@@ -1665,17 +1665,37 @@ async function publishSlice() {
         else text = extraTags.map(function(t) { return '#' + t; }).join(' ');
     }
     var hashtags = extractHashtags(text);
-    showNotification('Публикация...', 'info');
+    
+    // Показываем индикатор загрузки
+    showNotification('⏳ Публикация...', 'info');
+    var publishBtn = document.querySelector('#create-slice-modal .btn-primary');
+    var originalText = publishBtn?.textContent;
+    if (publishBtn) {
+        publishBtn.disabled = true;
+        publishBtn.textContent = '⏳ Загрузка...';
+    }
     
     try {
         var mediaUrls = [];
-        for (var i = 0; i < pendingSliceFiles.length; i++) {
-            if (typeof uploadToImgBB === 'function') {
-                var url = await uploadToImgBB(pendingSliceFiles[i]);
-                mediaUrls.push(url);
-            } else {
-                showNotification('Функция загрузки не найдена', 'error');
-                return;
+        
+        if (pendingSliceFiles.length > 0) {
+            showNotification(`📤 Загрузка ${pendingSliceFiles.length} файлов...`, 'info');
+            
+            // ПАРАЛЛЕЛЬНАЯ ЗАГРУЗКА (быстрее)
+            var uploadPromises = pendingSliceFiles.map(async function(file) {
+                try {
+                    return await uploadToImgBB(file);
+                } catch(e) {
+                    console.error('Ошибка загрузки файла:', e);
+                    return null;
+                }
+            });
+            
+            var results = await Promise.all(uploadPromises);
+            mediaUrls = results.filter(url => url !== null);
+            
+            if (mediaUrls.length !== pendingSliceFiles.length) {
+                showNotification(`⚠️ Загружено ${mediaUrls.length} из ${pendingSliceFiles.length} файлов`, 'warning');
             }
         }
         
@@ -1710,15 +1730,23 @@ async function publishSlice() {
         
         await database.ref('slices/').push(sliceData);
         playSliceCreateSound();
-        showNotification('Пост опубликован! 🍕', 'success');
+        showNotification('✅ Пост опубликован!', 'success');
         closeCreateSliceModal();
+        
+        // Очищаем Set и перезагружаем ленту
+        if (typeof loadedSliceIds !== 'undefined') loadedSliceIds.clear();
         loadSlices();
+        
     } catch (error) { 
         console.error(error); 
-        showNotification('Ошибка публикации', 'error'); 
+        showNotification('❌ Ошибка публикации: ' + error.message, 'error'); 
+    } finally {
+        if (publishBtn) {
+            publishBtn.disabled = false;
+            publishBtn.textContent = originalText || '🍕 Опубликовать';
+        }
     }
 }
-
 function closeCreateSliceModal() {
     var modal = document.getElementById('create-slice-modal');
     if (modal) modal.classList.add('hidden');
