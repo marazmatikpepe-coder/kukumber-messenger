@@ -6557,3 +6557,18 @@ body.night-mode .reply-form textarea {
 body.night-mode .replies-container {
     border-left-color: #3a3a3a;
 }
+/* Дополнительные стили для кнопки переключения ответов в тёмной теме */
+body.night-mode .comment-toggle-replies-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #32CD32 !important;
+}
+
+body.night-mode .comment-toggle-replies-btn:hover {
+    background: #2a2a2a !important;
+    border-radius: 16px !important;
+}
+
+body.night-mode .comment-toggle-replies-btn:active {
+    transform: scale(0.98);
+}
