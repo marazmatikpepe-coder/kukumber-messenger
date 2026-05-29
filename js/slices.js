@@ -46,21 +46,33 @@ function loadSlices() {
     
     feed.innerHTML = '<div class="empty-slices"><span>🍕</span><p>Загрузка...</p></div>';
     
-    if (slicesListener) slicesListener.off();
+    // Очищаем Set
+    if (typeof loadedSliceIds !== 'undefined') {
+        loadedSliceIds.clear();
+    }
     
-    slicesListener = database.ref('slices').orderByChild('createdAt').limitToLast(100);
-    slicesListener.on('value', function(snapshot) {
+    // Отключаем старый слушатель
+    if (slicesListener) {
+        slicesListener.off();
+    }
+    
+    // Загружаем существующие посты
+    database.ref('slices').orderByChild('createdAt').limitToLast(100).once('value', function(snapshot) {
         var slices = snapshot.val();
         if (!feed) return;
-        feed.innerHTML = '';
         
         if (!slices || Object.keys(slices).length === 0) {
             feed.innerHTML = '<div class="empty-slices"><span>🍕</span><p>Пока нет постов</p><p>Будьте первым!</p></div>';
+            // Всё равно настраиваем слушатель
+            setupSlicesListener();
             return;
         }
         
         var slicesArray = [];
         for (var id in slices) {
+            if (typeof loadedSliceIds !== 'undefined') {
+                loadedSliceIds.add(id);
+            }
             slicesArray.push({ id: id, data: slices[id] });
         }
         
@@ -70,6 +82,9 @@ function loadSlices() {
             return (b.data.createdAt || 0) - (a.data.createdAt || 0);
         });
         
+        feed.innerHTML = '';
+        
+        var pendingCount = slicesArray.length;
         slicesArray.forEach(function(slice) {
             database.ref('sliceLikes/' + slice.id + '/' + currentUser.uid).once('value').then(function(snap) {
                 slice.data.userLiked = snap.exists();
@@ -77,12 +92,11 @@ function loadSlices() {
                 if (feed) feed.appendChild(card);
             });
         });
-    }, function(error) {
-        console.error('Ошибка загрузки слайсов:', error);
-        if (feed) feed.innerHTML = '<div class="empty-slices"><span>❌</span><p>Ошибка загрузки</p></div>';
+        
+        // Настраиваем слушатель для новых постов
+        setupSlicesListener();
     });
 }
-
 // ========== СОЗДАНИЕ КАРТОЧКИ ПОСТА ==========
 function createSliceCard(sliceId, sliceData) {
     var div = document.createElement('div');
@@ -1727,7 +1741,18 @@ function uploadFileWithProgress(file, onProgress) {
 // ОСНОВНАЯ ФУНКЦИЯ ПУБЛИКАЦИИ С ПРОГРЕССОМ (ИСПРАВЛЕННАЯ)
 // ========== ПУБЛИКАЦИЯ СЛАЙСА (БЕЗ ДУБЛИРОВАНИЯ) ==========
 
+// ========== ПУБЛИКАЦИЯ СЛАЙСА (БЕЗ ДУБЛИРОВАНИЯ) ==========
+
+// Флаг, чтобы игнорировать свой же пост
+var isPublishingNow = false;
+
 async function publishSlice() {
+    // Если уже идет публикация - выходим
+    if (isPublishingNow) {
+        showNotification('Публикация уже выполняется', 'info');
+        return;
+    }
+    
     var text = document.getElementById('slice-text').value.trim();
     var hashtagsInput = document.getElementById('slice-hashtags-input').value.trim();
     var publishAs = document.getElementById('publish-as-select')?.value || 'self';
@@ -1740,7 +1765,7 @@ async function publishSlice() {
         return; 
     }
     
-    // Обработка хештегов из отдельного поля
+    // Обработка хештегов
     if (hashtagsInput) {
         var extraTags = hashtagsInput.split(/[ ,]+/).filter(function(t) { return t; });
         if (text) {
@@ -1766,7 +1791,6 @@ async function publishSlice() {
             var channel = channelSnap.val();
             
             if (channel && channel.type === 'channel') {
-                // Проверка прав администратора
                 if (channel.admins && channel.admins[currentUser.uid]) {
                     authorId = publishAs;
                     authorName = channel.name || 'Канал';
@@ -1789,6 +1813,14 @@ async function publishSlice() {
         }
     }
     
+    // Устанавливаем флаг, что начата публикация
+    isPublishingNow = true;
+    
+    // Временно отключаем слушатель новых постов, чтобы не получить дубль
+    if (slicesListener) {
+        slicesListener.off();
+    }
+    
     // ========== ЗАГРУЗКА ФАЙЛОВ ==========
     var mediaUrls = [];
     var totalFiles = pendingSliceFiles.length;
@@ -1800,18 +1832,10 @@ async function publishSlice() {
             var file = pendingSliceFiles[i];
             
             try {
-                // Загрузка с прогрессом
                 var url = await new Promise(function(resolve, reject) {
                     var xhr = new XMLHttpRequest();
                     var formData = new FormData();
                     formData.append('image', file);
-                    
-                    xhr.upload.addEventListener('progress', function(e) {
-                        if (e.lengthComputable) {
-                            var percent = Math.round((e.loaded / e.total) * 100);
-                            console.log(`Файл ${i+1}/${totalFiles}: ${percent}%`);
-                        }
-                    });
                     
                     xhr.onload = function() {
                         if (xhr.status === 200) {
@@ -1843,6 +1867,9 @@ async function publishSlice() {
             } catch (err) {
                 console.error('Ошибка загрузки файла:', err);
                 showNotification(`Ошибка загрузки: ${file.name}`, 'error');
+                isPublishingNow = false;
+                // Восстанавливаем слушатель
+                setupSlicesListener();
                 return;
             }
         }
@@ -1884,11 +1911,15 @@ async function publishSlice() {
             loadedSliceIds.add(realSliceId);
         }
         
-        // Добавляем пост в ленту
+        // Добавляем пост в ленту ВРУЧНУЮ (без слушателя)
         var feed = document.getElementById('slices-feed');
         if (feed) {
             sliceData.userLiked = false;
             var newCard = createSliceCard(realSliceId, sliceData);
+            
+            // Удаляем сообщение "Нет постов" если есть
+            var emptyDiv = feed.querySelector('.empty-slices');
+            if (emptyDiv) emptyDiv.remove();
             
             // Вставляем в начало ленты
             if (feed.firstChild) {
@@ -1896,6 +1927,9 @@ async function publishSlice() {
             } else {
                 feed.appendChild(newCard);
             }
+            
+            // Прокручиваем к новому посту
+            newCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         playSliceCreateSound();
@@ -1904,14 +1938,77 @@ async function publishSlice() {
         // Очищаем форму
         closeCreateSliceModal();
         pendingSliceFiles = [];
-        
-        // Обновляем превью
         updateSlicePreview();
         
     } catch (err) {
         console.error('❌ Ошибка публикации:', err);
         showNotification('Ошибка публикации: ' + err.message, 'error');
+    } finally {
+        // Снимаем флаг
+        isPublishingNow = false;
+        // Восстанавливаем слушатель через небольшую задержку
+        setTimeout(function() {
+            setupSlicesListener();
+        }, 1000);
     }
+}
+
+// Функция для настройки слушателя слайсов (вынесли в отдельную функцию)
+function setupSlicesListener() {
+    if (slicesListener) {
+        slicesListener.off();
+    }
+    
+    slicesListener = database.ref('slices').orderByChild('createdAt').limitToLast(100);
+    slicesListener.on('child_added', function(snapshot) {
+        var sliceId = snapshot.key;
+        
+        // Если идет публикация - пропускаем (свой пост)
+        if (isPublishingNow) {
+            console.log('Публикация в процессе, пропускаем:', sliceId);
+            return;
+        }
+        
+        // Если пост уже загружен - пропускаем
+        if (typeof loadedSliceIds !== 'undefined' && loadedSliceIds.has(sliceId)) {
+            console.log('Пост уже загружен, пропускаем:', sliceId);
+            return;
+        }
+        
+        var sliceData = snapshot.val();
+        if (!sliceData) return;
+        
+        // Добавляем ID в загруженные
+        if (typeof loadedSliceIds !== 'undefined') {
+            loadedSliceIds.add(sliceId);
+        }
+        
+        // Проверяем, не слишком ли старый пост (больше 3 секунд)
+        var now = Date.now();
+        var createdAt = sliceData.createdAt || 0;
+        if (now - createdAt > 3000) {
+            console.log('Старый пост, пропускаем:', sliceId);
+            return;
+        }
+        
+        // Добавляем новый пост в ленту
+        database.ref('sliceLikes/' + sliceId + '/' + currentUser.uid).once('value').then(function(snap) {
+            sliceData.userLiked = snap.exists();
+            var card = createSliceCard(sliceId, sliceData);
+            var feed = document.getElementById('slices-feed');
+            if (feed) {
+                // Проверяем, нет ли уже такого поста в ленте
+                var existingCard = feed.querySelector(`.slice-card[data-slice-id="${sliceId}"]`);
+                if (!existingCard) {
+                    if (feed.firstChild) {
+                        feed.insertBefore(card, feed.firstChild);
+                    } else {
+                        feed.appendChild(card);
+                    }
+                }
+            }
+        });
+    });
 }
 // ========== ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ МОДАЛЬНОГО ОКНА ==========
 
