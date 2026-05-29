@@ -1724,11 +1724,13 @@ function uploadFileWithProgress(file, onProgress) {
     });
 }
 
-// ОСНОВНАЯ ФУНКЦИЯ ПУБЛИКАЦИИ С ПРОГРЕССОМ
+// ОСНОВНАЯ ФУНКЦИЯ ПУБЛИКАЦИИ С ПРОГРЕССОМ (ИСПРАВЛЕННАЯ)
 async function publishSlice() {
     var text = document.getElementById('slice-text').value.trim();
     var hashtagsInput = document.getElementById('slice-hashtags-input').value.trim();
     var publishAs = document.getElementById('publish-as-select')?.value || 'self';
+    
+    console.log('Публикация от лица:', publishAs); // ДЛЯ ОТЛАДКИ
     
     if (pendingSliceFiles.length === 0 && !text) { 
         showNotification('Добавьте текст или фото', 'error'); 
@@ -1745,11 +1747,50 @@ async function publishSlice() {
     // Генерируем временный ID для поста
     var tempSliceId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
     
+    // Определяем автора (САМОЕ ВАЖНОЕ - ОТ ЧЬЕГО ЛИЦА ПУБЛИКУЕМ)
+    var authorId = currentUser.uid;
+    var authorName = currentUserData.username || 'Пользователь';
+    var authorAvatar = currentUserData.avatar || '';
+    var authorType = 'user';
+    var channelId = null;
+    
+    // ЕСЛИ ВЫБРАН КАНАЛ (НЕ 'self')
+    if (publishAs !== 'self') {
+        try {
+            var channelSnap = await database.ref('chats/' + publishAs).once('value');
+            var channel = channelSnap.val();
+            
+            if (channel && channel.type === 'channel') {
+                // Проверяем, является ли пользователь администратором канала
+                if (channel.admins && channel.admins[currentUser.uid]) {
+                    authorId = publishAs;  // ID канала становится автором
+                    authorName = channel.name || 'Канал';
+                    authorAvatar = channel.avatar || '';
+                    authorType = 'channel';
+                    channelId = publishAs;
+                    console.log('✅ Публикуем от лица канала:', authorName);
+                } else {
+                    showNotification('Вы не являетесь администратором этого канала', 'error');
+                    return;
+                }
+            } else {
+                showNotification('Канал не найден', 'error');
+                return;
+            }
+        } catch (err) {
+            console.error('Ошибка получения данных канала:', err);
+            showNotification('Ошибка при выборе канала', 'error');
+            return;
+        }
+    }
+    
     // Создаём временные данные поста
     var tempSliceData = {
-        authorId: currentUser.uid,
-        authorName: currentUserData.username || 'Пользователь',
-        authorAvatar: currentUserData.avatar || '',
+        authorId: authorId,
+        authorName: authorName,
+        authorAvatar: authorAvatar,
+        authorType: authorType,
+        channelId: channelId,
         text: text,
         hashtags: hashtags,
         mediaType: pendingSliceFiles.length > 0 ? 'uploading' : 'none',
@@ -1792,12 +1833,10 @@ async function publishSlice() {
             }
             
             var file = pendingSliceFiles[i];
-            var fileSize = file.size;
             
             // Обновляем прогресс для текущего файла
             var updateProgress = function(percent, loaded, total) {
                 if (cancelRequested) return;
-                // Обновляем карточку с прогрессом
                 var card = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
                 if (card) {
                     var progressPercent = Math.round(percent);
@@ -1851,7 +1890,6 @@ async function publishSlice() {
                 xhr.open('POST', `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`);
                 xhr.send(formData);
                 
-                // Сохраняем xhr для отмены
                 if (activeUploads[tempSliceId]) {
                     activeUploads[tempSliceId].xhr = xhr;
                 }
@@ -1860,10 +1898,9 @@ async function publishSlice() {
             var url = await uploadPromise;
             mediaUrls.push(url);
             
-            // Обновляем карточку - показываем загруженное изображение
+            // Обновляем карточку
             var card = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
             if (card && i < totalFiles - 1) {
-                // Если есть еще файлы, показываем следующий прогресс
                 var uploadingDiv = card.querySelector('.uploading-media');
                 if (uploadingDiv) {
                     var nextProgressHtml = `
@@ -1893,11 +1930,13 @@ async function publishSlice() {
         // Определяем тип медиа
         var mediaType = mediaUrls.length > 1 ? 'multiple' : (mediaUrls.length === 1 ? 'single' : 'none');
         
-        // Создаём финальные данные
+        // СОЗДАЁМ ФИНАЛЬНЫЕ ДАННЫЕ С ПРАВИЛЬНЫМ АВТОРОМ
         var finalSliceData = {
-            authorId: currentUser.uid,
-            authorName: currentUserData.username || 'Пользователь',
-            authorAvatar: currentUserData.avatar || '',
+            authorId: authorId,           // ID канала или пользователя
+            authorName: authorName,       // Имя канала или пользователя
+            authorAvatar: authorAvatar,   // Аватар канала или пользователя
+            authorType: authorType,       // 'user' или 'channel'
+            channelId: channelId,         // ID канала (если есть)
             text: text,
             hashtags: hashtags,
             mediaType: mediaType,
@@ -1911,17 +1950,7 @@ async function publishSlice() {
             createdAt: firebase.database.ServerValue.TIMESTAMP
         };
         
-        if (publishAs !== 'self') {
-            var channelSnap = await database.ref('chats/' + publishAs).once('value');
-            var channel = channelSnap.val();
-            if (channel && channel.type === 'channel') {
-                finalSliceData.authorId = publishAs;
-                finalSliceData.authorName = channel.name || 'Канал';
-                finalSliceData.authorAvatar = channel.avatar || '';
-                finalSliceData.authorType = 'channel';
-                finalSliceData.channelId = publishAs;
-            }
-        }
+        console.log('📝 Финальные данные слайса:', finalSliceData);
         
         // Сохраняем в Firebase
         var newSliceRef = await database.ref('slices/').push(finalSliceData);
@@ -1954,7 +1983,6 @@ async function publishSlice() {
     } catch (error) {
         console.error('Ошибка публикации:', error);
         
-        // Удаляем временный пост при ошибке
         var tempCardElement = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
         if (tempCardElement) tempCardElement.remove();
         
@@ -2064,20 +2092,32 @@ function loadUserChannelsForPublish() {
         var userChats = snapshot.val();
         if (!userChats) return;
         
-        for (var chatId in userChats) {
+        var processedCount = 0;
+        var channelIds = Object.keys(userChats);
+        
+        if (channelIds.length === 0) return;
+        
+        channelIds.forEach(function(chatId) {
             database.ref('chats/' + chatId).once('value').then(function(chatSnap) {
                 var chat = chatSnap.val();
+                // Проверяем, что это канал И пользователь является админом
                 if (chat && chat.type === 'channel' && chat.admins && chat.admins[currentUser.uid]) {
                     var option = document.createElement('option');
                     option.value = chatId;
                     option.textContent = '📢 ' + (chat.name || 'Канал');
                     select.appendChild(option);
+                    console.log('✅ Добавлен канал для публикации:', chat.name);
                 }
+                processedCount++;
+            }).catch(function(err) {
+                console.error('Ошибка загрузки чата:', err);
+                processedCount++;
             });
-        }
+        });
+    }).catch(function(err) {
+        console.error('Ошибка загрузки userChats:', err);
     });
 }
-
 function extractHashtags(text) { 
     var hashtags = text.match(/#[а-яА-Яa-zA-Z0-9_]+/g); 
     if (!hashtags) return []; 
