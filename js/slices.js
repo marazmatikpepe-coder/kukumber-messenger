@@ -1725,52 +1725,57 @@ function uploadFileWithProgress(file, onProgress) {
 }
 
 // ОСНОВНАЯ ФУНКЦИЯ ПУБЛИКАЦИИ С ПРОГРЕССОМ (ИСПРАВЛЕННАЯ)
+// ========== ПУБЛИКАЦИЯ СЛАЙСА (БЕЗ ДУБЛИРОВАНИЯ) ==========
+
 async function publishSlice() {
     var text = document.getElementById('slice-text').value.trim();
     var hashtagsInput = document.getElementById('slice-hashtags-input').value.trim();
     var publishAs = document.getElementById('publish-as-select')?.value || 'self';
     
-    console.log('Публикация от лица:', publishAs); // ДЛЯ ОТЛАДКИ
+    console.log('📝 Публикация от лица:', publishAs);
     
+    // Проверка: есть ли текст или файлы
     if (pendingSliceFiles.length === 0 && !text) { 
         showNotification('Добавьте текст или фото', 'error'); 
         return; 
     }
     
+    // Обработка хештегов из отдельного поля
     if (hashtagsInput) {
         var extraTags = hashtagsInput.split(/[ ,]+/).filter(function(t) { return t; });
-        if (text) text += ' ' + extraTags.map(function(t) { return '#' + t; }).join(' ');
-        else text = extraTags.map(function(t) { return '#' + t; }).join(' ');
+        if (text) {
+            text += ' ' + extraTags.map(function(t) { return '#' + t; }).join(' ');
+        } else {
+            text = extraTags.map(function(t) { return '#' + t; }).join(' ');
+        }
     }
+    
     var hashtags = extractHashtags(text);
     
-    // Генерируем временный ID для поста
-    var tempSliceId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    
-    // Определяем автора (САМОЕ ВАЖНОЕ - ОТ ЧЬЕГО ЛИЦА ПУБЛИКУЕМ)
+    // ========== ОПРЕДЕЛЯЕМ АВТОРА ==========
     var authorId = currentUser.uid;
-    var authorName = currentUserData.username || 'Пользователь';
-    var authorAvatar = currentUserData.avatar || '';
+    var authorName = currentUserData?.username || 'Пользователь';
+    var authorAvatar = currentUserData?.avatar || '';
     var authorType = 'user';
     var channelId = null;
     
-    // ЕСЛИ ВЫБРАН КАНАЛ (НЕ 'self')
+    // Если выбран канал
     if (publishAs !== 'self') {
         try {
             var channelSnap = await database.ref('chats/' + publishAs).once('value');
             var channel = channelSnap.val();
             
             if (channel && channel.type === 'channel') {
-                // Проверяем, является ли пользователь администратором канала
+                // Проверка прав администратора
                 if (channel.admins && channel.admins[currentUser.uid]) {
-                    authorId = publishAs;  // ID канала становится автором
+                    authorId = publishAs;
                     authorName = channel.name || 'Канал';
                     authorAvatar = channel.avatar || '';
                     authorType = 'channel';
                     channelId = publishAs;
-                    console.log('✅ Публикуем от лица канала:', authorName);
+                    console.log('✅ Публикация от канала:', authorName);
                 } else {
-                    showNotification('Вы не являетесь администратором этого канала', 'error');
+                    showNotification('Вы не администратор этого канала', 'error');
                     return;
                 }
             } else {
@@ -1778,222 +1783,134 @@ async function publishSlice() {
                 return;
             }
         } catch (err) {
-            console.error('Ошибка получения данных канала:', err);
+            console.error('Ошибка получения канала:', err);
             showNotification('Ошибка при выборе канала', 'error');
             return;
         }
     }
     
-    // Создаём временные данные поста
-    var tempSliceData = {
+    // ========== ЗАГРУЗКА ФАЙЛОВ ==========
+    var mediaUrls = [];
+    var totalFiles = pendingSliceFiles.length;
+    
+    if (totalFiles > 0) {
+        showNotification(`📤 Загрузка ${totalFiles} файл(ов)...`, 'info');
+        
+        for (var i = 0; i < totalFiles; i++) {
+            var file = pendingSliceFiles[i];
+            
+            try {
+                // Загрузка с прогрессом
+                var url = await new Promise(function(resolve, reject) {
+                    var xhr = new XMLHttpRequest();
+                    var formData = new FormData();
+                    formData.append('image', file);
+                    
+                    xhr.upload.addEventListener('progress', function(e) {
+                        if (e.lengthComputable) {
+                            var percent = Math.round((e.loaded / e.total) * 100);
+                            console.log(`Файл ${i+1}/${totalFiles}: ${percent}%`);
+                        }
+                    });
+                    
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            try {
+                                var response = JSON.parse(xhr.responseText);
+                                if (response.success && response.data && response.data.url) {
+                                    resolve(response.data.url);
+                                } else {
+                                    reject(new Error('Ошибка загрузки'));
+                                }
+                            } catch(e) {
+                                reject(e);
+                            }
+                        } else {
+                            reject(new Error('HTTP ' + xhr.status));
+                        }
+                    };
+                    
+                    xhr.onerror = function() {
+                        reject(new Error('Ошибка сети'));
+                    };
+                    
+                    xhr.open('POST', `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`);
+                    xhr.send(formData);
+                });
+                
+                mediaUrls.push(url);
+                
+            } catch (err) {
+                console.error('Ошибка загрузки файла:', err);
+                showNotification(`Ошибка загрузки: ${file.name}`, 'error');
+                return;
+            }
+        }
+    }
+    
+    // ========== СОЗДАНИЕ ПОСТА ==========
+    var mediaType = 'none';
+    if (mediaUrls.length === 1) mediaType = 'single';
+    else if (mediaUrls.length > 1) mediaType = 'multiple';
+    
+    var sliceData = {
         authorId: authorId,
         authorName: authorName,
         authorAvatar: authorAvatar,
         authorType: authorType,
         channelId: channelId,
-        text: text,
+        text: text || '',
         hashtags: hashtags,
-        mediaType: pendingSliceFiles.length > 0 ? 'uploading' : 'none',
-        mediaUrls: [],
+        mediaType: mediaType,
+        mediaUrls: mediaUrls.length > 0 ? mediaUrls : null,
+        mediaUrl: mediaUrls.length === 1 ? mediaUrls[0] : null,
         likesCount: 0,
         commentsCount: 0,
         repostsCount: 0,
         viewsCount: 0,
         pinned: false,
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        isTemp: true
+        createdAt: firebase.database.ServerValue.TIMESTAMP
     };
     
-    // Добавляем временный пост в начало ленты
-    var feed = document.getElementById('slices-feed');
-    var tempCard = createTempSliceCard(tempSliceId, tempSliceData, -1, pendingSliceFiles.length, 0);
-    if (feed) {
-        if (feed.firstChild) {
-            feed.insertBefore(tempCard, feed.firstChild);
-        } else {
-            feed.appendChild(tempCard);
-        }
-    }
-    
-    showNotification('📤 Загрузка...', 'info');
+    console.log('📤 Отправка данных в Firebase:', sliceData);
     
     try {
-        var mediaUrls = [];
-        var totalFiles = pendingSliceFiles.length;
-        var cancelRequested = false;
-        
-        // Сохраняем отмену
-        activeUploads[tempSliceId] = {
-            cancel: function() { cancelRequested = true; }
-        };
-        
-        for (var i = 0; i < pendingSliceFiles.length; i++) {
-            if (cancelRequested) {
-                throw new Error('Отменено пользователем');
-            }
-            
-            var file = pendingSliceFiles[i];
-            
-            // Обновляем прогресс для текущего файла
-            var updateProgress = function(percent, loaded, total) {
-                if (cancelRequested) return;
-                var card = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
-                if (card) {
-                    var progressPercent = Math.round(percent);
-                    var progressRing = card.querySelector('.progress-ring-fill');
-                    if (progressRing) {
-                        var circumference = 2 * Math.PI * 35;
-                        var offset = circumference * (1 - percent / 100);
-                        progressRing.style.strokeDashoffset = offset;
-                    }
-                    var percentDiv = card.querySelector('.progress-percent');
-                    if (percentDiv) percentDiv.textContent = progressPercent + '%';
-                    var sizeDiv = card.querySelector('.progress-size');
-                    if (sizeDiv) sizeDiv.textContent = formatFileSize(loaded) + ' / ' + formatFileSize(total);
-                }
-            };
-            
-            // Функция загрузки с прогрессом
-            var uploadPromise = new Promise(function(resolve, reject) {
-                var xhr = new XMLHttpRequest();
-                var formData = new FormData();
-                formData.append('image', file);
-                
-                xhr.upload.addEventListener('progress', function(e) {
-                    if (e.lengthComputable && !cancelRequested) {
-                        var percent = (e.loaded / e.total) * 100;
-                        updateProgress(percent, e.loaded, e.total);
-                    }
-                });
-                
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
-                        try {
-                            var response = JSON.parse(xhr.responseText);
-                            if (response.success && response.data && response.data.url) {
-                                resolve(response.data.url);
-                            } else {
-                                reject(new Error('Ошибка загрузки'));
-                            }
-                        } catch(e) {
-                            reject(e);
-                        }
-                    } else {
-                        reject(new Error('Ошибка HTTP: ' + xhr.status));
-                    }
-                };
-                
-                xhr.onerror = function() {
-                    reject(new Error('Ошибка сети'));
-                };
-                
-                xhr.open('POST', `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`);
-                xhr.send(formData);
-                
-                if (activeUploads[tempSliceId]) {
-                    activeUploads[tempSliceId].xhr = xhr;
-                }
-            });
-            
-            var url = await uploadPromise;
-            mediaUrls.push(url);
-            
-            // Обновляем карточку
-            var card = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
-            if (card && i < totalFiles - 1) {
-                var uploadingDiv = card.querySelector('.uploading-media');
-                if (uploadingDiv) {
-                    var nextProgressHtml = `
-                        <div class="slice-media uploading-media">
-                            <div class="upload-progress-container">
-                                <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
-                                    <circle class="progress-ring-bg" cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
-                                    <circle class="progress-ring-fill" cx="40" cy="40" r="35" fill="none" stroke="var(--forest)" stroke-width="4" 
-                                        stroke-dasharray="${2 * Math.PI * 35}" stroke-dashoffset="${2 * Math.PI * 35}"
-                                        stroke-linecap="round" transform="rotate(-90 40 40)"/>
-                                </svg>
-                                <div class="progress-percent">0%</div>
-                                <div class="progress-size">Загрузка файла ${i + 2} из ${totalFiles}</div>
-                            </div>
-                            <button class="cancel-upload-btn" onclick="cancelSliceUpload('${tempSliceId}')">⏹️ Отмена</button>
-                        </div>
-                    `;
-                    uploadingDiv.outerHTML = nextProgressHtml;
-                }
-            }
-        }
-        
-        if (cancelRequested) {
-            throw new Error('Отменено пользователем');
-        }
-        
-        // Определяем тип медиа
-        var mediaType = mediaUrls.length > 1 ? 'multiple' : (mediaUrls.length === 1 ? 'single' : 'none');
-        
-        // СОЗДАЁМ ФИНАЛЬНЫЕ ДАННЫЕ С ПРАВИЛЬНЫМ АВТОРОМ
-        var finalSliceData = {
-            authorId: authorId,           // ID канала или пользователя
-            authorName: authorName,       // Имя канала или пользователя
-            authorAvatar: authorAvatar,   // Аватар канала или пользователя
-            authorType: authorType,       // 'user' или 'channel'
-            channelId: channelId,         // ID канала (если есть)
-            text: text,
-            hashtags: hashtags,
-            mediaType: mediaType,
-            mediaUrls: mediaUrls.length > 0 ? mediaUrls : null,
-            mediaUrl: mediaUrls.length === 1 ? mediaUrls[0] : null,
-            likesCount: 0,
-            commentsCount: 0,
-            repostsCount: 0,
-            viewsCount: 0,
-            pinned: false,
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-        };
-        
-        console.log('📝 Финальные данные слайса:', finalSliceData);
-        
         // Сохраняем в Firebase
-        var newSliceRef = await database.ref('slices/').push(finalSliceData);
+        var newSliceRef = await database.ref('slices/').push(sliceData);
         var realSliceId = newSliceRef.key;
         
-        // Удаляем временный пост
-        var tempCardElement = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
-        if (tempCardElement) tempCardElement.remove();
-        
-        // Добавляем настоящий пост в начало ленты
-        finalSliceData.userLiked = false;
-        var realCard = createSliceCard(realSliceId, finalSliceData);
-        if (feed) {
-            if (feed.firstChild) {
-                feed.insertBefore(realCard, feed.firstChild);
-            } else {
-                feed.appendChild(realCard);
-            }
-        }
-        
-        // Добавляем ID в загруженные
+        // Добавляем ID в загруженные (чтобы не дублировать)
         if (typeof loadedSliceIds !== 'undefined') {
             loadedSliceIds.add(realSliceId);
         }
         
-        playSliceCreateSound();
-        showNotification('Пост опубликован! 🍕', 'success');
-        closeCreateSliceModal();
-        
-    } catch (error) {
-        console.error('Ошибка публикации:', error);
-        
-        var tempCardElement = document.querySelector(`.temp-slice-card[data-slice-id="${tempSliceId}"]`);
-        if (tempCardElement) tempCardElement.remove();
-        
-        if (error.message === 'Отменено пользователем') {
-            showNotification('Публикация отменена', 'info');
-        } else {
-            showNotification('Ошибка публикации: ' + error.message, 'error');
+        // Добавляем пост в ленту
+        var feed = document.getElementById('slices-feed');
+        if (feed) {
+            sliceData.userLiked = false;
+            var newCard = createSliceCard(realSliceId, sliceData);
+            
+            // Вставляем в начало ленты
+            if (feed.firstChild) {
+                feed.insertBefore(newCard, feed.firstChild);
+            } else {
+                feed.appendChild(newCard);
+            }
         }
-    } finally {
-        delete activeUploads[tempSliceId];
+        
+        playSliceCreateSound();
+        showNotification('✅ Пост опубликован!', 'success');
+        
+        // Очищаем форму
+        closeCreateSliceModal();
         pendingSliceFiles = [];
+        
+        // Обновляем превью
+        updateSlicePreview();
+        
+    } catch (err) {
+        console.error('❌ Ошибка публикации:', err);
+        showNotification('Ошибка публикации: ' + err.message, 'error');
     }
 }
 // ========== ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ МОДАЛЬНОГО ОКНА ==========
