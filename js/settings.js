@@ -878,7 +878,12 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--olive', '#556B2F');
     }
     
-    // Обновляем иконки при смене темы
+    // Обновляем логотип Slices
+    if (typeof updateSlicesLogo === 'function') {
+        updateSlicesLogo();
+    }
+    
+    // Обновляем иконки нижней навигации
     if (typeof updateBottomIcons === 'function') {
         updateBottomIcons();
     }
