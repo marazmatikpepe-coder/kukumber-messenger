@@ -2409,3 +2409,24 @@ window.addEventListener('load', function() {
         updateBottomIcons();
     }, 100);
 });
+// ========== СМЕНА ЛОГОТИПА SLICES ПРИ СМЕНЕ ТЕМЫ ==========
+function updateSlicesLogo() {
+    var isNightMode = document.body.classList.contains('night-mode');
+    var lightLogo = document.querySelector('.slices-logo-light');
+    var darkLogo = document.querySelector('.slices-logo-dark');
+    
+    if (lightLogo && darkLogo) {
+        if (isNightMode) {
+            lightLogo.style.display = 'none';
+            darkLogo.style.display = 'block';
+        } else {
+            lightLogo.style.display = 'block';
+            darkLogo.style.display = 'none';
+        }
+    }
+}
+
+// Вызываем при загрузке
+setTimeout(function() {
+    updateSlicesLogo();
+}, 100);
