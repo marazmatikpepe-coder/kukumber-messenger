@@ -121,6 +121,23 @@ function createSliceCard(sliceId, sliceData) {
     var avatarStyle = sliceData.authorAvatar ? 'background-image:url('+sliceData.authorAvatar+');background-size:cover;' : '';
     var avatarClass = (!sliceData.authorAvatar) ? 'default-avatar-user' : '';
     var avatarContent = '';
+     // ========== ВСТАВЬТЕ НОВЫЙ КОД ЗДЕСЬ ==========
+    var isNightMode = document.body.classList.contains('night-mode');
+    
+    var likedDarkIcon = 'https://i.ibb.co/q3sv3PMj/67467-E73-865-F-457-B-A63-E-7-C6-A05-FEF8-CC.png';
+    var likedLightIcon = 'https://i.ibb.co/0HFsXGK/1-CD2632-B-7-DD7-46-D4-8920-FBBE5-B29-D34-D.png';
+    var likeNotLikedIcon = 'https://i.ibb.co/4wPS6NB6/7-B6-E9-A78-01-E0-4481-9135-005-C4-F238-FD8.png';
+    
+    var likeIcon = sliceData.userLiked ? 
+        '<img src="' + (isNightMode ? likedDarkIcon : likedLightIcon) + '" class="like-icon" style="width:24px; height:24px;">' : 
+        '<img src="' + likeNotLikedIcon + '" class="like-icon not-liked" style="width:24px; height:24px;">';
+    
+    var commentIcon = '<img src="https://i.ibb.co/PzVWZ3dd/980-E0-C70-E93-B-4-AA0-80-AD-883-AD22-EB40-C.png" class="comment-icon" style="width:24px; height:24px;">';
+    var repostIcon = '<img src="https://i.ibb.co/BHzJVy1L/3545-DF6-B-CA20-410-D-8837-DB9-EC1-B2-A080.png" class="repost-icon" style="width:24px; height:24px;">';
+    var shareIcon = '<img src="https://i.ibb.co/p6KPqL4C/diting-result-8a8a10f55b3311f18da93e778ec87452-1-no-bg-preview-carve-photos.png" class="share-icon" style="width:28px; height:28px;">';
+    // ========== КОНЕЦ ВСТАВКИ ==========
+    
+    var mediaHtml = '';
     
     var mediaHtml = '';
     if (sliceData.mediaType === 'multiple' && sliceData.mediaUrls && sliceData.mediaUrls.length > 0) {
@@ -177,13 +194,7 @@ function createSliceCard(sliceId, sliceData) {
         }
     });
     
-    var likeIcon = sliceData.userLiked ? 
-        '<img src="https://i.ibb.co/0HFsXGK/1-CD2632-B-7-DD7-46-D4-8920-FBBE5-B29-D34-D.png" style="width:24px; height:24px;">' : 
-        '<img src="https://i.ibb.co/4wPS6NB6/7-B6-E9-A78-01-E0-4481-9135-005-C4-F238-FD8.png" style="width:24px; height:24px;">';
-    
-    var commentIcon = '<img src="https://i.ibb.co/PzVWZ3dd/980-E0-C70-E93-B-4-AA0-80-AD-883-AD22-EB40-C.png" style="width:24px; height:24px;">';
-    var repostIcon = '<img src="https://i.ibb.co/BHzJVy1L/3545-DF6-B-CA20-410-D-8837-DB9-EC1-B2-A080.png" style="width:24px; height:24px;">';
-    
+   
     div.innerHTML = `
         <div class="slice-header">
             <div class="slice-author" onclick="openUserProfile('${sliceData.authorId}')" style="cursor:pointer;">
@@ -219,7 +230,7 @@ function createSliceCard(sliceId, sliceData) {
                 </button>
             </div>
             <div class="slice-actions-right">
-                <button class="slice-action-btn" onclick="shareSlice('${sliceId}')">↗️</button>
+                <button class="slice-action-btn" onclick="shareSlice('${sliceId}')">${shareIcon}</button>
             </div>
         </div>
         <div id="comments-block-${sliceId}" class="comments-block" style="display: none;">
