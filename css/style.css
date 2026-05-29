@@ -7137,3 +7137,61 @@ body.night-mode .progress-percent {
 body.night-mode .progress-size {
     color: #aaa;
 }
+/* ========== ИКОНКИ СЛАЙСОВ ДЛЯ ТЁМНОЙ ТЕМЫ ========== */
+
+/* Лайк (не поставлен) - светлая тема */
+.slice-action-btn.like-btn img {
+    filter: none;
+}
+
+/* Лайк (поставлен) - светлая тема */
+.slice-action-btn.liked img {
+    filter: none;
+}
+
+/* Тёмная тема - меняем иконки */
+body.night-mode .slice-action-btn.like-btn img {
+    filter: brightness(0) invert(1);
+}
+
+body.night-mode .slice-action-btn.liked img {
+    filter: brightness(0) invert(1);
+}
+
+/* Иконка комментария - тёмная тема */
+body.night-mode .slice-action-btn[onclick*="toggleComments"] img {
+    filter: brightness(0) invert(1);
+}
+
+/* Иконка репоста - тёмная тема */
+body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
+    filter: brightness(0) invert(1);
+}
+
+/* Иконка поделиться (стрелка) - замена на картинку */
+.slice-action-btn[onclick*="shareSlice"] {
+    font-size: 0 !important;
+    text-indent: -9999px !important;
+    width: 40px !important;
+    height: 40px !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: transparent !important;
+}
+
+/* Светлая тема - иконка поделиться */
+body:not(.night-mode) .slice-action-btn[onclick*="shareSlice"] {
+    background-image: url('https://i.ibb.co/p6KPqL4C/diting-result-8a8a10f55b3311f18da93e778ec87452-1-no-bg-preview-carve-photos.png') !important;
+}
+
+/* Тёмная тема - иконка поделиться */
+body.night-mode .slice-action-btn[onclick*="shareSlice"] {
+    background-image: url('https://i.ibb.co/7tLRFmrk/editing-result-6787fc285b3311f190609e4ea3a14128-1-edited-free-carve-photos.png') !important;
+}
+
+/* Убираем старый текст/эмодзи */
+.slice-action-btn[onclick*="shareSlice"]::before,
+.slice-action-btn[onclick*="shareSlice"]::after {
+    display: none !important;
+}
