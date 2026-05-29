@@ -658,25 +658,35 @@
         
         // ========== ТЕМА (СВЕТЛАЯ/ТЁМНАЯ) ==========
         function setTheme(theme) {
-            var lightLogo = document.getElementById('slices-logo-light');
-            var darkLogo = document.getElementById('slices-logo-dark');
-            if (theme === 'dark') {
-                if (lightLogo) lightLogo.classList.add('hidden');
-                if (darkLogo) darkLogo.classList.remove('hidden');
-                document.body.classList.add('night-mode');
-            } else {
-                if (lightLogo) lightLogo.classList.remove('hidden');
-                if (darkLogo) darkLogo.classList.add('hidden');
-                document.body.classList.remove('night-mode');
-            }
-        }
-        
-        var savedTheme = localStorage.getItem('kukumber_night_mode');
-        if (savedTheme === 'true') {
-            setTheme('dark');
-        } else {
-            setTheme('light');
-        }
+    var lightLogo = document.getElementById('slices-logo-light');
+    var darkLogo = document.getElementById('slices-logo-dark');
+    if (theme === 'dark') {
+        if (lightLogo) lightLogo.classList.add('hidden');
+        if (darkLogo) darkLogo.classList.remove('hidden');
+        document.body.classList.add('night-mode');
+    } else {
+        if (lightLogo) lightLogo.classList.remove('hidden');
+        if (darkLogo) darkLogo.classList.add('hidden');
+        document.body.classList.remove('night-mode');
+    }
+    
+    // Обновляем иконки нижней навигации
+    if (typeof updateBottomIcons === 'function') {
+        updateBottomIcons();
+    }
+    
+    // Обновляем логотип Slices
+    if (typeof updateSlicesLogo === 'function') {
+        updateSlicesLogo();
+    }
+}
+
+var savedTheme = localStorage.getItem('kukumber_night_mode');
+if (savedTheme === 'true') {
+    setTheme('dark');
+} else {
+    setTheme('light');
+}
     </script>
 
     <!-- Service Workers -->
