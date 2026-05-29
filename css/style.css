@@ -7137,37 +7137,7 @@ body.night-mode .progress-percent {
 body.night-mode .progress-size {
     color: #aaa;
 }
-/* ========== ИКОНКИ СЛАЙСОВ ДЛЯ ТЁМНОЙ ТЕМЫ ========== */
-
-/* Лайк (не поставлен) - светлая тема */
-.slice-action-btn.like-btn img {
-    filter: none;
-}
-
-/* Лайк (поставлен) - светлая тема */
-.slice-action-btn.liked img {
-    filter: none;
-}
-
-/* Тёмная тема - меняем иконки */
-body.night-mode .slice-action-btn.like-btn img {
-    filter: brightness(0) invert(1);
-}
-
-body.night-mode .slice-action-btn.liked img {
-    filter: brightness(0) invert(1);
-}
-
-/* Иконка комментария - тёмная тема */
-body.night-mode .slice-action-btn[onclick*="toggleComments"] img {
-    filter: brightness(0) invert(1);
-}
-
-/* Иконка репоста - тёмная тема */
-body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
-    filter: brightness(0) invert(1);
-}
-
+ 
 /* Иконка поделиться (стрелка) - замена на картинку */
 .slice-action-btn[onclick*="shareSlice"] {
     font-size: 0 !important;
