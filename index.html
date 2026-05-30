@@ -711,23 +711,6 @@ if (savedTheme === 'true') {
 </div>
 
 <script>
-// Простой баннер - меняй URL здесь
-var bannerUrl = 'https://i.ibb.co/MyfV2nqs/image.png';
-var bannerLink = 'https://t.me/kukumber';
-
-var banner = document.getElementById('test-banner');
-var bannerImg = document.getElementById('test-banner-img');
-
-if (banner && bannerImg) {
-    bannerImg.src = bannerUrl;
-    banner.style.display = 'block';
-    banner.onclick = function(e) {
-        if (e.target !== banner.querySelector('.test-banner-close')) {
-            window.open(bannerLink, '_blank');
-        }
-    };
-}
-</script>
 </body>
 </html>
 
