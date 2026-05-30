@@ -2440,3 +2440,31 @@ window.addEventListener('load', function() {
         }, 2000);
     }
 });
+// ========== ПРОВЕРКА ШАРОВ ==========
+function checkSharedContent() {
+    const sharedContent = localStorage.getItem('kukumber_shared_content');
+    const sharedTime = localStorage.getItem('kukumber_shared_timestamp');
+    
+    if (sharedContent && sharedTime && (Date.now() - sharedTime) < 60000) {
+        // Очищаем
+        localStorage.removeItem('kukumber_shared_content');
+        localStorage.removeItem('kukumber_shared_timestamp');
+        
+        // Вставляем в поле ввода сообщения
+        setTimeout(function() {
+            const messageInput = document.getElementById('message-input');
+            if (messageInput) {
+                messageInput.value = sharedContent;
+                messageInput.focus();
+                showNotification('📎 Вставлено из другого приложения!', 'success');
+            }
+        }, 2000);
+    }
+}
+
+// Вызываем после загрузки
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkSharedContent);
+} else {
+    checkSharedContent();
+}
