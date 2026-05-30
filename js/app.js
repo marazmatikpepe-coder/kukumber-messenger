@@ -2430,3 +2430,13 @@ function updateSlicesLogo() {
 setTimeout(function() {
     updateSlicesLogo();
 }, 100);
+// ========== ПЕРЕХОД К ПОСТУ ПО ССЫЛКЕ ==========
+window.addEventListener('load', function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var postId = urlParams.get('post') || urlParams.get('slice');
+    if (postId && typeof loadAndScrollToPost === 'function') {
+        setTimeout(function() {
+            loadAndScrollToPost(postId);
+        }, 2000);
+    }
+});
