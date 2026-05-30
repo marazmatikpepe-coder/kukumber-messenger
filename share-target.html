@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обработка ссылки</title>
+</head>
+<body>
+    <script>
+        // Получаем данные из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const title = urlParams.get('title') || '';
+        const text = urlParams.get('text') || '';
+        const url = urlParams.get('url') || '';
+        
+        let sharedContent = '';
+        if (url) sharedContent = url;
+        else if (text) sharedContent = text;
+        else if (title) sharedContent = title;
+        
+        if (sharedContent) {
+            // Сохраняем в localStorage
+            localStorage.setItem('kukumber_shared_content', sharedContent);
+            localStorage.setItem('kukumber_shared_timestamp', Date.now());
+        }
+        
+        // Перенаправляем на главную
+        window.location.href = '/';
+    </script>
+</body>
+</html>
