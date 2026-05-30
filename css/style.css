@@ -7169,3 +7169,14 @@ body.night-mode .slice-action-btn[onclick*="toggleComments"] img {
 body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
     filter: brightness(0) invert(1);
 }
+/* Иконка поделиться */
+.share-icon {
+    width: 28px !important;
+    height: 28px !important;
+    object-fit: contain;
+}
+
+/* В тёмной теме - замена картинки для поделиться */
+body.night-mode .share-icon {
+    content: url('https://i.ibb.co/0V8JyjC3/editing-result-6787fc285b3311f190609e4ea3a14128-1-edited-free-carve-photos.png');
+}
