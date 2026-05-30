@@ -2437,4 +2437,12 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(loadPostFromUrl, 1500);
 }
+// Просто вставляем баннер в начало слайсов
+setTimeout(function() {
+    var banner = document.getElementById('test-banner');
+    var feed = document.getElementById('slices-feed');
+    if (banner && feed && feed.firstChild) {
+        feed.insertBefore(banner, feed.firstChild);
+    }
+}, 2000);
 console.log('✅ slices.js полностью загружен');
