@@ -134,7 +134,11 @@ function createSliceCard(sliceId, sliceData) {
     
     var commentIcon = '<img src="https://i.ibb.co/PzVWZ3dd/980-E0-C70-E93-B-4-AA0-80-AD-883-AD22-EB40-C.png" class="comment-icon" style="width:24px; height:24px;">';
     var repostIcon = '<img src="https://i.ibb.co/BHzJVy1L/3545-DF6-B-CA20-410-D-8837-DB9-EC1-B2-A080.png" class="repost-icon" style="width:24px; height:24px;">';
-    var shareIcon = '<img src="https://i.ibb.co/p6KPqL4C/diting-result-8a8a10f55b3311f18da93e778ec87452-1-no-bg-preview-carve-photos.png" class="share-icon" style="width:28px; height:28px;">';
+  var isNightMode = document.body.classList.contains('night-mode');
+var shareIconUrl = isNightMode 
+    ? 'https://i.ibb.co/0V8JyjC3/editing-result-6787fc285b3311f190609e4ea3a14128-1-edited-free-carve-photos.png'
+    : 'https://i.ibb.co/wZQLtzpD/diting-result-8a8a10f55b3311f18da93e778ec87452-1-no-bg-preview-carve-photos.png';
+var shareIcon = '<img src="' + shareIconUrl + '" class="share-icon" style="width:28px; height:28px;">';
     // ========== КОНЕЦ ВСТАВКИ ==========
     
     var mediaHtml = '';
