@@ -1454,15 +1454,30 @@ function searchSlices() {
 
 // ========== ОБЩИЕ ФУНКЦИИ ==========
 function shareSlice(sliceId) {
-    var url = window.location.href + '?slice=' + sliceId;
+    var url = window.location.origin + window.location.pathname + '?post=' + sliceId;
+    
     if (navigator.share) {
-        navigator.share({ title: 'Слайс', text: 'Посмотри пост!', url: url });
+        navigator.share({
+            title: 'Слайс',
+            text: 'Посмотри пост!',
+            url: url
+        }).catch(function(e) {
+            if (e.name !== 'AbortError') {
+                copyToClipboard(url);
+            }
+        });
     } else {
-        navigator.clipboard.writeText(url);
-        showNotification('Ссылка скопирована!', 'success');
+        copyToClipboard(url);
     }
 }
 
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        showNotification('🔗 Ссылка на пост скопирована!', 'success');
+    }).catch(function() {
+        showNotification('❌ Не удалось скопировать ссылку', 'error');
+    });
+}
 function openSliceLightbox(url) {
     var lightbox = document.getElementById('image-lightbox');
     var lightboxImg = document.getElementById('lightbox-image');
