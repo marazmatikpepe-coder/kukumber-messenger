@@ -2298,5 +2298,72 @@ window.publishSlice = publishSlice;
 window.startPrivateChatFromProfile = startPrivateChatFromProfile;
 window.editProfileUserTag = editProfileUserTag;
 window.openUserProfileFull = openUserProfileFull;
+// ========== ПЕРЕХОД К ПОСТУ ПО ССЫЛКЕ ==========
 
+function getPostIdFromUrl() {
+    var urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('post') || urlParams.get('slice');
+}
+
+function scrollToPost(postId) {
+    if (!postId) return false;
+    
+    var postElement = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
+    if (postElement) {
+        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        postElement.style.transition = 'background 0.3s ease';
+        postElement.style.backgroundColor = 'rgba(34, 139, 34, 0.2)';
+        setTimeout(function() {
+            postElement.style.backgroundColor = '';
+        }, 2000);
+        return true;
+    }
+    return false;
+}
+
+function loadAndScrollToPost(postId) {
+    if (!postId) return;
+    
+    // Сначала пробуем найти пост в уже загруженной ленте
+    if (scrollToPost(postId)) return;
+    
+    // Если не нашли, загружаем конкретный пост из Firebase
+    database.ref('slices/' + postId).once('value').then(function(snapshot) {
+        var post = snapshot.val();
+        if (!post) {
+            showNotification('Пост не найден', 'error');
+            return;
+        }
+        
+        // Переключаемся на вкладку Slices
+        if (typeof switchToTab === 'function') {
+            switchToTab('reels');
+        }
+        
+        // Ждём загрузки ленты и затем скроллим
+        var checkInterval = setInterval(function() {
+            if (scrollToPost(postId)) {
+                clearInterval(checkInterval);
+            }
+        }, 500);
+        
+        // Останавливаем проверку через 10 секунд
+        setTimeout(function() {
+            clearInterval(checkInterval);
+            showNotification('Пост загружается...', 'info');
+        }, 10000);
+    }).catch(function(err) {
+        console.error('Ошибка загрузки поста:', err);
+    });
+}
+
+// Проверяем URL при загрузке страницы
+window.addEventListener('load', function() {
+    var postId = getPostIdFromUrl();
+    if (postId) {
+        setTimeout(function() {
+            loadAndScrollToPost(postId);
+        }, 1500);
+    }
+});
 console.log('✅ slices.js полностью загружен');
