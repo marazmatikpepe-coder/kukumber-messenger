@@ -1454,23 +1454,32 @@ function searchSlices() {
 
 // ========== ОБЩИЕ ФУНКЦИИ ==========
 function shareSlice(sliceId) {
-    var url = window.location.origin + window.location.pathname + '?post=' + sliceId;
+    // Получаем полный URL без параметров
+    var baseUrl = window.location.origin + window.location.pathname;
+    var shareUrl = baseUrl + '?post=' + sliceId;
     
     if (navigator.share) {
         navigator.share({
-            title: 'Слайс',
-            text: 'Посмотри пост!',
-            url: url
+            title: 'Посмотри пост в K Messenger!',
+            text: '🍕 Интересный пост',
+            url: shareUrl
         }).catch(function(e) {
             if (e.name !== 'AbortError') {
-                copyToClipboard(url);
+                copyToClipboard(shareUrl);
             }
         });
     } else {
-        copyToClipboard(url);
+        copyToClipboard(shareUrl);
     }
 }
 
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        showNotification('🔗 Ссылка на пост скопирована!', 'success');
+    }).catch(function() {
+        showNotification('❌ Не удалось скопировать', 'error');
+    });
+}
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(function() {
         showNotification('🔗 Ссылка на пост скопирована!', 'success');
@@ -2381,4 +2390,51 @@ window.addEventListener('load', function() {
         }, 1500);
     }
 });
+// ========== ПЕРЕХОД К ПОСТУ ПО ССЫЛКЕ ==========
+function getPostIdFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get('post');
+}
+
+function scrollToPostById(postId) {
+    var postElement = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
+    if (postElement) {
+        postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        postElement.style.backgroundColor = 'rgba(34, 139, 34, 0.2)';
+        postElement.style.transition = 'background 0.3s';
+        setTimeout(function() {
+            postElement.style.backgroundColor = '';
+        }, 2000);
+        return true;
+    }
+    return false;
+}
+
+function loadPostFromUrl() {
+    var postId = getPostIdFromUrl();
+    if (!postId) return;
+    
+    // Сначала ищем в уже загруженной ленте
+    if (scrollToPostById(postId)) return;
+    
+    // Если не нашли, загружаем и ждём
+    var checkInterval = setInterval(function() {
+        if (scrollToPostById(postId)) {
+            clearInterval(checkInterval);
+        }
+    }, 500);
+    
+    setTimeout(function() {
+        clearInterval(checkInterval);
+    }, 10000);
+}
+
+// Запускаем при загрузке страницы
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(loadPostFromUrl, 1500);
+    });
+} else {
+    setTimeout(loadPostFromUrl, 1500);
+}
 console.log('✅ slices.js полностью загружен');
