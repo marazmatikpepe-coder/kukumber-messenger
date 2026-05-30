@@ -7180,3 +7180,19 @@ body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
 body.night-mode .share-icon {
     content: url('https://i.ibb.co/0V8JyjC3/editing-result-6787fc285b3311f190609e4ea3a14128-1-edited-free-carve-photos.png');
 }
+/* ========== КНОПКА ПОДЕЛИТЬСЯ ========== */
+.share-icon {
+    width: 28px !important;
+    height: 28px !important;
+    object-fit: contain;
+    display: inline-block;
+}
+
+.slice-action-btn {
+    background: transparent !important;
+}
+
+/* Убираем всё лишнее */
+.slice-action-btn .share-icon {
+    filter: none !important;
+}
