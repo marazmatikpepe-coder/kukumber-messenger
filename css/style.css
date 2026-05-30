@@ -7186,3 +7186,30 @@ body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
 .slice-action-btn .share-icon {
     filter: none !important;
 }
+/* ========== ПРОСТОЙ БАННЕР ДЛЯ ТЕСТА ========== */
+.test-banner {
+    background: linear-gradient(135deg, #228B22, #556B2F);
+    margin: 10px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+}
+.test-banner img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.test-banner-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    cursor: pointer;
+}
