@@ -138,7 +138,7 @@ function createSliceCard(sliceId, sliceData) {
 var shareIconUrl = isNightMode 
     ? 'https://i.ibb.co/0V8JyjC3/editing-result-6787fc285b3311f190609e4ea3a14128-1-edited-free-carve-photos.png'
     : 'https://i.ibb.co/wZQLtzpD/diting-result-8a8a10f55b3311f18da93e778ec87452-1-no-bg-preview-carve-photos.png';
-var shareIcon = '<img src="' + shareIconUrl + '" class="share-icon" style="width:28px; height:28px;">';
+var shareIcon = '<img src="' + shareIconUrl + '" class="share-icon">';
     // ========== КОНЕЦ ВСТАВКИ ==========
     
     var mediaHtml = '';
