@@ -704,6 +704,30 @@ if (savedTheme === 'true') {
      <!-- Для push-уведомлений на iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+     <!-- Простой тестовый баннер -->
+<div id="test-banner" class="test-banner" style="display: none;">
+    <button class="test-banner-close" onclick="document.getElementById('test-banner').style.display='none'">✕</button>
+    <img id="test-banner-img" src="" alt="Реклама">
+</div>
+
+<script>
+// Простой баннер - меняй URL здесь
+var bannerUrl = 'https://i.ibb.co/MyfV2nqs/image.png';
+var bannerLink = 'https://t.me/kukumber';
+
+var banner = document.getElementById('test-banner');
+var bannerImg = document.getElementById('test-banner-img');
+
+if (banner && bannerImg) {
+    bannerImg.src = bannerUrl;
+    banner.style.display = 'block';
+    banner.onclick = function(e) {
+        if (e.target !== banner.querySelector('.test-banner-close')) {
+            window.open(bannerLink, '_blank');
+        }
+    };
+}
+</script>
 </body>
 </html>
 
