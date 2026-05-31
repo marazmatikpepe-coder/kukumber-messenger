@@ -7213,3 +7213,66 @@ body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
     font-size: 16px;
     cursor: pointer;
 }
+/* ========== ОБОИ В ЧАТЕ ДЛЯ ТЕЛЕФОНОВ ========== */
+@media (max-width: 768px) {
+    /* Контейнер чата с обоями */
+    .chat-area {
+        position: relative;
+    }
+    
+    #active-chat .messages-container {
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: local !important;
+        position: relative;
+    }
+    
+    /* Полупрозрачный фон для сообщений, чтобы текст читался */
+    #active-chat .messages-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: inherit;
+        filter: blur(0);
+        z-index: 0;
+    }
+    
+    #active-chat .message {
+        position: relative;
+        z-index: 1;
+    }
+    
+    #active-chat .message.received {
+        background: rgba(255, 255, 255, 0.9) !important;
+        backdrop-filter: blur(2px);
+    }
+    
+    body.night-mode #active-chat .message.received {
+        background: rgba(30, 30, 40, 0.9) !important;
+        color: white !important;
+    }
+    
+    #active-chat .message.sent {
+        background: linear-gradient(135deg, rgba(34, 139, 34, 0.85), rgba(50, 205, 50, 0.85)) !important;
+        backdrop-filter: blur(2px);
+    }
+    
+    /* Время сообщений на обоях */
+    #active-chat .message-time {
+        opacity: 0.8;
+    }
+}
+
+/* Стиль для выбора обоев в настройках темы */
+.wallpaper-preview {
+    width: 100%;
+    height: 60px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    background-size: cover;
+    background-position: center;
+}
