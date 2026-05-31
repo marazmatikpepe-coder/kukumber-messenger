@@ -937,4 +937,126 @@ function detectUserLanguage() {
 
 // Запуск
 initSettings();
+// ========== ОБОИ ДЛЯ ЧАТА ==========
+var currentWallpaper = localStorage.getItem('kukumber_chat_wallpaper') || 'none';
+
+// Функция применения обоев
+function applyChatWallpaper() {
+    var isMobile = window.innerWidth <= 768;
+    if (!isMobile) return;
+    
+    var messagesContainer = document.querySelector('#active-chat .messages-container');
+    if (!messagesContainer) return;
+    
+    if (currentWallpaper && currentWallpaper !== 'none') {
+        messagesContainer.style.backgroundImage = 'url(' + currentWallpaper + ')';
+        messagesContainer.style.backgroundSize = 'cover';
+        messagesContainer.style.backgroundPosition = 'center';
+        messagesContainer.style.backgroundRepeat = 'no-repeat';
+    } else {
+        messagesContainer.style.backgroundImage = '';
+    }
+}
+
+// Функция выбора обоев в модалке темы
+function showWallpaperSelector() {
+    var isNightMode = document.body.classList.contains('night-mode');
+    
+    // Обои для тёмной темы
+    var darkWallpapers = {
+        'Желтый': 'https://i.ibb.co/tTh0ZV8r/B94428-A4-44-C0-45-CD-B94-B-3-E6-CA0-E3-B5-A4.jpg',
+        'Бирюзовый': 'https://i.ibb.co/DDQsHJTq/E93-AC3-CC-9-FCB-4803-87-E7-8-DF8-AFA05-B70.jpg',
+        'Розовый': 'https://i.ibb.co/GQw73wZF/09-A5-F103-2-D08-4999-90-FC-F2680-B53-EFA7.jpg',
+        'Фиолетовый': 'https://i.ibb.co/Y7Q4nrdS/E6-B950-C3-1-BEB-43-AB-9-B9-D-107487-FDF697.jpg',
+        'Зеленый': 'https://i.ibb.co/GQcpWSpf/21-E44401-07-DC-4958-B5-D9-073-B31570-C4-A.jpg',
+        'Синий': 'https://i.ibb.co/CsXmZbHd/80-BF86-D8-0-EE6-45-E6-8244-FB1322410873.jpg',
+        'Оранжевый': 'https://i.ibb.co/yc59YYSM/F7-EBAA21-FEAC-4608-AFAB-0017-F9537-ADB.jpg',
+        'Красный': 'https://i.ibb.co/tVCW5C8/63-FF886-B-3850-4-E60-A208-EE8979522-BE8.jpg'
+    };
+    
+    // Обои для светлой темы
+    var lightWallpapers = {
+        'Желтый': 'https://i.ibb.co/VckyCQ6z/064-E6-BEB-BE2-E-4354-8-D0-F-416-D483-AD7-A2.jpg',
+        'Оранжевый': 'https://i.ibb.co/7t2sXvfq/A0-FE866-C-A8-E8-45-AF-A6-AC-F4338-EBB7-F42.jpg',
+        'Красный': 'https://i.ibb.co/CKksMqrV/1-D874411-3-D92-4-F8-E-98-BF-3914-FD6726-AF.jpg',
+        'Розовый': 'https://i.ibb.co/1f54zJZd/C91-EC1-A7-5-F26-463-C-8834-B3348-F5-C9842.jpg',
+        'Фиолетовый': 'https://i.ibb.co/YT1sPj2f/2419-CCDD-B40-F-4638-8301-6-D5-CF2-CC2-CC7.jpg',
+        'Бирюзовый': 'https://i.ibb.co/PZKj6GGV/06114-C10-16-B2-4-F42-92-A1-FB312-B98-DE74.jpg',
+        'Синий': 'https://i.ibb.co/WpVsG9s5/71-B84542-8-B22-4-FEC-9-F43-DAA7-F8-DBA824.jpg',
+        'Зеленый': 'https://i.ibb.co/0p9JnLm5/7-D56113-A-7-DFB-4922-B7-CE-1-AD9964-CAFD8.jpg'
+    };
+    
+    var wallpapers = isNightMode ? darkWallpapers : lightWallpapers;
+    
+    var modalHtml = `
+        <div id="wallpaper-modal" class="modal">
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h3>🎨 Обои для чата</h3>
+                    <button onclick="closeWallpaperModal()" class="btn-close">×</button>
+                </div>
+                <div style="padding: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div onclick="selectWallpaper('none')" style="text-align: center; cursor: pointer;">
+                        <div style="width: 100%; height: 80px; background: #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 30px;">🚫</div>
+                        <span style="font-size: 12px;">Без обоев</span>
+                    </div>
+                    ${Object.entries(wallpapers).map(([name, url]) => `
+                        <div onclick="selectWallpaper('${url}')" style="text-align: center; cursor: pointer;">
+                            <div class="wallpaper-preview" style="background-image: url('${url}');"></div>
+                            <span style="font-size: 12px;">${name}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    var oldModal = document.getElementById('wallpaper-modal');
+    if (oldModal) oldModal.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('wallpaper-modal').classList.remove('hidden');
+}
+
+function closeWallpaperModal() {
+    var modal = document.getElementById('wallpaper-modal');
+    if (modal) modal.remove();
+}
+
+function selectWallpaper(wallpaperUrl) {
+    currentWallpaper = wallpaperUrl;
+    localStorage.setItem('kukumber_chat_wallpaper', wallpaperUrl);
+    applyChatWallpaper();
+    closeWallpaperModal();
+    showNotification('Обои применены!', 'success');
+}
+
+// Добавляем кнопку выбора обоев в модалку темы
+var originalShowThemeSettings = window.showThemeSettings;
+window.showThemeSettings = function() {
+    originalShowThemeSettings();
+    
+    setTimeout(function() {
+        var modalContent = document.querySelector('#theme-settings-modal .modal-content');
+        if (modalContent) {
+            var wallpaperBtn = document.createElement('button');
+            wallpaperBtn.innerHTML = '🖼️ Обои для чата';
+            wallpaperBtn.style.cssText = 'width: 100%; padding: 14px; background: var(--background); border: 2px solid var(--border); border-radius: 16px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px;';
+            wallpaperBtn.onclick = function() {
+                closeThemeSettings();
+                showWallpaperSelector();
+            };
+            modalContent.appendChild(wallpaperBtn);
+        }
+    }, 100);
+};
+
+// Применяем обои при переключении чата
+var originalOpenChatWithData = window.openChatWithData;
+window.openChatWithData = function(chatId, chatData) {
+    originalOpenChatWithData(chatId, chatData);
+    setTimeout(applyChatWallpaper, 100);
+};
+
+// Применяем обои при загрузке страницы
+setTimeout(applyChatWallpaper, 1500);
 console.log('✅ settings.js загружен');
