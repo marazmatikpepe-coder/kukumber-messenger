@@ -7213,29 +7213,25 @@ body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
     font-size: 16px;
     cursor: pointer;
 }
-/* ========== ОБОИ В ЧАТЕ ДЛЯ ТЕЛЕФОНОВ ========== */
+/* ========== ОБОИ В ЧАТЕ КАК В TELEGRAM ========== */
 @media (max-width: 768px) {
-    /* Контейнер чата с обоями */
-    .chat-area {
-        position: relative;
-    }
-    
     #active-chat .messages-container {
         background-size: auto !important;
-        background-position: top center !important;
-        background-repeat: repeat-y !important;
+        background-repeat: repeat !important;
+        background-position: top left !important;
         background-attachment: local !important;
         position: relative;
     }
     
-    /* Если хочешь, чтобы картинка не повторялась, а была одна сверху */
+    /* Если хочешь чтобы картинка была одна и не повторялась */
     #active-chat .messages-container {
-        background-size: 100% auto !important;
+        background-size: auto !important;
         background-repeat: no-repeat !important;
+        background-position: top center !important;
         background-attachment: local !important;
     }
     
-    /* Полупрозрачный фон для сообщений, чтобы текст читался */
+    /* Полупрозрачный фон для сообщений */
     #active-chat .message {
         position: relative;
         z-index: 1;
@@ -7254,10 +7250,5 @@ body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
     #active-chat .message.sent {
         background: linear-gradient(135deg, rgba(34, 139, 34, 0.85), rgba(50, 205, 50, 0.85)) !important;
         backdrop-filter: blur(2px);
-    }
-    
-    /* Время сообщений на обоях */
-    #active-chat .message-time {
-        opacity: 0.8;
     }
 }
