@@ -1033,26 +1033,6 @@ function selectWallpaper(wallpaperUrl) {
     showNotification('Обои применены!', 'success');
 }
 
-// Добавляем кнопку выбора обоев в модалку темы
-var originalShowThemeSettings = window.showThemeSettings;
-window.showThemeSettings = function() {
-    originalShowThemeSettings();
-    
-    setTimeout(function() {
-        var modalContent = document.querySelector('#theme-settings-modal .modal-content');
-        if (modalContent) {
-            var wallpaperBtn = document.createElement('button');
-            wallpaperBtn.innerHTML = '🖼️ Обои для чата';
-            wallpaperBtn.style.cssText = 'width: 100%; padding: 14px; background: var(--background); border: 2px solid var(--border); border-radius: 16px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px;';
-            wallpaperBtn.onclick = function() {
-                closeThemeSettings();
-                showWallpaperSelector();
-            };
-            modalContent.appendChild(wallpaperBtn);
-        }
-    }, 100);
-};
-
 // Применяем обои при переключении чата
 var originalOpenChatWithData = window.openChatWithData;
 window.openChatWithData = function(chatId, chatData) {
