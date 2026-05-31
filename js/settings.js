@@ -837,10 +837,8 @@ function setSimpleTheme(colorKey) {
         btn.style.background = gradient;
     });
     
-    // Обновляем цвет плавающего индикатора
-    if (typeof updateIndicatorColor === 'function') {
-        updateIndicatorColor();
-    }
+    // Обновляем обои в соответствии с выбранным цветом и темой
+    updateWallpaperByTheme(colorKey);
     
     renderThemesGrid();
     showNotification('Тема "' + theme.name + '" применена', 'success');
@@ -876,6 +874,11 @@ function applyNightModeToBody() {
         document.documentElement.style.setProperty('--border', '#d4e4d4');
         document.documentElement.style.setProperty('--sage', '#9DC183');
         document.documentElement.style.setProperty('--olive', '#556B2F');
+    }
+    
+    // Обновляем обои при смене темы
+    if (currentThemeColor) {
+        updateWallpaperByTheme(currentThemeColor);
     }
     
     // Обновляем логотип Slices
@@ -1059,4 +1062,56 @@ window.openChatWithData = function(chatId, chatData) {
 
 // Применяем обои при загрузке страницы
 setTimeout(applyChatWallpaper, 1500);
+// ========== АВТОМАТИЧЕСКИЕ ОБОИ ДЛЯ ЧАТА ==========
+
+function updateWallpaperByTheme(colorKey) {
+    var isNightMode = document.body.classList.contains('night-mode');
+    
+    // Соответствие цветов обоям (тот же ключ, что и в colorThemes)
+    var wallpaperMap = {
+        green: {
+            light: 'https://i.ibb.co/0p9JnLm5/7-D56113-A-7-DFB-4922-B7-CE-1-AD9964-CAFD8.jpg',
+            dark: 'https://i.ibb.co/GQcpWSpf/21-E44401-07-DC-4958-B5-D9-073-B31570-C4-A.jpg'
+        },
+        blue: {
+            light: 'https://i.ibb.co/WpVsG9s5/71-B84542-8-B22-4-FEC-9-F43-DAA7-F8-DBA824.jpg',
+            dark: 'https://i.ibb.co/CsXmZbHd/80-BF86-D8-0-EE6-45-E6-8244-FB1322410873.jpg'
+        },
+        red: {
+            light: 'https://i.ibb.co/CKksMqrV/1-D874411-3-D92-4-F8-E-98-BF-3914-FD6726-AF.jpg',
+            dark: 'https://i.ibb.co/tVCW5C8/63-FF886-B-3850-4-E60-A208-EE8979522-BE8.jpg'
+        },
+        purple: {
+            light: 'https://i.ibb.co/YT1sPj2f/2419-CCDD-B40-F-4638-8301-6-D5-CF2-CC2-CC7.jpg',
+            dark: 'https://i.ibb.co/Y7Q4nrdS/E6-B950-C3-1-BEB-43-AB-9-B9-D-107487-FDF697.jpg'
+        },
+        orange: {
+            light: 'https://i.ibb.co/7t2sXvfq/A0-FE866-C-A8-E8-45-AF-A6-AC-F4338-EBB7-F42.jpg',
+            dark: 'https://i.ibb.co/yc59YYSM/F7-EBAA21-FEAC-4608-AFAB-0017-F9537-ADB.jpg'
+        },
+        pink: {
+            light: 'https://i.ibb.co/1f54zJZd/C91-EC1-A7-5-F26-463-C-8834-B3348-F5-C9842.jpg',
+            dark: 'https://i.ibb.co/GQw73wZF/09-A5-F103-2-D08-4999-90-FC-F2680-B53-EFA7.jpg'
+        },
+        turquoise: {
+            light: 'https://i.ibb.co/PZKj6GGV/06114-C10-16-B2-4-F42-92-A1-FB312-B98-DE74.jpg',
+            dark: 'https://i.ibb.co/DDQsHJTq/E93-AC3-CC-9-FCB-4803-87-E7-8-DF8-AFA05-B70.jpg'
+        },
+        yellow: {
+            light: 'https://i.ibb.co/VckyCQ6z/064-E6-BEB-BE2-E-4354-8-D0-F-416-D483-AD7-A2.jpg',
+            dark: 'https://i.ibb.co/tTh0ZV8r/B94428-A4-44-C0-45-CD-B94-B-3-E6-CA0-E3-B5-A4.jpg'
+        }
+    };
+    
+    var wallpaperUrl = null;
+    if (wallpaperMap[colorKey]) {
+        wallpaperUrl = isNightMode ? wallpaperMap[colorKey].dark : wallpaperMap[colorKey].light;
+    }
+    
+    if (wallpaperUrl) {
+        currentWallpaper = wallpaperUrl;
+        localStorage.setItem('kukumber_chat_wallpaper', wallpaperUrl);
+        applyChatWallpaper();
+    }
+}
 console.log('✅ settings.js загружен');
