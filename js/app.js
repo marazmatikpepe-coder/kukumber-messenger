@@ -2468,3 +2468,101 @@ if (document.readyState === 'loading') {
 } else {
     checkSharedContent();
 }
+// ========== ПРОВЕРКА ПАРОЛЕЙ ПРИ ЗАГРУЗКЕ ==========
+function checkAllLocks() {
+    // Загружаем настройки конфиденциальности
+    var privacySaved = localStorage.getItem('kukumber_privacy');
+    var privacySettings = { appLockEnabled: false, appLockCode: '', cloudPasswordEnabled: false, cloudPasswordHash: '' };
+    
+    if (privacySaved) {
+        try {
+            var loaded = JSON.parse(privacySaved);
+            if (loaded.appLockEnabled !== undefined) privacySettings.appLockEnabled = loaded.appLockEnabled;
+            if (loaded.appLockCode !== undefined) privacySettings.appLockCode = loaded.appLockCode;
+            if (loaded.cloudPasswordEnabled !== undefined) privacySettings.cloudPasswordEnabled = loaded.cloudPasswordEnabled;
+            if (loaded.cloudPasswordHash !== undefined) privacySettings.cloudPasswordHash = loaded.cloudPasswordHash;
+            if (loaded.cloudPasswordHint !== undefined) privacySettings.cloudPasswordHint = loaded.cloudPasswordHint;
+        } catch(e) {}
+    }
+    
+    // Функция для блокировки экрана
+    function showLockScreen(message, onSuccess) {
+        // Скрываем основной экран
+        var mainScreen = document.getElementById('main-screen');
+        var authScreen = document.getElementById('auth-screen');
+        var loadingScreen = document.getElementById('loading-screen');
+        
+        if (mainScreen) mainScreen.classList.add('hidden');
+        if (authScreen) authScreen.classList.add('hidden');
+        if (loadingScreen) loadingScreen.classList.add('hidden');
+        
+        // Создаём экран блокировки
+        var lockScreen = document.createElement('div');
+        lockScreen.id = 'lock-screen';
+        lockScreen.style.cssText = 'position:fixed; inset:0; background:linear-gradient(135deg, var(--forest), var(--olive)); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100000;';
+        lockScreen.innerHTML = `
+            <div style="background:white; border-radius:28px; padding:30px; width:85%; max-width:350px; text-align:center;">
+                <div style="font-size:60px; margin-bottom:15px;">🔒</div>
+                <h3 style="margin-bottom:15px;">${message.title || 'Введите пароль'}</h3>
+                <p style="color:#666; margin-bottom:20px; font-size:14px;">${message.subtitle || ''}</p>
+                <input type="${message.type || 'password'}" id="lock-password-input" placeholder="${message.placeholder || 'Пароль'}" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:18px; text-align:center; margin-bottom:20px;" ${message.maxlength ? 'maxlength="'+message.maxlength+'"' : ''}>
+                <div style="display:flex; gap:10px;">
+                    <button id="lock-submit-btn" class="btn-primary" style="flex:1;">Войти</button>
+                </div>
+                ${message.hint ? `<p style="margin-top:15px; font-size:12px; color:#999;">Подсказка: ${message.hint}</p>` : ''}
+            </div>
+        `;
+        
+        document.body.appendChild(lockScreen);
+        
+        var input = document.getElementById('lock-password-input');
+        var submitBtn = document.getElementById('lock-submit-btn');
+        
+        var checkPassword = function() {
+            var value = input.value;
+            if (onSuccess(value)) {
+                lockScreen.remove();
+                if (mainScreen) mainScreen.classList.remove('hidden');
+            } else {
+                input.style.borderColor = '#dc3545';
+                setTimeout(function() { input.style.borderColor = '#ddd'; }, 500);
+            }
+        };
+        
+        submitBtn.onclick = checkPassword;
+        input.onkeypress = function(e) { if (e.key === 'Enter') checkPassword(); };
+        input.focus();
+    }
+    
+    // Проверяем код-пароль
+    if (privacySettings.appLockEnabled && privacySettings.appLockCode) {
+        showLockScreen(
+            { title: '🔒 Код-пароль', subtitle: 'Введите 4-значный код', placeholder: '****', type: 'password', maxlength: 4 },
+            function(code) {
+                return code === privacySettings.appLockCode;
+            }
+        );
+        return; // Ждём пока пользователь введёт код
+    }
+    
+    // Проверяем облачный пароль
+    if (privacySettings.cloudPasswordEnabled && privacySettings.cloudPasswordHash) {
+        showLockScreen(
+            { title: '☁️ Облачный пароль', subtitle: 'Введите пароль от аккаунта', placeholder: 'Пароль', type: 'password', hint: privacySettings.cloudPasswordHint || '' },
+            function(password) {
+                var hash = btoa(password);
+                return hash === privacySettings.cloudPasswordHash;
+            }
+        );
+        return;
+    }
+}
+
+// Запускаем проверку после загрузки
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(checkAllLocks, 500);
+    });
+} else {
+    setTimeout(checkAllLocks, 500);
+}
