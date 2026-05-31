@@ -1412,13 +1412,14 @@ function saveAppLockCode() {
         return;
     }
     
+    // Сохраняем хеш, а не открытый код
+    var hash = btoa(code);
     privacySettings.appLockEnabled = true;
-    privacySettings.appLockCode = code;
+    privacySettings.appLockCode = hash; // Сохраняем хеш
     savePrivacySettings();
-    showNotification('Код-пароль сохранён! При перезапуске приложения он запросится', 'success');
+    showNotification('Код-пароль сохранён! При следующем входе он запросится', 'success');
     document.getElementById('applock-code-input').value = '';
 }
-
 // Проверка кода при загрузке приложения
 function checkAppLock() {
     if (privacySettings.appLockEnabled && privacySettings.appLockCode) {
@@ -1456,7 +1457,6 @@ function saveCloudPassCode() {
         return;
     }
     
-    // Простое хеширование (для демо)
     var hash = btoa(code);
     
     privacySettings.cloudPasswordEnabled = true;
