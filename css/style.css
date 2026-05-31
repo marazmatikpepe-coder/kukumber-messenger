@@ -7221,11 +7221,18 @@ body.night-mode .slice-action-btn[onclick*="repostSlice"] img {
     }
     
     #active-chat .messages-container {
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-        background-attachment: fixed !important;  /* ← ГЛАВНОЕ: фон не двигается */
+        background-size: auto !important;
+        background-position: top center !important;
+        background-repeat: repeat-y !important;
+        background-attachment: local !important;
         position: relative;
+    }
+    
+    /* Если хочешь, чтобы картинка не повторялась, а была одна сверху */
+    #active-chat .messages-container {
+        background-size: 100% auto !important;
+        background-repeat: no-repeat !important;
+        background-attachment: local !important;
     }
     
     /* Полупрозрачный фон для сообщений, чтобы текст читался */
