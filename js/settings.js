@@ -1012,4 +1012,259 @@ function updateWallpaperByTheme(colorKey) {
         applyChatWallpaper();
     }
 }
+// ========== КОНФИДЕНЦИАЛЬНОСТЬ (ПРОСТАЯ ВЕРСИЯ) ==========
+
+var privacySettings = {
+    blacklist: [],
+    appLockEnabled: false,
+    appLockCode: '',
+    lastSeen: 'everyone', // everyone, nobody, contacts
+    avatar: 'everyone', // everyone, nobody
+    addToGroups: 'everyone',
+    forwardMessages: 'everyone',
+    calls: 'everyone',
+    voiceMessages: 'everyone',
+    startChat: 'everyone',
+    autoDelete: 6 // months: 1,2,6,12,24,0=never
+};
+
+function loadPrivacySettings() {
+    var saved = localStorage.getItem('kukumber_privacy');
+    if (saved) {
+        try {
+            var loaded = JSON.parse(saved);
+            for (var key in loaded) {
+                if (privacySettings.hasOwnProperty(key)) {
+                    privacySettings[key] = loaded[key];
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+function savePrivacySettings() {
+    localStorage.setItem('kukumber_privacy', JSON.stringify(privacySettings));
+    showNotification('Настройки сохранены', 'success');
+}
+
+function showPrivacySettings() {
+    loadPrivacySettings();
+    
+    var modalHtml = `
+        <div id="privacy-modal" class="modal" style="z-index: 10050;">
+            <div class="modal-content" style="max-width: 500px; border-radius: 24px; max-height: 85vh; overflow-y: auto;">
+                <div class="modal-header" style="position: sticky; top: 0;">
+                    <button onclick="closePrivacyModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">←</button>
+                    <h3 style="margin: 0;">Конфиденциальность</h3>
+                    <button onclick="closePrivacyModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+                </div>
+                <div style="padding: 15px;">
+                    
+                    <!-- Чёрный список -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">🚫 Чёрный список</div>
+                        <div id="blacklist-container" style="margin-bottom: 10px;"></div>
+                        <button onclick="addToBlacklist()" class="btn-secondary btn-small">➕ Добавить</button>
+                    </div>
+                    
+                    <!-- Код-пароль -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600;">🔒 Код-пароль при входе</span>
+                            <label class="privacy-switch">
+                                <input type="checkbox" id="applock-switch" ${privacySettings.appLockEnabled ? 'checked' : ''} onchange="toggleAppLock()">
+                                <span class="privacy-slider"></span>
+                            </label>
+                        </div>
+                        <div id="applock-panel" style="margin-top: 10px; display: ${privacySettings.appLockEnabled ? 'block' : 'none'};">
+                            <input type="password" id="applock-code" placeholder="4-значный код" maxlength="4" class="privacy-input">
+                            <button onclick="saveAppLock()" class="btn-primary btn-small" style="margin-top: 8px;">Сохранить</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Время захода -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">👁️ Кто видит время захода</div>
+                        <select id="lastseen-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="everyone" ${privacySettings.lastSeen === 'everyone' ? 'selected' : ''}>Все</option>
+                            <option value="contacts" ${privacySettings.lastSeen === 'contacts' ? 'selected' : ''}>Мои контакты</option>
+                            <option value="nobody" ${privacySettings.lastSeen === 'nobody' ? 'selected' : ''}>Никто</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Аватарка -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">🖼️ Кто видит аватарку</div>
+                        <select id="avatar-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="everyone" ${privacySettings.avatar === 'everyone' ? 'selected' : ''}>Все</option>
+                            <option value="nobody" ${privacySettings.avatar === 'nobody' ? 'selected' : ''}>Никто</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Добавление в группы -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">👥 Кто может добавлять в группы/каналы</div>
+                        <select id="addtogroups-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="everyone" ${privacySettings.addToGroups === 'everyone' ? 'selected' : ''}>Все</option>
+                            <option value="contacts" ${privacySettings.addToGroups === 'contacts' ? 'selected' : ''}>Мои контакты</option>
+                            <option value="nobody" ${privacySettings.addToGroups === 'nobody' ? 'selected' : ''}>Никто</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Пересылка сообщений -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">📤 Кто может пересылать мои сообщения</div>
+                        <select id="forward-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="everyone" ${privacySettings.forwardMessages === 'everyone' ? 'selected' : ''}>Все</option>
+                            <option value="nobody" ${privacySettings.forwardMessages === 'nobody' ? 'selected' : ''}>Никто</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Звонки -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">📞 Кто может мне звонить</div>
+                        <select id="calls-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="everyone" ${privacySettings.calls === 'everyone' ? 'selected' : ''}>Все</option>
+                            <option value="contacts" ${privacySettings.calls === 'contacts' ? 'selected' : ''}>Мои контакты</option>
+                            <option value="nobody" ${privacySettings.calls === 'nobody' ? 'selected' : ''}>Никто</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Голосовые сообщения -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">🎤 Кто может отправлять голосовые</div>
+                        <select id="voice-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="everyone" ${privacySettings.voiceMessages === 'everyone' ? 'selected' : ''}>Все</option>
+                            <option value="contacts" ${privacySettings.voiceMessages === 'contacts' ? 'selected' : ''}>Мои контакты</option>
+                            <option value="nobody" ${privacySettings.voiceMessages === 'nobody' ? 'selected' : ''}>Никто</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Начать чат -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">💬 Кто может начать со мной чат</div>
+                        <select id="chat-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="everyone" ${privacySettings.startChat === 'everyone' ? 'selected' : ''}>Все</option>
+                            <option value="contacts" ${privacySettings.startChat === 'contacts' ? 'selected' : ''}>Мои контакты</option>
+                            <option value="nobody" ${privacySettings.startChat === 'nobody' ? 'selected' : ''}>Никто</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Автоудаление аккаунта -->
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <div style="font-weight: 600; margin-bottom: 10px;">🗑️ Автоудаление аккаунта</div>
+                        <select id="autodelete-select" style="width: 100%; padding: 10px; border-radius: 12px; border: 2px solid var(--border);">
+                            <option value="1" ${privacySettings.autoDelete === 1 ? 'selected' : ''}>1 месяц</option>
+                            <option value="2" ${privacySettings.autoDelete === 2 ? 'selected' : ''}>2 месяца</option>
+                            <option value="6" ${privacySettings.autoDelete === 6 ? 'selected' : ''}>6 месяцев</option>
+                            <option value="12" ${privacySettings.autoDelete === 12 ? 'selected' : ''}>1 год</option>
+                            <option value="24" ${privacySettings.autoDelete === 24 ? 'selected' : ''}>2 года</option>
+                            <option value="0" ${privacySettings.autoDelete === 0 ? 'selected' : ''}>Не удалять</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="saveAllPrivacySettings()" class="btn-primary" style="margin-top: 10px;">💾 Сохранить все настройки</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    var old = document.getElementById('privacy-modal');
+    if (old) old.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('privacy-modal').classList.remove('hidden');
+    
+    loadBlacklist();
+}
+
+function closePrivacyModal() {
+    var modal = document.getElementById('privacy-modal');
+    if (modal) modal.remove();
+}
+
+function saveAllPrivacySettings() {
+    privacySettings.lastSeen = document.getElementById('lastseen-select').value;
+    privacySettings.avatar = document.getElementById('avatar-select').value;
+    privacySettings.addToGroups = document.getElementById('addtogroups-select').value;
+    privacySettings.forwardMessages = document.getElementById('forward-select').value;
+    privacySettings.calls = document.getElementById('calls-select').value;
+    privacySettings.voiceMessages = document.getElementById('voice-select').value;
+    privacySettings.startChat = document.getElementById('chat-select').value;
+    privacySettings.autoDelete = parseInt(document.getElementById('autodelete-select').value);
+    
+    savePrivacySettings();
+    closePrivacyModal();
+}
+
+// ===== ЧЁРНЫЙ СПИСОК =====
+function loadBlacklist() {
+    var container = document.getElementById('blacklist-container');
+    if (!container) return;
+    
+    if (privacySettings.blacklist.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); padding: 10px 0;">Список пуст</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    for (var i = 0; i < privacySettings.blacklist.length; i++) {
+        var user = privacySettings.blacklist[i];
+        var div = document.createElement('div');
+        div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);';
+        div.innerHTML = '<span>🚫 ' + escapeHtml(user.name) + '</span><button onclick="removeFromBlacklist(' + i + ')" class="btn-danger btn-small">Удалить</button>';
+        container.appendChild(div);
+    }
+}
+
+function addToBlacklist() {
+    var userId = prompt('Введите ID пользователя или @username:');
+    if (!userId) return;
+    
+    var userName = prompt('Введите имя пользователя (для отображения):');
+    if (!userName) return;
+    
+    privacySettings.blacklist.push({ id: userId, name: userName });
+    savePrivacySettings();
+    loadBlacklist();
+    showNotification('Пользователь добавлен в чёрный список', 'success');
+}
+
+function removeFromBlacklist(index) {
+    privacySettings.blacklist.splice(index, 1);
+    savePrivacySettings();
+    loadBlacklist();
+    showNotification('Пользователь удалён из чёрного списка', 'success');
+}
+
+// ===== КОД-ПАРОЛЬ =====
+function toggleAppLock() {
+    var isEnabled = document.getElementById('applock-switch').checked;
+    var panel = document.getElementById('applock-panel');
+    
+    if (isEnabled) {
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+        privacySettings.appLockEnabled = false;
+        privacySettings.appLockCode = '';
+        savePrivacySettings();
+    }
+}
+
+function saveAppLock() {
+    var code = document.getElementById('applock-code').value;
+    if (!code || code.length !== 4 || !/^\d+$/.test(code)) {
+        showNotification('Введите 4-значный цифровой код', 'error');
+        return;
+    }
+    
+    privacySettings.appLockEnabled = true;
+    privacySettings.appLockCode = code;
+    savePrivacySettings();
+    showNotification('Код-пароль сохранён', 'success');
+    document.getElementById('applock-code').value = '';
+}
+
+// ===== СТИЛИ ДЛЯ CSS (добавь в style.css) =====
+// Стили нужно добавить отдельно (я напишу ниже)
 console.log('✅ settings.js загружен');
