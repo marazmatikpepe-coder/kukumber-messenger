@@ -656,12 +656,11 @@ async function sendSimpleVoice(blob, duration) {
     showNotification('📤 Отправка...', 'info');
     
     try {
-        // Конвертируем в base64 и сохраняем в Firebase
-        const reader = new FileReader();
+        var reader = new FileReader();
         
         reader.onloadend = async function() {
-            const base64 = reader.result;
-            const voiceId = 'voice_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+            var base64 = reader.result;
+            var voiceId = 'voice_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
             
             await database.ref('voiceMessages/' + voiceId).set({
                 data: base64,
@@ -693,7 +692,6 @@ async function sendSimpleVoice(blob, duration) {
         showNotification('❌ Ошибка отправки', 'error');
     }
 }
-
 // Инициализация кнопки
 function initSimpleVoice() {
     const btn = document.getElementById('voice-record-btn');
