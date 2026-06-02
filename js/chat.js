@@ -641,9 +641,13 @@ function appendMessage(message) {
             </div>
         `;
     }
-    else if (message.type === 'audio') {
-    var audioId = message.voiceId || message.audioUrl;
-    content += `<div class="audio-message"><button onclick="playAudio('${audioId}')">▶️</button><span>Голосовое сообщение ${message.duration ? '(' + message.duration + ' сек)' : ''}</span></div>`;
+   else if (message.type === 'audio') {
+    var voiceId = message.voiceId;
+    var duration = message.duration || '?';
+    content = `<div class="audio-message">
+        <button class="play-voice-btn" data-voice-id="${voiceId}">▶️</button>
+        <span>🎤 Голосовое сообщение (${duration} сек)</span>
+    </div>`;
 }
     else if (message.type === 'video') {
         content += `<div class="video-message"><video src="${message.videoUrl}" controls preload="metadata" style="max-width:250px; max-height:300px; border-radius:12px;"></video></div>`;
@@ -1184,32 +1188,32 @@ function closeLightbox() {
     if (lightbox) lightbox.classList.add('hidden');
 }
 
-function playAudio(audioUrlOrId) {
-    // Если передан voiceId (строка вида voice_timestamp_random)
-    if (audioUrlOrId && audioUrlOrId.startsWith('voice_')) {
-        // Загружаем голосовое из Firebase
-        database.ref('voiceMessages/' + audioUrlOrId).once('value').then(function(snapshot) {
-            var voiceData = snapshot.val();
-            if (voiceData && voiceData.data) {
-                var audio = new Audio(voiceData.data);
-                audio.play().catch(function(e) { 
-                    console.log('Ошибка воспроизведения:', e);
-                    showNotification('Не удалось воспроизвести голосовое', 'error');
-                });
-            } else {
-                showNotification('Голосовое сообщение не найдено', 'error');
-            }
-        }).catch(function(err) {
-            console.error('Ошибка загрузки голосового:', err);
-            showNotification('Ошибка загрузки голосового', 'error');
-        });
-    } else {
-        // Обычный URL
-        var audio = new Audio(audioUrlOrId);
-        audio.play().catch(function(e) { 
-            console.log('Ошибка воспроизведения:', e);
-        });
+function playAudio(voiceId) {
+    if (!voiceId) return;
+    
+    // Проверяем, не проигрывается ли уже
+    if (window.currentAudio && !window.currentAudio.paused) {
+        window.currentAudio.pause();
+        window.currentAudio.currentTime = 0;
     }
+    
+    // Загружаем голосовое из Firebase
+    database.ref('voiceMessages/' + voiceId).once('value').then(function(snapshot) {
+        var voiceData = snapshot.val();
+        if (voiceData && voiceData.data) {
+            var audio = new Audio(voiceData.data);
+            window.currentAudio = audio;
+            audio.play().catch(function(e) { 
+                console.error('Ошибка воспроизведения:', e);
+                showNotification('❌ Не удалось воспроизвести', 'error');
+            });
+        } else {
+            showNotification('Голосовое сообщение не найдено', 'error');
+        }
+    }).catch(function(err) {
+        console.error('Ошибка загрузки:', err);
+        showNotification('Ошибка загрузки голосового', 'error');
+    });
 }
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 function initChat() {
@@ -1243,4 +1247,14 @@ function linkifyText(text) {
     escaped = escaped.replace(/(^|\s)(www\.[^\s]+)/g, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$2</a>');
     return escaped;
 }
+// Обработчик для голосовых сообщений (делегирование)
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.play-voice-btn');
+    if (btn) {
+        var voiceId = btn.getAttribute('data-voice-id');
+        if (voiceId) {
+            playAudio(voiceId);
+        }
+    }
+});
 console.log('✅ chat.js исправлен (контекстное меню + верификация)');
