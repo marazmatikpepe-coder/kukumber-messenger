@@ -642,8 +642,9 @@ function appendMessage(message) {
         `;
     }
     else if (message.type === 'audio') {
-        content += `<div class="audio-message"><button onclick="playAudio('${message.audioUrl}')">▶️</button><span>Голосовое сообщение ${message.duration ? '(' + message.duration + ' сек)' : ''}</span></div>`;
-    }
+    var audioId = message.voiceId || message.audioUrl;
+    content += `<div class="audio-message"><button onclick="playAudio('${audioId}')">▶️</button><span>Голосовое сообщение ${message.duration ? '(' + message.duration + ' сек)' : ''}</span></div>`;
+}
     else if (message.type === 'video') {
         content += `<div class="video-message"><video src="${message.videoUrl}" controls preload="metadata" style="max-width:250px; max-height:300px; border-radius:12px;"></video></div>`;
     }
@@ -1183,11 +1184,33 @@ function closeLightbox() {
     if (lightbox) lightbox.classList.add('hidden');
 }
 
-function playAudio(url) {
-    var audio = new Audio(url);
-    audio.play().catch(function(e) { console.log('Ошибка воспроизведения аудио:', e); });
+function playAudio(audioUrlOrId) {
+    // Если передан voiceId (строка вида voice_timestamp_random)
+    if (audioUrlOrId && audioUrlOrId.startsWith('voice_')) {
+        // Загружаем голосовое из Firebase
+        database.ref('voiceMessages/' + audioUrlOrId).once('value').then(function(snapshot) {
+            var voiceData = snapshot.val();
+            if (voiceData && voiceData.data) {
+                var audio = new Audio(voiceData.data);
+                audio.play().catch(function(e) { 
+                    console.log('Ошибка воспроизведения:', e);
+                    showNotification('Не удалось воспроизвести голосовое', 'error');
+                });
+            } else {
+                showNotification('Голосовое сообщение не найдено', 'error');
+            }
+        }).catch(function(err) {
+            console.error('Ошибка загрузки голосового:', err);
+            showNotification('Ошибка загрузки голосового', 'error');
+        });
+    } else {
+        // Обычный URL
+        var audio = new Audio(audioUrlOrId);
+        audio.play().catch(function(e) { 
+            console.log('Ошибка воспроизведения:', e);
+        });
+    }
 }
-
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 function initChat() {
     window.loadChats = loadChats;
