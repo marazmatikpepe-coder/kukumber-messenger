@@ -2484,7 +2484,16 @@ function checkAllLocks() {
             if (loaded.cloudPasswordHint !== undefined) privacySettings.cloudPasswordHint = loaded.cloudPasswordHint;
         } catch(e) {}
     }
-    
+    // Простая функция хеширования (должна быть идентична той, что в settings.js)
+function simpleHashCheck(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return hash.toString();
+}
     // Функция для блокировки экрана
     function showLockScreen(message, onSuccess) {
         // Скрываем основной экран
@@ -2534,30 +2543,33 @@ function checkAllLocks() {
         input.focus();
     }
     
-    // Проверяем код-пароль
-    if (privacySettings.appLockEnabled && privacySettings.appLockCode) {
-        showLockScreen(
-            { title: '🔒 Код-пароль', subtitle: 'Введите 4-значный код', placeholder: '****', type: 'password', maxlength: 4 },
-            function(code) {
-                return code === privacySettings.appLockCode;
-            }
-        );
-        return; // Ждём пока пользователь введёт код
-    }
+// Проверяем код-пароль
+if (privacySettings.appLockEnabled && privacySettings.appLockCode) {
+    showLockScreen(
+        { title: '🔒 Код-пароль', subtitle: 'Введите 4-значный код', placeholder: '****', type: 'password', maxlength: 4 },
+        function(code) {
+            var hash = simpleHashCheck(code);
+            console.log('Введённый хеш:', hash);
+            console.log('Сохранённый хеш:', privacySettings.appLockCode);
+            return hash === privacySettings.appLockCode;
+        }
+    );
+    return;
+}
     
     // Проверяем облачный пароль
-    if (privacySettings.cloudPasswordEnabled && privacySettings.cloudPasswordHash) {
-        showLockScreen(
-            { title: '☁️ Облачный пароль', subtitle: 'Введите пароль от аккаунта', placeholder: 'Пароль', type: 'password', hint: privacySettings.cloudPasswordHint || '' },
-            function(password) {
-                var hash = btoa(password);
-                return hash === privacySettings.cloudPasswordHash;
-            }
-        );
-        return;
-    }
+if (privacySettings.cloudPasswordEnabled && privacySettings.cloudPasswordHash) {
+    showLockScreen(
+        { title: '☁️ Облачный пароль', subtitle: 'Введите пароль от аккаунта', placeholder: 'Пароль', type: 'password', hint: privacySettings.cloudPasswordHint || '' },
+        function(password) {
+            var hash = simpleHashCheck(password);
+            console.log('Введённый хеш:', hash);
+            console.log('Сохранённый хеш:', privacySettings.cloudPasswordHash);
+            return hash === privacySettings.cloudPasswordHash;
+        }
+    );
+    return;
 }
-
 // Запускаем проверку после загрузки
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
