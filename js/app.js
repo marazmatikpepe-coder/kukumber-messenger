@@ -2579,3 +2579,4 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(checkAllLocks, 500);
 }
+}  // <--- ЭТА СКОБКА НЕ ХВАТАЕТ
