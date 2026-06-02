@@ -1189,30 +1189,40 @@ function closeLightbox() {
 }
 
 function playAudio(voiceId) {
-    if (!voiceId) return;
+    console.log('▶️ Воспроизведение:', voiceId);
     
-    // Проверяем, не проигрывается ли уже
-    if (window.currentAudio && !window.currentAudio.paused) {
-        window.currentAudio.pause();
-        window.currentAudio.currentTime = 0;
+    if (!voiceId) {
+        showNotification('Ошибка: ID не указан', 'error');
+        return;
     }
     
-    // Загружаем голосовое из Firebase
     database.ref('voiceMessages/' + voiceId).once('value').then(function(snapshot) {
         var voiceData = snapshot.val();
+        
         if (voiceData && voiceData.data) {
-            var audio = new Audio(voiceData.data);
-            window.currentAudio = audio;
-            audio.play().catch(function(e) { 
-                console.error('Ошибка воспроизведения:', e);
-                showNotification('❌ Не удалось воспроизвести', 'error');
-            });
+            // Создаём аудио элемент
+            var audio = new Audio();
+            audio.src = voiceData.data;
+            audio.volume = 1.0;
+            
+            // Пробуем воспроизвести
+            var playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(function() {
+                    console.log('✅ Воспроизведение успешно');
+                }).catch(function(error) {
+                    console.error('Ошибка:', error);
+                    // Показываем кнопку "Разрешить звук"
+                    showNotification('🔊 Нажмите на страницу, затем снова на ▶️', 'info');
+                });
+            }
         } else {
-            showNotification('Голосовое сообщение не найдено', 'error');
+            showNotification('Голосовое не найдено', 'error');
         }
     }).catch(function(err) {
-        console.error('Ошибка загрузки:', err);
-        showNotification('Ошибка загрузки голосового', 'error');
+        console.error('Ошибка:', err);
+        showNotification('Ошибка загрузки', 'error');
     });
 }
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
