@@ -22,7 +22,27 @@ var userCache = {
     statuses: {},
     verified: {} // ДОБАВЛЕНО: кэш для верификации
 };
+// Инициализация звука (нужно для автоплея)
+function initAudioContext() {
+    // Создаём пустой AudioContext для "разрешения" автоплея
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext && !window.audioContextAllowed) {
+        var context = new AudioContext();
+        context.resume().then(function() {
+            console.log('🔊 Аудио разрешено');
+            window.audioContextAllowed = true;
+        });
+    }
+}
 
+// Добавляем обработчик на весь документ для разрешения звука
+document.addEventListener('click', function() {
+    if (window.AudioContext && !window.audioContextAllowed) {
+        var context = new (window.AudioContext || window.webkitAudioContext)();
+        context.resume();
+        window.audioContextAllowed = true;
+    }
+}, { once: true });
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function escapeHtml(text) {
     if (!text) return '';
