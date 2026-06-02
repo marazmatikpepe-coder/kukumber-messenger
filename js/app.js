@@ -2470,7 +2470,6 @@ if (document.readyState === 'loading') {
 }
 // ========== ПРОВЕРКА ПАРОЛЕЙ ПРИ ЗАГРУЗКЕ ==========
 
-// Простая функция хеширования (должна быть идентична той, что в settings.js)
 function simpleHashCheck(str) {
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
@@ -2482,9 +2481,14 @@ function simpleHashCheck(str) {
 }
 
 function checkAllLocks() {
-    // Загружаем настройки конфиденциальности
     var privacySaved = localStorage.getItem('kukumber_privacy');
-    var privacySettings = { appLockEnabled: false, appLockCode: '', cloudPasswordEnabled: false, cloudPasswordHash: '' };
+    var privacySettings = { 
+        appLockEnabled: false, 
+        appLockCode: '', 
+        cloudPasswordEnabled: false, 
+        cloudPasswordHash: '',
+        cloudPasswordHint: ''
+    };
     
     if (privacySaved) {
         try {
@@ -2497,9 +2501,7 @@ function checkAllLocks() {
         } catch(e) {}
     }
     
-    // Функция для блокировки экрана
     function showLockScreen(message, onSuccess) {
-        // Скрываем основной экран
         var mainScreen = document.getElementById('main-screen');
         var authScreen = document.getElementById('auth-screen');
         var loadingScreen = document.getElementById('loading-screen');
@@ -2508,7 +2510,6 @@ function checkAllLocks() {
         if (authScreen) authScreen.classList.add('hidden');
         if (loadingScreen) loadingScreen.classList.add('hidden');
         
-        // Создаём экран блокировки
         var lockScreen = document.createElement('div');
         lockScreen.id = 'lock-screen';
         lockScreen.style.cssText = 'position:fixed; inset:0; background:linear-gradient(135deg, var(--forest), var(--olive)); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100000;';
@@ -2546,7 +2547,6 @@ function checkAllLocks() {
         input.focus();
     }
     
-    // Проверяем код-пароль
     if (privacySettings.appLockEnabled && privacySettings.appLockCode) {
         showLockScreen(
             { title: '🔒 Код-пароль', subtitle: 'Введите 4-значный код', placeholder: '****', type: 'password', maxlength: 4 },
@@ -2558,7 +2558,6 @@ function checkAllLocks() {
         return;
     }
     
-    // Проверяем облачный пароль
     if (privacySettings.cloudPasswordEnabled && privacySettings.cloudPasswordHash) {
         showLockScreen(
             { title: '☁️ Облачный пароль', subtitle: 'Введите пароль от аккаунта', placeholder: 'Пароль', type: 'password', hint: privacySettings.cloudPasswordHint || '' },
@@ -2571,12 +2570,4 @@ function checkAllLocks() {
     }
 }
 
-// Запускаем проверку после загрузки
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(checkAllLocks, 500);
-    });
-} else {
-    setTimeout(checkAllLocks, 500);
-}
-}  // <--- ЭТА СКОБКА НЕ ХВАТАЕТ
+setTimeout(checkAllLocks, 500);
