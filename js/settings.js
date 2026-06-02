@@ -1050,7 +1050,16 @@ function savePrivacySettings() {
     localStorage.setItem('kukumber_privacy', JSON.stringify(privacySettings));
     showNotification('Настройки сохранены', 'success');
 }
-
+// Простая функция хеширования (работает с любыми символами)
+function simpleHash(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return hash.toString();
+}
 // ГЛАВНОЕ ОКНО
 function showPrivacySettings() {
     loadPrivacySettings();
@@ -1412,10 +1421,10 @@ function saveAppLockCode() {
         return;
     }
     
-    // Сохраняем хеш, а не открытый код
-    var hash = btoa(code);
+    // Простое хеширование через простой алгоритм
+    var hash = simpleHash(code);
     privacySettings.appLockEnabled = true;
-    privacySettings.appLockCode = hash; // Сохраняем хеш
+    privacySettings.appLockCode = hash;
     savePrivacySettings();
     showNotification('Код-пароль сохранён! При следующем входе он запросится', 'success');
     document.getElementById('applock-code-input').value = '';
@@ -1457,8 +1466,7 @@ function saveCloudPassCode() {
         return;
     }
     
-    var hash = btoa(code);
-    
+    var hash = simpleHash(code);
     privacySettings.cloudPasswordEnabled = true;
     privacySettings.cloudPasswordHash = hash;
     privacySettings.cloudPasswordHint = hint;
