@@ -651,15 +651,23 @@ window.stopVoiceRecording = function() {
     }
 };
 
-// Отправка голосового
+// Отправка голосового сообщения
 async function sendSimpleVoice(blob, duration) {
+    if (!window.currentChatId) {
+        showNotification('Сначала выберите чат', 'error');
+        return;
+    }
+    
     showNotification('📤 Отправка...', 'info');
     
     try {
+        // Конвертируем blob в base64
         var reader = new FileReader();
         
         reader.onloadend = async function() {
             var base64 = reader.result;
+            
+            // Сохраняем в Firebase
             var voiceId = 'voice_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
             
             await database.ref('voiceMessages/' + voiceId).set({
@@ -669,11 +677,12 @@ async function sendSimpleVoice(blob, duration) {
                 senderId: currentUser.uid
             });
             
+            // Отправляем сообщение
             await database.ref('messages/' + window.currentChatId).push({
                 type: 'audio',
                 voiceId: voiceId,
                 duration: duration,
-                senderId: window.currentUser.uid,
+                senderId: currentUser.uid,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             });
             
