@@ -2571,3 +2571,17 @@ function checkAllLocks() {
 }
 
 setTimeout(checkAllLocks, 500);
+// ========== ОТСЛЕЖИВАНИЕ ИНТЕРНЕТА ==========
+window.addEventListener('online', function() {
+    showNotification('🌐 Интернет появился', 'success');
+    var indicator = document.getElementById('offline-indicator');
+    if (indicator) indicator.classList.remove('show');
+    if (typeof loadChats === 'function') loadChats();
+    if (typeof loadSlices === 'function') loadSlices();
+});
+
+window.addEventListener('offline', function() {
+    showNotification('📴 Интернет пропал, показываю сохранённые сообщения', 'info');
+    var indicator = document.getElementById('offline-indicator');
+    if (indicator) indicator.classList.add('show');
+});
