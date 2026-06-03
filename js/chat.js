@@ -713,6 +713,11 @@ function appendMessage(message) {
     messageDiv.setAttribute('data-message-id', message.id);
     messageDiv.setAttribute('data-message-type', message.type || 'text');
     
+    // Кэшируем сообщение для офлайн-доступа
+    if (window.currentChatId && message.id) {
+        cacheMessage(window.currentChatId, message);
+    }
+    
     // Добавляем контекстное меню
     messageDiv.addEventListener('contextmenu', function(e) {
         e.preventDefault();
@@ -720,19 +725,14 @@ function appendMessage(message) {
         showMessageContextMenu(e, message, this);
     });
     
-    // Для мобильных устройств - долгое нажатие
     var touchTimer = null;
     messageDiv.addEventListener('touchstart', function(e) {
         touchTimer = setTimeout(function() {
             showMessageContextMenu(e, message, messageDiv);
         }, 500);
     });
-    messageDiv.addEventListener('touchend', function() {
-        if (touchTimer) clearTimeout(touchTimer);
-    });
-    messageDiv.addEventListener('touchmove', function() {
-        if (touchTimer) clearTimeout(touchTimer);
-    });
+    messageDiv.addEventListener('touchend', function() { if (touchTimer) clearTimeout(touchTimer); });
+    messageDiv.addEventListener('touchmove', function() { if (touchTimer) clearTimeout(touchTimer); });
     
     var content = '';
     
@@ -756,44 +756,52 @@ function appendMessage(message) {
     }
     
     if (message.type === 'image') {
+        // Пытаемся загрузить из кэша сначала
+        var imageUrl = message.imageUrl;
         content += `
-            <div class="message-image" onclick="openLightbox('${message.imageUrl}')">
-                <img src="${message.imageUrl}" loading="lazy" style="max-width:250px; max-height:250px; border-radius:12px;">
+            <div class="message-image" onclick="openLightbox('${imageUrl}')">
+                <img src="${imageUrl}" loading="lazy" style="max-width:250px; max-height:250px; border-radius:12px;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23ccc\'/%3E%3Ctext x=\'50\' y=\'50\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\'%3E📷%3C/text%3E%3C/svg%3E'">
             </div>
             ${message.caption ? '<div class="message-text">' + escapeHtml(message.caption) + '</div>' : ''}
         `;
+        // Кэшируем изображение
+        if (imageUrl) {
+            cacheImage(imageUrl);
+        }
     } 
     else if (message.type === 'gif') {
+        var gifUrl = message.gifUrl;
         content += `
-            <div class="gif-message" onclick="openLightbox('${message.gifUrl}')">
-                <img src="${message.gifUrl}" loading="lazy" style="max-width:250px; max-height:250px; border-radius:12px;">
+            <div class="gif-message" onclick="openLightbox('${gifUrl}')">
+                <img src="${gifUrl}" loading="lazy" style="max-width:250px; max-height:250px; border-radius:12px;">
                 <span class="gif-badge">GIF</span>
             </div>
         `;
+        if (gifUrl) {
+            cacheImage(gifUrl);
+        }
     }
-   else if (message.type === 'audio') {
-    var voiceId = message.voiceId;
-    var duration = message.duration || '?';
-    content = `<div class="audio-message">
-        <button class="play-voice-btn" data-voice-id="${voiceId}">▶️</button>
-        <span>🎤 Голосовое сообщение (${duration} сек)</span>
-    </div>`;
-}
+    else if (message.type === 'audio') {
+        var voiceId = message.voiceId;
+        var duration = message.duration || '?';
+        content = `<div class="audio-message">
+            <button class="play-voice-btn" data-voice-id="${voiceId}">▶️</button>
+            <span>🎤 Голосовое сообщение (${duration} сек)</span>
+        </div>`;
+    }
     else if (message.type === 'video') {
         content += `<div class="video-message"><video src="${message.videoUrl}" controls preload="metadata" style="max-width:250px; max-height:300px; border-radius:12px;"></video></div>`;
     }
     else if (message.type === 'file') {
         content += `<div class="file-message"><span style="font-size:24px;">📎</span><a href="${message.fileUrl}" target="_blank">${escapeHtml(message.fileName)}</a></div>`;
     }
-   else {
-    var textContent = escapeHtml(message.text || '');
-    // Делаем ссылки кликабельными
-    textContent = textContent.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$1</a>');
-    // Делаем кликабельными ссылки без http (www.example.com)
-    textContent = textContent.replace(/(^|\s)(www\.[^\s]+)/g, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$2</a>');
-    if (message.edited) textContent += ' <span style="font-size:10px; opacity:0.6;">(ред.)</span>';
-    content = '<div class="message-text" style="word-break:break-word; white-space:normal;">' + textContent + '</div>';
-}
+    else {
+        var textContent = escapeHtml(message.text || '');
+        textContent = textContent.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$1</a>');
+        textContent = textContent.replace(/(^|\s)(www\.[^\s]+)/g, '$1<a href="http://$2" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">$2</a>');
+        if (message.edited) textContent += ' <span style="font-size:10px; opacity:0.6;">(ред.)</span>';
+        content = '<div class="message-text" style="word-break:break-word; white-space:normal;">' + textContent + '</div>';
+    }
     
     var senderNameHtml = '';
     if (window.currentChatData && window.currentChatData.type !== 'private' && !isSent && message.senderId) {
@@ -1187,7 +1195,6 @@ function sendMessage() {
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
     
-    // Добавляем информацию об ответе
     if (window.currentReplyTo) {
         message.replyTo = window.currentReplyTo;
         window.currentReplyTo = null;
@@ -1197,7 +1204,31 @@ function sendMessage() {
     
     input.value = '';
     
-    database.ref('messages/' + currentChatId).push(message).then(async function() {
+    // Создаём временный ID для кэша
+    var tempId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    message.id = tempId;
+    
+    // Сразу показываем сообщение и сохраняем в кэш
+    cacheMessage(currentChatId, message);
+    appendMessage(message);
+    
+    database.ref('messages/' + currentChatId).push(message).then(async function(snapshot) {
+        var realId = snapshot.key;
+        // Обновляем ID сообщения в DOM
+        var msgElement = document.querySelector('.message[data-message-id="' + tempId + '"]');
+        if (msgElement) {
+            msgElement.setAttribute('data-message-id', realId);
+            // Обновляем ID в кэше
+            var cached = offlineCache.messages[currentChatId];
+            if (cached) {
+                var index = cached.findIndex(m => m.id === tempId);
+                if (index !== -1) {
+                    cached[index].id = realId;
+                    saveOfflineCache();
+                }
+            }
+        }
+        
         var lastMsg = text.length > 100 ? text.substring(0, 97) + '...' : text;
         await database.ref('chats/' + currentChatId).update({
             lastMessage: lastMsg,
@@ -1211,9 +1242,11 @@ function sendMessage() {
         console.error('Ошибка отправки:', err);
         showNotification('Ошибка отправки', 'error');
         input.value = text;
+        // Удаляем сообщение из DOM при ошибке
+        var msgElement = document.querySelector('.message[data-message-id="' + tempId + '"]');
+        if (msgElement) msgElement.remove();
     });
 }
-
 // Отправка push-уведомления
 async function sendPushForMessage(chatId, messageText) {
     try {
