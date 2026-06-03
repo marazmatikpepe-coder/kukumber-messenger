@@ -7519,3 +7519,21 @@ body.night-mode .privacy-btn-small {
 body.night-mode .privacy-btn-add:hover {
     background: #3a3a3a;
 }
+/* Индикатор офлайн-режима */
+.offline-indicator {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff9800;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    z-index: 1000;
+    display: none;
+}
+
+.offline-indicator.show {
+    display: block;
+}
