@@ -22,6 +22,105 @@ var userCache = {
     statuses: {},
     verified: {} // ДОБАВЛЕНО: кэш для верификации
 };
+// ========== ОФЛАЙН-КЭШ ДЛЯ СООБЩЕНИЙ ==========
+var offlineCache = {
+    messages: {}, // { chatId: [messages] }
+    images: {}    // { url: blob }
+};
+
+// Загружаем кэш из localStorage
+function loadOfflineCache() {
+    var saved = localStorage.getItem('kukumber_offline_cache');
+    if (saved) {
+        try {
+            var data = JSON.parse(saved);
+            if (data.messages) offlineCache.messages = data.messages;
+            if (data.images) offlineCache.images = data.images;
+        } catch(e) {}
+    }
+}
+
+// Сохраняем кэш
+function saveOfflineCache() {
+    // Не сохраняем изображения в localStorage (много места)
+    var toSave = {
+        messages: offlineCache.messages
+    };
+    localStorage.setItem('kukumber_offline_cache', JSON.stringify(toSave));
+}
+
+// Кэшируем сообщение
+function cacheMessage(chatId, message) {
+    if (!offlineCache.messages[chatId]) {
+        offlineCache.messages[chatId] = [];
+    }
+    // Добавляем только если нет такого сообщения
+    var exists = offlineCache.messages[chatId].some(m => m.id === message.id);
+    if (!exists) {
+        offlineCache.messages[chatId].push(message);
+        // Ограничиваем количество cached сообщений до 200 на чат
+        if (offlineCache.messages[chatId].length > 200) {
+            offlineCache.messages[chatId].shift();
+        }
+        saveOfflineCache();
+    }
+}
+
+// Кэшируем изображение
+async function cacheImage(url) {
+    if (offlineCache.images[url]) return;
+    try {
+        var response = await fetch(url);
+        var blob = await response.blob();
+        offlineCache.images[url] = blob;
+        // Сохраняем blob в IndexedDB (временно, для офлайн-доступа)
+        saveImageToIndexedDB(url, blob);
+    } catch(e) {
+        console.log('Не удалось кэшировать изображение:', e);
+    }
+}
+
+// IndexedDB для хранения изображений
+var dbPromise = null;
+
+function openImageDatabase() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function(resolve, reject) {
+        var request = indexedDB.open('KukumberImages', 1);
+        request.onerror = function() { reject(request.error); };
+        request.onsuccess = function() { resolve(request.result); };
+        request.onupgradeneeded = function(event) {
+            var db = event.target.result;
+            if (!db.objectStoreNames.contains('images')) {
+                db.createObjectStore('images', { keyPath: 'url' });
+            }
+        };
+    });
+    return dbPromise;
+}
+
+async function saveImageToIndexedDB(url, blob) {
+    try {
+        var db = await openImageDatabase();
+        var tx = db.transaction('images', 'readwrite');
+        var store = tx.objectStore('images');
+        store.put({ url: url, blob: blob, timestamp: Date.now() });
+        await tx.complete;
+    } catch(e) { console.log('Ошибка сохранения изображения:', e); }
+}
+
+async function getImageFromIndexedDB(url) {
+    try {
+        var db = await openImageDatabase();
+        var tx = db.transaction('images', 'readonly');
+        var store = tx.objectStore('images');
+        var result = await new Promise(function(resolve) {
+            var get = store.get(url);
+            get.onsuccess = function() { resolve(get.result); };
+        });
+        return result?.blob;
+    } catch(e) { return null; }
+}
 // Инициализация звука (нужно для автоплея)
 function initAudioContext() {
     // Создаём пустой AudioContext для "разрешения" автоплея
@@ -552,6 +651,26 @@ function loadMessages(chatId) {
     container.innerHTML = '';
     loadedMessageIds.clear();
     
+    // Проверяем интернет
+    if (!navigator.onLine) {
+        // Загружаем из кэша
+        var cached = offlineCache.messages[chatId];
+        if (cached && cached.length > 0) {
+            cached.forEach(function(message) {
+                if (!loadedMessageIds.has(message.id)) {
+                    loadedMessageIds.add(message.id);
+                    appendMessage(message);
+                }
+            });
+            showNotification('📱 Офлайн-режим: показаны сохранённые сообщения', 'info');
+            return;
+        } else {
+            container.innerHTML = '<div class="empty-chats">📴 Нет интернета<br>Нет сохранённых сообщений</div>';
+            return;
+        }
+    }
+    
+    // Если интернет есть - загружаем как обычно
     if (messagesListener) messagesListener.off();
     
     messagesListener = database.ref('messages/' + chatId)
@@ -565,19 +684,10 @@ function loadMessages(chatId) {
         loadedMessageIds.add(messageId);
         message.id = messageId;
         appendMessage(message);
-    });
-    
-    messagesListener.on('child_removed', function(snapshot) {
-        var msgElement = document.querySelector('.message[data-message-id="' + snapshot.key + '"]');
-        if (msgElement) msgElement.remove();
-        loadedMessageIds.delete(snapshot.key);
-    });
-    
-    messagesListener.on('child_changed', function(snapshot) {
-        var message = snapshot.val();
-        var msgElement = document.querySelector('.message[data-message-id="' + snapshot.key + '"]');
-        if (msgElement && message) {
-            updateMessageElement(msgElement, message);
+        // Кэшируем
+        cacheMessage(chatId, message);
+        if (message.type === 'image' || message.type === 'gif') {
+            cacheImage(message.imageUrl || message.gifUrl);
         }
     });
 }
