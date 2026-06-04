@@ -157,39 +157,45 @@ function updateUserDisplay() {
     if (!currentUserData) return;
     var username = currentUserData.username || 'Пользователь';
     var avatar = currentUserData.avatar || '';
+    var userTag = currentUserData.userTag || '@' + username.toLowerCase().replace(/\s/g, '');
+    
     document.getElementById('current-username').textContent = username;
     document.getElementById('settings-username').textContent = username;
     
-    // Функция для установки аватарки с дефолтом
-    function setAvatar(element, avatarUrl, type) {
+    var usertagSpan = document.getElementById('settings-usertag');
+    if (usertagSpan) usertagSpan.textContent = userTag;
+    
+    // Функция для установки аватарки
+    function setAvatar(element, avatarUrl, defaultClass) {
         if (!element) return;
-        if (avatarUrl) {
-            element.style.backgroundImage = 'url(' + avatarUrl + ')';
+        if (avatarUrl && avatarUrl !== '') {
+            element.style.backgroundImage = 'url(' + avatarUrl + '?t=' + Date.now() + ')';
             element.style.backgroundSize = 'cover';
+            element.style.backgroundPosition = 'center';
+            element.style.backgroundRepeat = 'no-repeat';
             element.textContent = '';
             element.classList.remove('default-avatar-user', 'default-avatar-group', 'default-avatar-channel');
         } else {
             element.style.backgroundImage = '';
-            element.classList.add('default-avatar-' + type);
+            element.classList.add(defaultClass);
             element.textContent = '';
         }
     }
     
-    setAvatar(document.getElementById('user-avatar'), avatar, 'user');
-    setAvatar(document.getElementById('settings-avatar'), avatar, 'user');
+    setAvatar(document.getElementById('user-avatar'), avatar, 'default-avatar-user');
+    setAvatar(document.getElementById('settings-avatar'), avatar, 'default-avatar-user');
     
     // Для Slices аватарки
     var slicesAvatar = document.getElementById('slices-user-avatar');
     if (slicesAvatar) {
-        if (avatar) {
-            slicesAvatar.style.backgroundImage = 'url(' + avatar + ')';
-            slicesAvatar.style.backgroundSize = 'cover';
-            slicesAvatar.textContent = '';
-            slicesAvatar.classList.remove('default-avatar-user');
-        } else {
-            slicesAvatar.style.backgroundImage = '';
-            slicesAvatar.classList.add('default-avatar-user');
-            slicesAvatar.textContent = '';
+        setAvatar(slicesAvatar, avatar, 'default-avatar-user');
+    }
+    
+    // Если открыт чат - обновляем аватарку в шапке
+    if (currentChatData && currentChatData.type === 'private' && currentChatData.otherUserId === currentUser.uid) {
+        var chatAvatar = document.getElementById('chat-avatar');
+        if (chatAvatar) {
+            setAvatar(chatAvatar, avatar, 'default-avatar-user');
         }
     }
 }
