@@ -22,99 +22,60 @@ async function uploadToImgBB(file) {
 
 // ========== ГЛОБАЛЬНАЯ ФУНКЦИЯ ОБНОВЛЕНИЯ АВАТАРА ВО ВСЕХ МЕСТАХ ==========
 function updateAvatarEverywhere(userId, avatarUrl, userName) {
+    var timestamp = '?t=' + Date.now();
+    
     // 1. Профиль (открытое модальное окно)
     var profileAvatar = document.getElementById('profile-avatar');
     if (profileAvatar) {
-        profileAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
+        profileAvatar.style.backgroundImage = 'url(' + avatarUrl + timestamp + ')';
         profileAvatar.style.backgroundSize = 'cover';
         profileAvatar.textContent = '';
     }
     
-    // 2. Боковая панель (свой профиль)
+    // 2. Боковая панель
     if (userId === currentUser?.uid) {
         var userAvatar = document.getElementById('user-avatar');
         if (userAvatar) {
-            userAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
+            userAvatar.style.backgroundImage = 'url(' + avatarUrl + timestamp + ')';
             userAvatar.style.backgroundSize = 'cover';
             userAvatar.textContent = '';
         }
         
         var settingsAvatar = document.getElementById('settings-avatar');
         if (settingsAvatar) {
-            settingsAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
+            settingsAvatar.style.backgroundImage = 'url(' + avatarUrl + timestamp + ')';
             settingsAvatar.style.backgroundSize = 'cover';
             settingsAvatar.textContent = '';
         }
         
         var slicesAvatar = document.getElementById('slices-user-avatar');
         if (slicesAvatar) {
-            slicesAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
+            slicesAvatar.style.backgroundImage = 'url(' + avatarUrl + timestamp + ')';
             slicesAvatar.style.backgroundSize = 'cover';
             slicesAvatar.textContent = '';
         }
     }
     
-    // 3. Все посты (Slices) этого пользователя в ленте
-    var allCards = document.querySelectorAll('.slice-card');
-    allCards.forEach(function(card) {
-        var authorDiv = card.querySelector('.slice-author');
+    // 3. Обновляем все аватарки в ленте слайсов
+    document.querySelectorAll('.slice-card .avatar').forEach(function(avatar) {
+        var authorDiv = avatar.closest('.slice-author');
         if (authorDiv && authorDiv.getAttribute('onclick') && authorDiv.getAttribute('onclick').includes(userId)) {
-            var avatarEl = authorDiv.querySelector('.avatar');
-            if (avatarEl) {
-                avatarEl.style.backgroundImage = 'url(' + avatarUrl + ')';
-                avatarEl.style.backgroundSize = 'cover';
-                avatarEl.textContent = '';
-            }
+            avatar.style.backgroundImage = 'url(' + avatarUrl + timestamp + ')';
+            avatar.style.backgroundSize = 'cover';
+            avatar.textContent = '';
         }
     });
     
-    // 4. Открытый чат
+    // 4. Шапка чата
     if (currentChatUser && currentChatUser.otherUserId === userId) {
         var chatAvatar = document.getElementById('chat-avatar');
         if (chatAvatar) {
-            chatAvatar.style.backgroundImage = 'url(' + avatarUrl + ')';
+            chatAvatar.style.backgroundImage = 'url(' + avatarUrl + timestamp + ')';
             chatAvatar.style.backgroundSize = 'cover';
             chatAvatar.textContent = '';
         }
     }
-    
-    // 5. Список чатов
-    var chatItems = document.querySelectorAll('.chat-item');
-    chatItems.forEach(function(item) {
-        var nameSpan = item.querySelector('.chat-item-name');
-        if (nameSpan && nameSpan.textContent === (userName || window.viewingProfileUserName)) {
-            var chatAvatarEl = item.querySelector('.avatar');
-            if (chatAvatarEl && !chatAvatarEl.parentElement.querySelector('.chat-type-badge')) {
-                chatAvatarEl.style.backgroundImage = 'url(' + avatarUrl + ')';
-                chatAvatarEl.style.backgroundSize = 'cover';
-                chatAvatarEl.textContent = '';
-            }
-        }
-    });
-    
-    // 6. Список участников в чате
-    var memberAvatars = document.querySelectorAll('.member-item .avatar');
-    memberAvatars.forEach(function(avatar) {
-        var parent = avatar.closest('.member-item');
-        if (parent && parent.textContent.includes(userName || '')) {
-            avatar.style.backgroundImage = 'url(' + avatarUrl + ')';
-            avatar.style.backgroundSize = 'cover';
-            avatar.textContent = '';
-        }
-    });
-    
-    // 7. Комментарии
-    var commentAvatars = document.querySelectorAll('.comment-author-avatar');
-    commentAvatars.forEach(function(avatar) {
-        var parent = avatar.closest('.comment-item');
-        if (parent && parent.querySelector('.comment-author-name')?.textContent === (userName || '')) {
-            avatar.style.backgroundImage = 'url(' + avatarUrl + ')';
-            avatar.style.backgroundSize = 'cover';
-            avatar.textContent = '';
-        }
-    });
 }
-
 // ========== РЕДАКТИРОВАНИЕ АВАТАРА (СВОЙ ПРОФИЛЬ) ==========
 async function editProfileAvatar() {
     var userId = window.viewingProfileUserId || currentUser?.uid;
