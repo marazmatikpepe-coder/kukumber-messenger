@@ -122,6 +122,7 @@ window.openGroupProfile = async function(chatId) {
                             </div>
                         </div>
                         <button id="share-group-btn" style="width: 100%; padding: 12px; background: #228B22; color: white; border: none; border-radius: 16px; margin-top: 10px; cursor: pointer;">🔗 Поделиться группой</button>
+                        <button id="share-group-invite-btn" style="width: 100%; padding: 12px; background: var(--forest); color: white; border: none; border-radius: 16px; margin-top: 10px; cursor: pointer;">🔗 Скопировать ссылку-приглашение</button>
                         ${(isAdmin || isCreator) ? '<button id="edit-group-settings-btn" style="width: 100%; padding: 12px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 16px; margin-top: 10px; cursor: pointer;">⚙️ Изменить инфо группы</button>' : ''}
                         ${isCreator ? '<button id="delete-group-btn" style="width: 100%; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 16px; margin-top: 10px; cursor: pointer;">🗑️ Удалить группу</button>' : ''}
                     </div>
@@ -501,7 +502,17 @@ function bindGroupProfileEvents(chatId, chatData, isMember, isAdmin, isCreator, 
             }
         };
     }
-    
+    const shareInviteBtn = document.getElementById('share-group-invite-btn');
+if (shareInviteBtn) {
+    shareInviteBtn.onclick = function() {
+        var inviteLink = window.location.origin + window.location.pathname + '?group=' + chatId;
+        navigator.clipboard.writeText(inviteLink).then(function() {
+            showNotification('🔗 Ссылка-приглашение скопирована!', 'success');
+        }).catch(function() {
+            showNotification('❌ Не удалось скопировать ссылку', 'error');
+        });
+    };
+}
     // Редактирование описания
     const editDescBtn = document.getElementById('edit-desc-btn');
     const descDisplay = document.getElementById('group-desc-display');
