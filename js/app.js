@@ -2799,3 +2799,36 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(checkGroupInvite, 500);
 }
+// ========== ИСПРАВЛЕННЫЕ ФУНКЦИИ ДЛЯ СТРЕЛКИ ==========
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    
+    sidebar.classList.toggle('open');
+    
+    if (sidebar.classList.contains('open')) {
+        if (menuBtn) menuBtn.innerHTML = '✕';
+    } else {
+        if (menuBtn) menuBtn.innerHTML = '←';
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    
+    sidebar.classList.remove('open');
+    if (menuBtn) menuBtn.innerHTML = '←';
+}
+
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile) return;
+    
+    sidebar.classList.add('open');
+    if (menuBtn) menuBtn.innerHTML = '✕';
+}
