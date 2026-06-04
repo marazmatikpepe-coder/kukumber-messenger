@@ -2585,3 +2585,163 @@ window.addEventListener('offline', function() {
     var indicator = document.getElementById('offline-indicator');
     if (indicator) indicator.classList.add('show');
 });
+// ========== ОБРАБОТКА ССЫЛКИ НА ГРУППУ ==========
+function getGroupIdFromUrl() {
+    var urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('group') || urlParams.get('join');
+}
+
+async function showGroupInvite(groupId) {
+    if (!groupId) return;
+    
+    try {
+        var groupSnap = await database.ref('chats/' + groupId).once('value');
+        var groupData = groupSnap.val();
+        
+        if (!groupData || groupData.type !== 'group') {
+            showNotification('Группа не найдена', 'error');
+            return;
+        }
+        
+        var isMember = groupData.members && groupData.members[currentUser?.uid];
+        
+        if (isMember) {
+            // Уже в группе - просто открываем чат
+            if (typeof openChatById === 'function') {
+                openChatById(groupId);
+            }
+            return;
+        }
+        
+        // Показываем модальное окно с приглашением
+        showInviteModal(groupId, groupData);
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        showNotification('Ошибка при загрузке группы', 'error');
+    }
+}
+
+function showInviteModal(groupId, groupData) {
+    var modalHtml = `
+        <div id="invite-modal" class="modal" style="z-index: 10050;">
+            <div class="modal-content" style="max-width: 400px; text-align: center; padding: 0;">
+                <div style="background: linear-gradient(135deg, var(--forest), var(--olive)); padding: 30px 20px; color: white;">
+                    <div style="font-size: 60px; margin-bottom: 10px;">👥</div>
+                    <h2 style="margin: 0; font-size: 24px;">${escapeHtml(groupData.name || 'Группа')}</h2>
+                    <p style="margin: 8px 0 0; opacity: 0.9;">Приглашение в группу</p>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 15px; color: var(--text-muted);">
+                        ${groupData.members ? Object.keys(groupData.members).length : 0} участников
+                    </div>
+                    <p style="margin-bottom: 20px; color: var(--text-light);">
+                        ${escapeHtml(groupData.description || 'Присоединяйтесь к нам в группе!')}
+                    </p>
+                    <button id="join-group-btn" class="btn-primary" style="width: 100%; padding: 14px; font-size: 16px;">
+                        ➕ Вступить в группу
+                    </button>
+                    <button onclick="closeInviteModal()" class="btn-secondary" style="width: 100%; margin-top: 10px; padding: 12px;">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    var oldModal = document.getElementById('invite-modal');
+    if (oldModal) oldModal.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('invite-modal').classList.remove('hidden');
+    
+    document.getElementById('join-group-btn').onclick = async function() {
+        await joinGroupFromInvite(groupId);
+    };
+}
+
+function closeInviteModal() {
+    var modal = document.getElementById('invite-modal');
+    if (modal) modal.remove();
+}
+
+async function joinGroupFromInvite(groupId) {
+    if (!currentUser) {
+        showNotification('Авторизуйтесь, чтобы вступить в группу', 'error');
+        closeInviteModal();
+        return;
+    }
+    
+    showNotification('Вступление в группу...', 'info');
+    
+    try {
+        // Проверяем, не в группе ли уже
+        var groupSnap = await database.ref('chats/' + groupId).once('value');
+        var groupData = groupSnap.val();
+        
+        if (!groupData) {
+            showNotification('Группа не найдена', 'error');
+            closeInviteModal();
+            return;
+        }
+        
+        if (groupData.members && groupData.members[currentUser.uid]) {
+            showNotification('Вы уже в группе!', 'success');
+            closeInviteModal();
+            if (typeof openChatById === 'function') {
+                openChatById(groupId);
+            }
+            return;
+        }
+        
+        // Добавляем участника
+        await database.ref('chats/' + groupId + '/members/' + currentUser.uid).set(true);
+        await database.ref('userChats/' + currentUser.uid + '/' + groupId).set(true);
+        
+        // Обновляем количество участников
+        var membersCount = groupData.members ? Object.keys(groupData.members).length : 0;
+        await database.ref('chats/' + groupId + '/membersCount').set(membersCount + 1);
+        
+        showNotification('✅ Вы вступили в группу!', 'success');
+        closeInviteModal();
+        
+        // Открываем чат с группой
+        if (typeof openChatById === 'function') {
+            openChatById(groupId);
+        }
+        if (typeof loadChats === 'function') {
+            setTimeout(loadChats, 500);
+        }
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        showNotification('Ошибка при вступлении в группу', 'error');
+    }
+}
+
+// Проверяем URL при загрузке
+function checkGroupInvite() {
+    var groupId = getGroupIdFromUrl();
+    if (groupId) {
+        // Ждём авторизации
+        var checkUser = setInterval(function() {
+            if (currentUser && currentUser.uid) {
+                clearInterval(checkUser);
+                setTimeout(function() {
+                    showGroupInvite(groupId);
+                }, 1000);
+            }
+        }, 500);
+        
+        // Таймаут на 10 секунд
+        setTimeout(function() {
+            clearInterval(checkUser);
+        }, 10000);
+    }
+}
+
+// Запускаем проверку
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkGroupInvite);
+} else {
+    setTimeout(checkGroupInvite, 500);
+}
