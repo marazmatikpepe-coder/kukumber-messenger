@@ -928,23 +928,31 @@ function openUserProfileFull(userId) {
             
             // Устанавливаем аватарку
             setTimeout(function() {
-    var avatarDiv = document.getElementById('profile-avatar');
-    if (avatarDiv) {
-        if (userAvatar && userAvatar !== '') {
-            avatarDiv.style.backgroundImage = 'url(' + userAvatar + '?t=' + Date.now() + ')';
-            avatarDiv.style.backgroundSize = 'cover';
-            avatarDiv.style.backgroundPosition = 'center';
-            avatarDiv.style.backgroundRepeat = 'no-repeat';
-            avatarDiv.textContent = '';
-            avatarDiv.classList.remove('default-avatar-user');
-            console.log('✅ Аватар установлен:', userAvatar);
-        } else {
-            avatarDiv.style.backgroundImage = '';
-            avatarDiv.classList.add('default-avatar-user');
-            avatarDiv.textContent = '';
-        }
-    }
-}, 100);
+                var avatarDiv = document.getElementById('profile-avatar');
+                if (avatarDiv) {
+                    if (userAvatar && userAvatar !== '') {
+                        avatarDiv.style.backgroundImage = 'url(' + userAvatar + '?t=' + Date.now() + ')';
+                        avatarDiv.style.backgroundSize = 'cover';
+                        avatarDiv.style.backgroundPosition = 'center';
+                        avatarDiv.style.backgroundRepeat = 'no-repeat';
+                        avatarDiv.textContent = '';
+                        avatarDiv.classList.remove('default-avatar-user');
+                    } else {
+                        avatarDiv.classList.add('default-avatar-user');
+                        avatarDiv.textContent = '';
+                    }
+                }
+            }, 100);
+            
+            if (!isOwnProfile) {
+                checkSubscriptionStatus(userId);
+                checkNotificationStatus(userId);
+            }
+            
+            switchProfileTab('posts', userId);
+        });
+    });
+}
 function checkSubscriptionStatus(userId) {
     database.ref('subscriptions/' + currentUser.uid + '/' + userId).once('value').then(function(snap) {
         var isSubscribed = snap.exists();
