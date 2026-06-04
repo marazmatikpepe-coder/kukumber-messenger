@@ -1406,4 +1406,12 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+// Добавь в конец chat.js, перед console.log
+function reloadCurrentChat() {
+    if (window.currentChatId && typeof loadMessages === 'function') {
+        loadMessages(window.currentChatId);
+    }
+}
+
+window.reloadCurrentChat = reloadCurrentChat;
 console.log('✅ chat.js исправлен (контекстное меню + верификация)');
