@@ -2212,10 +2212,64 @@ async function createGroup() {
     showNotification('✅ Группа создана!', 'success');
     closeCreateGroupWizard();
     
+    // Генерируем ссылку-приглашение
+    const inviteLink = window.location.origin + window.location.pathname + '?group=' + chatId;
+    console.log('🔗 Ссылка-приглашение:', inviteLink);
+    
+    // Показываем диалог со ссылкой
+    setTimeout(function() {
+        showInviteLinkDialog(chatId, inviteLink);
+    }, 500);
+    
     if (typeof switchToTab === 'function') switchToTab('chats');
     setTimeout(() => { if (typeof openChatById === 'function') openChatById(chatId); }, 300);
 }
 
+// Диалог со ссылкой-приглашением после создания группы
+function showInviteLinkDialog(chatId, inviteLink) {
+    const modalHtml = `
+        <div id="invite-link-modal" class="modal" style="z-index: 10051;">
+            <div class="modal-content" style="max-width: 400px; text-align: center;">
+                <div class="modal-header">
+                    <h3>🎉 Группа создана!</h3>
+                    <button onclick="closeInviteLinkModal()" class="btn-close">×</button>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">👥</div>
+                    <p style="margin-bottom: 15px;">Приглашайте друзей в группу по ссылке:</p>
+                    <div style="background: var(--background); padding: 12px; border-radius: 12px; margin-bottom: 15px; word-break: break-all;">
+                        <code style="font-size: 12px;">${inviteLink}</code>
+                    </div>
+                    <button onclick="copyInviteLink('${inviteLink}')" class="btn-primary" style="width: 100%; margin-bottom: 10px;">
+                        🔗 Скопировать ссылку
+                    </button>
+                    <button onclick="closeInviteLinkModal()" class="btn-secondary" style="width: 100%;">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const old = document.getElementById('invite-link-modal');
+    if (old) old.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('invite-link-modal').classList.remove('hidden');
+}
+
+function closeInviteLinkModal() {
+    const modal = document.getElementById('invite-link-modal');
+    if (modal) modal.remove();
+}
+
+function copyInviteLink(link) {
+    navigator.clipboard.writeText(link).then(function() {
+        showNotification('🔗 Ссылка скопирована!', 'success');
+        closeInviteLinkModal();
+    }).catch(function() {
+        showNotification('❌ Не удалось скопировать', 'error');
+    });
+}
 // ========== СОЗДАНИЕ КАНАЛА (ПОЛНАЯ ВЕРСИЯ) ==========
 window.openCreateChannelWizard = function() {
     closeCreateMenu();
