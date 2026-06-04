@@ -7537,3 +7537,54 @@ body.night-mode .privacy-btn-add:hover {
 .offline-indicator.show {
     display: block;
 }
+/* ========== ФИКС ШАПКИ ЧАТА ДЛЯ МОБИЛЬНЫХ ========== */
+
+/* Стрелка назад вместо бургера */
+.mobile-menu-btn {
+    color: var(--forest) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 28px !important;
+    font-weight: bold !important;
+}
+
+/* Тёмная тема - стрелка */
+body.night-mode .mobile-menu-btn {
+    color: var(--lime) !important;
+}
+
+/* На мобильных - отступ слева в шапке чата */
+@media (max-width: 768px) {
+    .chat-header {
+        padding-left: 55px !important;
+    }
+    
+    /* Кнопка стрелки */
+    .mobile-menu-btn {
+        position: fixed !important;
+        top: 12px !important;
+        left: 12px !important;
+        width: 40px !important;
+        height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 100 !important;
+        background: transparent !important;
+        border: none !important;
+        font-size: 28px !important;
+        cursor: pointer !important;
+    }
+    
+    /* Убираем старый бургер фон */
+    .mobile-menu-btn:hover {
+        background: transparent !important;
+    }
+}
+
+/* На ПК скрываем стрелку */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none !important;
+    }
+}
