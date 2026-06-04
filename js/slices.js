@@ -2437,4 +2437,12 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(loadPostFromUrl, 1500);
 }
+// Добавь в конец slices.js, перед console.log
+function reloadSlices() {
+    if (typeof loadSlices === 'function') {
+        loadSlices();
+    }
+}
+
+window.reloadSlices = reloadSlices;
 console.log('✅ slices.js полностью загружен');
