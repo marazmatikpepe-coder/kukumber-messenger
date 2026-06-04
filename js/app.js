@@ -2834,24 +2834,33 @@ function openSidebar() {
 }
 // ========== ВОССТАНОВЛЕНИЕ СОЕДИНЕНИЯ ПРИ ВОЗВРАЩЕНИИ ==========
 
-// Функция для восстановления всех слушателей
+let isReconnecting = false;
+let lastReconnectTime = 0;
+
 function reconnectApp() {
+    // Защита от множественных вызовов
+    if (isReconnecting) return;
+    if (Date.now() - lastReconnectTime < 3000) return;
+    
+    isReconnecting = true;
+    lastReconnectTime = Date.now();
+    
     console.log('🔄 Восстановление соединения...');
     
-    // Восстанавливаем Firebase соединение
+    // Восстанавливаем Firebase соединение (без уведомления)
     if (database && database.ref) {
         database.goOnline();
     }
     
-    // Перезагружаем чаты если они были открыты
-    if (typeof loadChats === 'function') {
-        loadChats();
-    }
-    
-    // Перезагружаем слайсы
-    if (typeof loadSlices === 'function') {
-        loadSlices();
-    }
+    // Перезагружаем чаты если они были открыты (но не сразу)
+    setTimeout(function() {
+        if (typeof loadChats === 'function') {
+            loadChats();
+        }
+        if (typeof loadSlices === 'function') {
+            loadSlices();
+        }
+    }, 100);
     
     // Обновляем статус пользователя
     if (currentUser && currentUser.uid) {
@@ -2861,15 +2870,14 @@ function reconnectApp() {
         });
     }
     
-    // Если чат открыт - перезагружаем сообщения
-    if (window.currentChatId && typeof loadMessages === 'function') {
-        loadMessages(window.currentChatId);
-    }
-    
-    showNotification('🔄 Соединение восстановлено', 'info');
+    setTimeout(function() {
+        isReconnecting = false;
+    }, 1000);
 }
 
-// Отслеживаем видимость страницы (вкладка/приложение активно или нет)
+// Отслеживаем видимость страницы
+let wasHidden = false;
+
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
         // Приложение стало видимым (вернулись)
@@ -2878,7 +2886,7 @@ document.addEventListener('visibilitychange', function() {
     } else {
         // Приложение скрыто (ушли)
         console.log('💤 Приложение в фоне');
-        // Обновляем статус "был(а) недавно"
+        wasHidden = true;
         if (currentUser && currentUser.uid) {
             database.ref('users/' + currentUser.uid + '/status').update({
                 lastSeen: firebase.database.ServerValue.TIMESTAMP
@@ -2887,13 +2895,13 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// Отслеживаем, когда страница получает фокус (клик по окну)
+// Отслеживаем, когда страница получает фокус
 window.addEventListener('focus', function() {
     console.log('🎯 Окно в фокусе');
     reconnectApp();
 });
 
-// Периодический пинг для поддержания соединения
+// Периодический пинг (только для проверки соединения, без уведомлений)
 let pingInterval = null;
 
 function startPingInterval() {
@@ -2901,47 +2909,29 @@ function startPingInterval() {
     
     pingInterval = setInterval(function() {
         if (!document.hidden && currentUser) {
-            // Отправляем пинг в Firebase
             database.ref('.info/connected').once('value').then(function(snap) {
                 if (!snap.val()) {
                     console.log('📡 Нет соединения, переподключаем...');
                     reconnectApp();
                 }
             });
-            
-            // Обновляем статус онлайн
-            if (currentUser && currentUser.uid) {
-                database.ref('users/' + currentUser.uid + '/status').update({
-                    online: true,
-                    lastSeen: firebase.database.ServerValue.TIMESTAMP
-                });
-            }
         }
-    }, 30000); // Каждые 30 секунд
+    }, 60000); // Раз в минуту
 }
 
 // Запускаем пинг после авторизации
-var originalLoadUserData = loadUserData;
-window.loadUserData = function() {
-    originalLoadUserData();
-    startPingInterval();
-};
+var originalLoadUserData = window.loadUserData;
+if (originalLoadUserData) {
+    window.loadUserData = function() {
+        originalLoadUserData();
+        startPingInterval();
+    };
+}
 
-// Также восстанавливаем при свайпе назад (Page Show)
+// При восстановлении страницы из кэша
 window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
-        console.log('📄 Страница восстановлена из bfcache');
+        console.log('📄 Страница восстановлена из кэша');
         reconnectApp();
-    }
-});
-
-// Принудительное восстановление при любом клике после возвращения
-let wasHidden = false;
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && wasHidden) {
-        wasHidden = false;
-        setTimeout(reconnectApp, 500);
-    } else if (document.hidden) {
-        wasHidden = true;
     }
 });
