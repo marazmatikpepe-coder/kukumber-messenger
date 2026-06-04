@@ -1204,31 +1204,10 @@ function sendMessage() {
     
     input.value = '';
     
-    // Создаём временный ID для кэша
-    var tempId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-    message.id = tempId;
-    
-    // Сразу показываем сообщение и сохраняем в кэш
+    // Сохраняем в кэш для офлайн-доступа (но НЕ показываем)
     cacheMessage(currentChatId, message);
-    appendMessage(message);
     
     database.ref('messages/' + currentChatId).push(message).then(async function(snapshot) {
-        var realId = snapshot.key;
-        // Обновляем ID сообщения в DOM
-        var msgElement = document.querySelector('.message[data-message-id="' + tempId + '"]');
-        if (msgElement) {
-            msgElement.setAttribute('data-message-id', realId);
-            // Обновляем ID в кэше
-            var cached = offlineCache.messages[currentChatId];
-            if (cached) {
-                var index = cached.findIndex(m => m.id === tempId);
-                if (index !== -1) {
-                    cached[index].id = realId;
-                    saveOfflineCache();
-                }
-            }
-        }
-        
         var lastMsg = text.length > 100 ? text.substring(0, 97) + '...' : text;
         await database.ref('chats/' + currentChatId).update({
             lastMessage: lastMsg,
@@ -1242,9 +1221,6 @@ function sendMessage() {
         console.error('Ошибка отправки:', err);
         showNotification('Ошибка отправки', 'error');
         input.value = text;
-        // Удаляем сообщение из DOM при ошибке
-        var msgElement = document.querySelector('.message[data-message-id="' + tempId + '"]');
-        if (msgElement) msgElement.remove();
     });
 }
 // Отправка push-уведомления
