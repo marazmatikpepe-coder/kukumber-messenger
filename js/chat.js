@@ -349,8 +349,10 @@ async function createChatItem(chatId, chatData, container) {
         name = chatData.name || 'Канал';
         avatarUrl = chatData.avatar || '';
         badge = '<span class="chat-type-badge">📢</span>';
-    } 
+        isVerified = chatData.verified === true;  // ⭐ ДЛЯ ГАЛОЧКИ КАНАЛА
+    }
     else {
+        // Личный чат
         var otherUserId = null;
         if (chatData.participants) {
             for (var i = 0; i < chatData.participants.length; i++) {
@@ -382,7 +384,7 @@ async function createChatItem(chatId, chatData, container) {
         else defaultClass = 'default-avatar-user';
     }
     
-    // Добавляем галочку верификации к имени
+    // ГАЛОЧКА ДЛЯ КАНАЛОВ (и для пользователей)
     var verifiedBadge = isVerified ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:14px; height:14px; margin-left:4px; vertical-align:middle;">' : '';
     
     div.innerHTML = `
@@ -510,21 +512,28 @@ async function updateChatHeader(chatId, chatData) {
         }
     } 
     // КАНАЛ
-    else if (chatData.type === 'channel') {
+else if (chatData.type === 'channel') {
+    // ⭐ ДОБАВЛЯЕМ ГАЛОЧКУ ДЛЯ КАНАЛА В ШАПКУ
+    if (chatData.verified === true) {
+        chatUsername.innerHTML = escapeHtml(chatData.name || 'Канал') + 
+            ' <img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:16px; height:16px; margin-left:4px; vertical-align:middle;">';
+    } else {
         chatUsername.textContent = chatData.name || 'Канал';
-        if (chatStatus) {
-            var subsCount = chatData.subscribers ? Object.keys(chatData.subscribers).length : 0;
-            chatStatus.textContent = subsCount + ' подписчиков';
+    }
+    
+    if (chatStatus) {
+        var subsCount = chatData.subscribers ? Object.keys(chatData.subscribers).length : 0;
+        chatStatus.textContent = subsCount + ' подписчиков';
+    }
+    if (chatAvatar) {
+        if (chatData.avatar) {
+            chatAvatar.style.backgroundImage = 'url(' + chatData.avatar + ')';
+            chatAvatar.style.backgroundSize = 'cover';
+        } else {
+            chatAvatar.classList.add('default-avatar-channel');
         }
-        if (chatAvatar) {
-            if (chatData.avatar) {
-                chatAvatar.style.backgroundImage = 'url(' + chatData.avatar + ')';
-                chatAvatar.style.backgroundSize = 'cover';
-            } else {
-                chatAvatar.classList.add('default-avatar-channel');
-            }
-        }
-    } 
+    }
+}
     // ЛИЧНЫЙ ЧАТ
     else {
         callButtons.forEach(function(btn) {
