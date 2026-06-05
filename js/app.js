@@ -2941,3 +2941,57 @@ window.addEventListener('pageshow', function(event) {
         reconnectApp();
     }
 });
+// ========== БОТ "ИЗБРАННОЕ" — ПРОСТАЯ ВЕРСИЯ ==========
+
+// Создание бота для пользователя
+window.createFavoritesBot = async function() {
+    if (!currentUser || !currentUser.uid) return;
+    
+    var botChatId = currentUser.uid + '_favorites';
+    
+    // Проверяем, существует ли уже
+    var check = await database.ref('chats/' + botChatId).once('value');
+    if (check.exists()) return;
+    
+    // Создаём чат с ботом
+    await database.ref('chats/' + botChatId).set({
+        type: 'private',
+        participants: [currentUser.uid, 'favorites_bot'],
+        isBot: true,
+        botType: 'favorites',
+        name: 'Избранное',
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        lastMessage: '📌 Добро пожаловать в Избранное!',
+        lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+        verified: true
+    });
+    
+    // Добавляем в список чатов пользователя
+    await database.ref('userChats/' + currentUser.uid + '/' + botChatId).set(true);
+    
+    // Приветственное сообщение
+    await database.ref('messages/' + botChatId).push({
+        type: 'text',
+        text: '📌 Избранное\n\nПересылайте сюда важные сообщения — они сохранятся навсегда!\n\n💡 Чтобы сохранить сообщение: нажмите и удерживайте → "Переслать" → выберите "Избранное"',
+        senderId: 'favorites_bot',
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+    
+    console.log('✅ Бот "Избранное" создан');
+};
+
+// Запускаем создание бота после загрузки пользователя
+var oldLoadUserData = window.loadUserData;
+if (oldLoadUserData) {
+    window.loadUserData = function() {
+        oldLoadUserData();
+        setTimeout(function() {
+            if (currentUser && currentUser.uid) {
+                window.createFavoritesBot();
+                if (typeof loadChats === 'function') setTimeout(loadChats, 500);
+            }
+        }, 1500);
+    };
+}
+
+console.log('✅ Бот "Избранное" загружен (простая версия)');
