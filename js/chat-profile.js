@@ -730,11 +730,14 @@ window.openChannelProfile = async function(chatId) {
                 </div>
                 
                 <div class="channel-info">
-                    <div class="channel-name-row">
-                        <h2 class="channel-name" id="channel-name">${escapeHtml(channelData.name || 'Канал')}</h2>
-                        ${canEdit ? '<button class="channel-name-edit-btn" onclick="editChannelName(\''+chatId+'\')">✏️</button>' : ''}
-                        ${isSuperAdmin ? `<button class="channel-verify-btn" onclick="toggleChannelVerification('${chatId}')">${channelData.verified ? '✅' : '🔘'}</button>` : ''}
-                    </div>
+                   <div class="channel-name-row">
+    <h2 class="channel-name" id="channel-name">
+        ${escapeHtml(channelData.name || 'Канал')}
+        ${channelData.verified === true ? '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:18px; height:18px; margin-left:5px; vertical-align:middle;">' : ''}
+    </h2>
+    ${canEdit ? '<button class="channel-name-edit-btn" onclick="editChannelName(\''+chatId+'\')">✏️</button>' : ''}
+    ${isSuperAdmin ? `<button class="channel-verify-btn" onclick="toggleChannelVerification('${chatId}')">${channelData.verified ? '✅' : '🔘'}</button>` : ''}
+</div>
                     <div class="channel-kname">
                         ${channelData.kname ? '@' + channelData.kname : 'Нет ссылки'}
                         ${canEdit ? '<button class="channel-kname-edit-btn" onclick="editChannelKname(\''+chatId+'\')">✏️</button>' : ''}
