@@ -1423,3 +1423,90 @@ function reloadCurrentChat() {
 }
 window.reloadCurrentChat = reloadCurrentChat;
 console.log('✅ chat.js исправлен (контекстное меню + верификация)');
+// ========== ОТОБРАЖЕНИЕ БОТА "ИЗБРАННОЕ" ==========
+
+// Сохраняем оригинальную функцию createChatItem
+var originalCreateChatItem = window.createChatItem;
+
+// Переопределяем, но безопасно
+window.createChatItem = async function(chatId, chatData, container) {
+    // Проверка на бота Избранное
+    if (chatData.isBot && chatData.botType === 'favorites') {
+        var div = document.createElement('div');
+        div.className = 'chat-item';
+        div.setAttribute('data-chat-id', chatId);
+        
+        if (window.currentChatId === chatId) div.classList.add('active');
+        
+        var preview = chatData.lastMessage || 'Нет сообщений';
+        var time = chatData.lastMessageTime ? formatTime(chatData.lastMessageTime) : '';
+        if (preview && preview.length > 50) preview = preview.substring(0, 47) + '...';
+        
+        // Аватарка (зелёная по умолчанию)
+        var botAvatar = 'https://i.ibb.co/JjFWkgsP/AF49-D677-0-D26-4-EB1-99-FC-EF7-E2962-C0-A6.png';
+        
+        div.innerHTML = `
+            <div class="chat-item-avatar">
+                <div class="avatar" style="background-image: url(${botAvatar}); background-size: cover;"></div>
+                <span class="chat-type-badge">⭐</span>
+            </div>
+            <div class="chat-item-info">
+                <div class="chat-item-header">
+                    <span class="chat-item-name">📌 Избранное <img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:14px; height:14px; margin-left:4px; vertical-align:middle;"></span>
+                    <span class="chat-item-time">${time}</span>
+                </div>
+                <div class="chat-item-preview">${escapeHtml(preview)}</div>
+            </div>
+        `;
+        
+        div.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof openChatById === 'function') openChatById(chatId);
+        };
+        
+        container.appendChild(div);
+        return;
+    }
+    
+    // Для всех остальных чатов — вызываем оригинальную функцию
+    if (originalCreateChatItem) {
+        return originalCreateChatItem(chatId, chatData, container);
+    }
+};
+
+// Сохраняем оригинальную функцию updateChatHeader
+var originalUpdateChatHeader = window.updateChatHeader;
+
+// Переопределяем для шапки чата
+window.updateChatHeader = async function(chatId, chatData) {
+    if (chatData.isBot && chatData.botType === 'favorites') {
+        var chatUsername = document.getElementById('chat-username');
+        var chatStatus = document.getElementById('chat-status');
+        var chatAvatar = document.getElementById('chat-avatar');
+        var callButtons = document.querySelectorAll('.chat-actions .call-btn');
+        
+        if (chatUsername) {
+            chatUsername.innerHTML = '📌 Избранное <img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:16px; height:16px; margin-left:4px; vertical-align:middle;">';
+        }
+        if (chatStatus) {
+            chatStatus.textContent = 'Бот · Сохраняйте важное';
+        }
+        if (chatAvatar) {
+            var botAvatar = 'https://i.ibb.co/JjFWkgsP/AF49-D677-0-D26-4-EB1-99-FC-EF7-E2962-C0-A6.png';
+            chatAvatar.style.backgroundImage = 'url(' + botAvatar + ')';
+            chatAvatar.style.backgroundSize = 'cover';
+            chatAvatar.textContent = '';
+        }
+        callButtons.forEach(function(btn) {
+            btn.style.display = 'none';
+        });
+        return;
+    }
+    
+    if (originalUpdateChatHeader) {
+        return originalUpdateChatHeader(chatId, chatData);
+    }
+};
+
+console.log('✅ Бот "Избранное" отображается');
