@@ -2941,3 +2941,129 @@ window.addEventListener('pageshow', function(event) {
         reconnectApp();
     }
 });
+// ========== БОТ "ИЗБРАННОЕ" ==========
+
+// Аватарки бота для разных тем
+const botAvatars = {
+    green: 'https://i.ibb.co/JjFWkgsP/AF49-D677-0-D26-4-EB1-99-FC-EF7-E2962-C0-A6.png',
+    blue: 'https://i.ibb.co/Y4NZTTXD/0-BE65-CA2-F1-F3-4-B46-BEC6-EBBD24-FA3313.png',
+    red: 'https://i.ibb.co/96RQfTP/11-A548-A7-C5-AA-4-D35-A315-B8-A8-B6-A08-B64.png',
+    orange: 'https://i.ibb.co/prZxTGcH/39-A3-E2-BF-D804-4-FEA-977-E-814439-C86-EAF.png',
+    purple: 'https://i.ibb.co/wZRxkgSx/124-F125-B-3-EE6-40-E2-9-E64-4-E89-C58838-F4.png',
+    pink: 'https://i.ibb.co/wZRxkgSx/124-F125-B-3-EE6-40-E2-9-E64-4-E89-C58838-F4.png',
+    yellow: 'https://i.ibb.co/zTFpZ26x/AF675321-2957-4-AC3-8728-9765-F6-E23-CE4.png',
+    turquoise: 'https://i.ibb.co/1fCsctXH/4-CCFB1-CD-21-BE-46-AC-B57-F-204-AA00-B36-AB.png'
+};
+
+function getBotAvatarByTheme() {
+    var theme = localStorage.getItem('kukumber_theme_color') || 'green';
+    return botAvatars[theme] || botAvatars.green;
+}
+
+// Создание бота для пользователя
+async function createFavoritesBotForUser(userId, username) {
+    var botChatId = userId + '_favorites_bot';
+    
+    var chatSnap = await database.ref('chats/' + botChatId).once('value');
+    if (!chatSnap.exists()) {
+        var botAvatar = getBotAvatarByTheme();
+        
+        await database.ref('chats/' + botChatId).set({
+            type: 'private',
+            participants: [userId, 'favorites_bot'],
+            isBot: true,
+            botType: 'favorites',
+            name: 'Избранное',
+            avatar: botAvatar,
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastMessage: '📌 Добро пожаловать в Избранное!',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+            verified: true
+        });
+        
+        await database.ref('userChats/' + userId + '/' + botChatId).set(true);
+        
+        var welcomeMessage = {
+            type: 'text',
+            text: '📌 *Избранное*\n\nЭто ваш личный бот. Пересылайте сюда важные сообщения, и они никогда не потеряются!\n\n📎 *Как использовать:*\n• Нажмите и удерживайте любое сообщение\n• Выберите «Переслать»\n• Выберите чат «Избранное»\n\nВсе ваши сохранённые сообщения будут здесь! 🥒',
+            senderId: 'favorites_bot',
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            isWelcome: true
+        };
+        
+        await database.ref('messages/' + botChatId).push(welcomeMessage);
+        console.log('✅ Бот "Избранное" создан для пользователя:', userId);
+    }
+}
+
+// Проверка и создание бота для текущего пользователя
+async function ensureFavoritesBot() {
+    if (!currentUser || !currentUser.uid) return;
+    if (!currentUserData) return;
+    
+    try {
+        var botChatId = currentUser.uid + '_favorites_bot';
+        var chatSnap = await database.ref('chats/' + botChatId).once('value');
+        if (!chatSnap.exists()) {
+            await createFavoritesBotForUser(currentUser.uid, currentUserData.username);
+            if (typeof loadChats === 'function') {
+                setTimeout(loadChats, 500);
+            }
+        }
+    } catch(e) {
+        console.error('Ошибка создания бота:', e);
+    }
+}
+
+// Обновление аватарки бота при смене темы
+function updateBotAvatar() {
+    if (!currentUser || !currentUser.uid) return;
+    
+    var botChatId = currentUser.uid + '_favorites_bot';
+    var botAvatar = getBotAvatarByTheme();
+    
+    database.ref('chats/' + botChatId + '/avatar').set(botAvatar).catch(function(e) {
+        console.log('Ошибка обновления аватарки бота:', e);
+    });
+    
+    // Обновляем в открытом чате, если это бот
+    if (currentChatData && currentChatData.isBot && currentChatData.botType === 'favorites') {
+        var chatAvatar = document.getElementById('chat-avatar');
+        if (chatAvatar) {
+            chatAvatar.style.backgroundImage = 'url(' + botAvatar + ')';
+            chatAvatar.style.backgroundSize = 'cover';
+        }
+    }
+}
+
+// Перехватываем смену темы для обновления аватарки бота
+var originalSetSimpleTheme = window.setSimpleTheme;
+if (originalSetSimpleTheme) {
+    window.setSimpleTheme = function(colorKey) {
+        originalSetSimpleTheme(colorKey);
+        setTimeout(function() {
+            if (typeof updateBotAvatar === 'function') {
+                updateBotAvatar();
+            }
+        }, 100);
+    };
+}
+
+// Запускаем создание бота после загрузки пользователя
+var originalLoadUserData = window.loadUserData;
+if (originalLoadUserData) {
+    window.loadUserData = function() {
+        originalLoadUserData();
+        setTimeout(function() {
+            ensureFavoritesBot();
+        }, 1000);
+    };
+} else {
+    setTimeout(function() {
+        if (currentUser && currentUserData) {
+            ensureFavoritesBot();
+        }
+    }, 2000);
+}
+
+console.log('✅ Бот "Избранное" загружен');
