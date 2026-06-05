@@ -251,10 +251,20 @@ var shareIcon = '<img src="' + shareIconUrl + '" class="share-icon">';
         sessionStorage.setItem(viewedKey, 'true');
         database.ref('slices/' + sliceId + '/viewsCount').transaction(function(v) { return (v || 0) + 1; });
     }
+     // ⭐ ПРОВЕРКА ВЕРИФИКАЦИИ ДЛЯ КАНАЛОВ В ПОСТАХ
+    if (sliceData.authorType === 'channel') {
+        database.ref('chats/' + sliceData.authorId + '/verified').once('value').then(function(snap) {
+            if (snap.val() === true) {
+                var badgeSpan = div.querySelector('.verified-badge-placeholder');
+                if (badgeSpan) {
+                    badgeSpan.innerHTML = '<img src="https://i.ibb.co/YTRCNHkq/4e9cba55-b083-46d3-8a30-bff7b1be94c7-1.png" style="width:16px; height:16px; cursor:pointer;" onclick="event.stopPropagation(); showVerifiedInfo()">';
+                }
+            }
+        });
+    }
     
     return div;
 }
-
 // ========== ЛАЙКИ ==========
 function likeSlice(sliceId) {
     if (pendingLikeRequests[sliceId]) return;
