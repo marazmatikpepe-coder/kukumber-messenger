@@ -7723,3 +7723,35 @@ body.night-mode .default-avatar-group {
 body.night-mode .default-avatar-channel {
     background-image: url('https://i.ibb.co/BH6QbPYc/image.png') !important;
 }
+/* Уменьшаем расстояние между кнопками в слайсах */
+.slice-actions-left {
+    display: flex;
+    gap: 8px !important;
+    align-items: center;
+}
+
+.slice-action-btn {
+    gap: 4px !important;
+    padding: 6px 8px !important;
+}
+
+.slice-action-btn img {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* На мобильных ещё меньше */
+@media (max-width: 768px) {
+    .slice-actions-left {
+        gap: 4px !important;
+    }
+    
+    .slice-action-btn {
+        padding: 4px 6px !important;
+    }
+    
+    .slice-action-btn img {
+        width: 22px !important;
+        height: 22px !important;
+    }
+}
