@@ -1573,32 +1573,71 @@ function renderSavedSliceInChat(message) {
 
 // Функция для перехода к оригинальному посту
 window.scrollToOriginalPost = function(sliceId) {
+    if (!sliceId) {
+        showNotification('Пост не найден', 'error');
+        return;
+    }
+    
     // Переключаемся на вкладку Slices
     if (typeof switchToTab === 'function') {
         switchToTab('reels');
     }
     
-    // Ищем пост в ленте
+    // Ждём переключения вкладки
     setTimeout(function() {
+        // Пробуем найти пост в ленте
         var postElement = document.querySelector('.slice-card[data-slice-id="' + sliceId + '"]');
+        
         if (postElement) {
+            // Плавно скроллим к посту
             postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            postElement.style.transition = 'background 0.3s ease';
-            postElement.style.backgroundColor = 'rgba(34, 139, 34, 0.2)';
+            
+            // Получаем цвет темы для подсветки
+            var forestColor = getComputedStyle(document.documentElement).getPropertyValue('--forest').trim();
+            
+            // Подсветка поста
+            postElement.style.transition = 'background-color 0.3s ease';
+            postElement.style.backgroundColor = forestColor + '40'; // 40 = 25% прозрачности
+            
             setTimeout(function() {
                 postElement.style.backgroundColor = '';
-            }, 2000);
+            }, 1500);
         } else {
             // Если пост не найден в ленте, загружаем его отдельно
-            if (typeof loadAndScrollToPost === 'function') {
-                loadAndScrollToPost(sliceId);
-            } else {
-                showNotification('Пост не найден в ленте', 'info');
-            }
+            showNotification('Пост загружается...', 'info');
+            
+            // Проверяем, существует ли пост в Firebase
+            database.ref('slices/' + sliceId).once('value').then(function(snapshot) {
+                if (snapshot.exists()) {
+                    // Перезагружаем ленту и пробуем снова
+                    if (typeof loadSlices === 'function') {
+                        loadSlices();
+                    }
+                    
+                    // Повторяем поиск через 1 секунду
+                    setTimeout(function() {
+                        var retryElement = document.querySelector('.slice-card[data-slice-id="' + sliceId + '"]');
+                        if (retryElement) {
+                            retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            var forestColor = getComputedStyle(document.documentElement).getPropertyValue('--forest').trim();
+                            retryElement.style.transition = 'background-color 0.3s ease';
+                            retryElement.style.backgroundColor = forestColor + '40';
+                            setTimeout(function() {
+                                retryElement.style.backgroundColor = '';
+                            }, 1500);
+                        } else {
+                            showNotification('Пост не найден в ленте', 'error');
+                        }
+                    }, 1000);
+                } else {
+                    showNotification('Пост не существует или был удалён', 'error');
+                }
+            }).catch(function() {
+                showNotification('Ошибка загрузки поста', 'error');
+            });
         }
-    }, 300);
+    }, 400);
 };
-
 // Переопределяем appendMessage для отображения сохранённых постов
 var originalAppendMessage = window.appendMessage;
 if (originalAppendMessage) {
