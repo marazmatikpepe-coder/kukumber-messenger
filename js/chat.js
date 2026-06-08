@@ -1508,5 +1508,126 @@ window.updateChatHeader = async function(chatId, chatData) {
         return originalUpdateChatHeader(chatId, chatData);
     }
 };
+// ========== ОТОБРАЖЕНИЕ СОХРАНЁННЫХ ПОСТОВ В ЧАТЕ "ИЗБРАННОЕ" ==========
 
+function renderSavedSliceInChat(message) {
+    if (message.type !== 'saved_slice_full' || !message.sliceData) return null;
+    
+    var slice = message.sliceData;
+    var container = document.createElement('div');
+    container.className = 'saved-slice-message';
+    container.style.cssText = 'background: var(--background); border-radius: 16px; margin: 8px 0; overflow: hidden; border: 1px solid var(--border);';
+    
+    // Шапка с информацией об авторе
+    var authorHtml = `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: white; border-bottom: 1px solid var(--border);">
+            <div class="avatar" style="width: 36px; height: 36px; background-size: cover; background-position: center; ${slice.authorAvatar ? 'background-image: url(' + slice.authorAvatar + ')' : 'background: var(--sage);'}"></div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; font-size: 14px;">${escapeHtml(slice.authorName)}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Оригинальный пост</div>
+            </div>
+        </div>
+    `;
+    
+    // Медиа (если есть)
+    var mediaHtml = '';
+    if (slice.mediaUrl) {
+        var isGif = slice.mediaUrl.toLowerCase().endsWith('.gif');
+        if (isGif) {
+            mediaHtml = `<div style="text-align: center; background: #f0f0f0;"><img src="${slice.mediaUrl}" style="max-width: 100%; max-height: 250px; object-fit: contain;"></div>`;
+        } else {
+            mediaHtml = `<div style="text-align: center; background: #f0f0f0;"><img src="${slice.mediaUrl}" style="max-width: 100%; max-height: 300px; object-fit: contain;"></div>`;
+        }
+    } else if (slice.mediaUrls && slice.mediaUrls.length > 0) {
+        mediaHtml = `<div style="text-align: center; background: #f0f0f0;"><img src="${slice.mediaUrls[0]}" style="max-width: 100%; max-height: 300px; object-fit: contain;"></div>`;
+    }
+    
+    // Текст поста
+    var textHtml = slice.text ? `<div style="padding: 12px; font-size: 14px; line-height: 1.4;">${escapeHtml(slice.text)}</div>` : '';
+    
+    // Статистика (лайки, комментарии, просмотры)
+    var statsHtml = `
+        <div style="display: flex; gap: 16px; padding: 8px 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
+            <span>❤️ ${slice.likesCount || 0}</span>
+            <span>💬 ${slice.commentsCount || 0}</span>
+            <span>🔄 ${slice.repostsCount || 0}</span>
+            <span>👁️ ${slice.viewsCount || 0}</span>
+        </div>
+    `;
+    
+    // Кнопка "Пост в ленте"
+    var buttonHtml = `
+        <div style="padding: 8px 12px 12px 12px;">
+            <button onclick="scrollToOriginalPost('${slice.originalId}')" style="width: 100%; padding: 10px; background: linear-gradient(135deg, var(--forest), var(--lime)); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                📍 Пост в ленте
+            </button>
+        </div>
+    `;
+    
+    container.innerHTML = authorHtml + mediaHtml + textHtml + statsHtml + buttonHtml;
+    
+    return container;
+}
+
+// Функция для перехода к оригинальному посту
+window.scrollToOriginalPost = function(sliceId) {
+    // Переключаемся на вкладку Slices
+    if (typeof switchToTab === 'function') {
+        switchToTab('reels');
+    }
+    
+    // Ищем пост в ленте
+    setTimeout(function() {
+        var postElement = document.querySelector('.slice-card[data-slice-id="' + sliceId + '"]');
+        if (postElement) {
+            postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            postElement.style.transition = 'background 0.3s ease';
+            postElement.style.backgroundColor = 'rgba(34, 139, 34, 0.2)';
+            setTimeout(function() {
+                postElement.style.backgroundColor = '';
+            }, 2000);
+        } else {
+            // Если пост не найден в ленте, загружаем его отдельно
+            if (typeof loadAndScrollToPost === 'function') {
+                loadAndScrollToPost(sliceId);
+            } else {
+                showNotification('Пост не найден в ленте', 'info');
+            }
+        }
+    }, 300);
+};
+
+// Переопределяем appendMessage для отображения сохранённых постов
+var originalAppendMessage = window.appendMessage;
+if (originalAppendMessage) {
+    window.appendMessage = function(message) {
+        if (message.type === 'saved_slice_full' && message.sliceData) {
+            var container = document.getElementById('messages-container');
+            if (!container) return;
+            
+            var isSent = message.senderId === window.currentUser?.uid;
+            var messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (isSent ? 'sent' : 'received');
+            messageDiv.setAttribute('data-message-id', message.id);
+            
+            var savedContent = renderSavedSliceInChat(message);
+            if (savedContent) {
+                messageDiv.appendChild(savedContent);
+                var timeSpan = document.createElement('div');
+                timeSpan.className = 'message-time';
+                timeSpan.textContent = formatTime(message.timestamp);
+                messageDiv.appendChild(timeSpan);
+                container.appendChild(messageDiv);
+                container.scrollTop = container.scrollHeight;
+            }
+            return;
+        }
+        
+        if (originalAppendMessage) {
+            originalAppendMessage(message);
+        }
+    };
+}
+
+console.log('✅ Отображение сохранённых постов в чате Избранное');
 console.log('✅ Бот "Избранное" отображается');
