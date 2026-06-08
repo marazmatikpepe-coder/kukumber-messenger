@@ -2954,17 +2954,19 @@ window.createFavoritesBot = async function() {
     if (check.exists()) return;
     
     // Создаём чат с ботом
-    await database.ref('chats/' + botChatId).set({
-        type: 'private',
-        participants: [currentUser.uid, 'favorites_bot'],
-        isBot: true,
-        botType: 'favorites',
-        name: 'Избранное',
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        lastMessage: '📌 Добро пожаловать в Избранное!',
-        lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
-        verified: true
-    });
+   // В createFavoritesBot, при создании чата:
+await database.ref('chats/' + botChatId).set({
+    type: 'private',
+    participants: [currentUser.uid, 'favorites_bot'],
+    isBot: true,
+    botType: 'favorites',
+    name: 'Избранное',
+    avatar: 'https://i.ibb.co/My7L4c1X/FB06-B57-E-7-E8-C-458-F-AA4-E-04-EA2-E55697-A.png',  // ⭐ НОВАЯ АВАТАРКА
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    lastMessage: '📌 Добро пожаловать в Избранное!',
+    lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+    verified: true
+});
     
     // Добавляем в список чатов пользователя
     await database.ref('userChats/' + currentUser.uid + '/' + botChatId).set(true);
