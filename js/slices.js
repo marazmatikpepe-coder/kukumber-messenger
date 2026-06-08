@@ -32,11 +32,11 @@ function playSliceCreateSound() {
 function getSaveIcon(isSaved) {
     var isNightMode = document.body.classList.contains('night-mode');
     if (isSaved) {
-        return '<img src="https://i.ibb.co/rKrcZSDS/4-CF2-CFDA-B599-406-D-96-B5-67-D664-D042-F1.png" style="width:24px; height:24px;">';
+        return '<img src="https://i.ibb.co/rKrcZSDS/4-CF2-CFDA-B599-406-D-96-B5-67-D664-D042-F1.png" style="width:34px; height:34px;">';
     } else {
         return isNightMode 
-            ? '<img src="https://i.ibb.co/cXxMZCt3/F77-F18-D5-8271-4042-8-C27-B3-D0821-F985-E.png" style="width:24px; height:24px;">'
-            : '<img src="https://i.ibb.co/ccRz1Kss/E1-DE0-AAC-8735-4-B92-894-B-F2-B1973-E995-A.png" style="width:24px; height:24px;">';
+            ? '<img src="https://i.ibb.co/cXxMZCt3/F77-F18-D5-8271-4042-8-C27-B3-D0821-F985-E.png" style="width:34px; height:34px;">'
+            : '<img src="https://i.ibb.co/ccRz1Kss/E1-DE0-AAC-8735-4-B92-894-B-F2-B1973-E995-A.png" style="width:34px; height:34px;">';
     }
 }
 function loadSlices() {
@@ -400,9 +400,11 @@ window.toggleSaveSlice = async function(sliceId) {
         var isSaved = snap.exists();
         
         if (isSaved) {
+            // Удаляем из избранного
             await saveRef.remove();
             await sliceRef.child('savesCount').transaction(function(c) { return Math.max((c || 1) - 1, 0); });
             
+            // Удаляем сообщение из чата "Избранное"
             var messagesSnap = await database.ref('messages/' + botChatId).orderByChild('originalSliceId').equalTo(sliceId).once('value');
             messagesSnap.forEach(function(msgSnap) { msgSnap.ref.remove(); });
             
@@ -414,26 +416,56 @@ window.toggleSaveSlice = async function(sliceId) {
             }
             showNotification('Удалено из избранного', 'info');
         } else {
+            // Сохраняем в избранное
             await saveRef.set(true);
             await sliceRef.child('savesCount').transaction(function(c) { return (c || 0) + 1; });
             
+            // Получаем ВСЕ данные поста
             var sliceSnap = await database.ref('slices/' + sliceId).once('value');
-            var sliceData = sliceSnap.val();
+            var originalSlice = sliceSnap.val();
             
-            if (sliceData) {
+            if (originalSlice) {
+                // Создаём КОПИЮ поста со всеми данными
+                var savedSliceCopy = {
+                    type: 'saved_copy',
+                    originalId: sliceId,
+                    authorId: originalSlice.authorId,
+                    authorName: originalSlice.authorName,
+                    authorAvatar: originalSlice.authorAvatar,
+                    authorType: originalSlice.authorType || 'user',
+                    text: originalSlice.text || '',
+                    hashtags: originalSlice.hashtags || [],
+                    mediaType: originalSlice.mediaType || 'none',
+                    mediaUrls: originalSlice.mediaUrls || null,
+                    mediaUrl: originalSlice.mediaUrl || null,
+                    likesCount: originalSlice.likesCount || 0,
+                    commentsCount: originalSlice.commentsCount || 0,
+                    repostsCount: originalSlice.repostsCount || 0,
+                    viewsCount: originalSlice.viewsCount || 0,
+                    createdAt: originalSlice.createdAt,
+                    savedAt: firebase.database.ServerValue.TIMESTAMP,
+                    savedBy: currentUser.uid
+                };
+                
+                // Сохраняем копию в отдельную ветку savedSlices
+                var savedSliceRef = await database.ref('savedSlices/' + currentUser.uid + '/' + sliceId).set(savedSliceCopy);
+                
+                // Создаём сообщение в чате "Избранное" с HTML-кнопкой
+                var messageId = database.ref('messages/' + botChatId).push().key;
+                
                 var savedMessage = {
-                    type: 'saved_slice',
+                    type: 'saved_slice_full',
                     originalSliceId: sliceId,
-                    text: sliceData.text || '',
-                    mediaUrl: sliceData.mediaUrl || (sliceData.mediaUrls ? sliceData.mediaUrls[0] : null),
-                    authorName: sliceData.authorName,
+                    sliceData: savedSliceCopy,
                     savedAt: firebase.database.ServerValue.TIMESTAMP,
                     senderId: currentUser.uid,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 };
-                await database.ref('messages/' + botChatId).push(savedMessage);
+                
+                await database.ref('messages/' + botChatId + '/' + messageId).set(savedMessage);
+                
                 await database.ref('chats/' + botChatId).update({
-                    lastMessage: '📌 Сохранённый пост',
+                    lastMessage: '📌 Сохранённый пост: ' + (originalSlice.text ? originalSlice.text.substring(0, 50) : 'Медиа'),
                     lastMessageTime: firebase.database.ServerValue.TIMESTAMP
                 });
             }
@@ -444,10 +476,11 @@ window.toggleSaveSlice = async function(sliceId) {
                 saveCountSpan.textContent = currentCount + 1;
                 card.querySelector('.save-btn').innerHTML = getSaveIcon(true) + ' <span class="save-count">' + (currentCount + 1) + '</span>';
             }
-            showNotification('Сохранено!', 'success');
+            showNotification('Сохранено в избранное!', 'success');
         }
     } catch(err) {
         console.error(err);
+        showNotification('Ошибка', 'error');
     } finally {
         setTimeout(function() { delete pendingSaveRequests[sliceId]; }, 500);
     }
