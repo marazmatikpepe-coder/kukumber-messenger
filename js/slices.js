@@ -2482,8 +2482,21 @@ function scrollToPost(postId) {
 function loadAndScrollToPost(postId) {
     if (!postId) return;
     
+    function highlightAndScroll(element) {
+        if (!element) return false;
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var forestColor = getComputedStyle(document.documentElement).getPropertyValue('--forest').trim();
+        element.style.transition = 'background-color 0.3s ease';
+        element.style.backgroundColor = forestColor + '40';
+        setTimeout(function() {
+            element.style.backgroundColor = '';
+        }, 1500);
+        return true;
+    }
+    
     // Сначала пробуем найти пост в уже загруженной ленте
-    if (scrollToPost(postId)) return;
+    var postElement = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
+    if (highlightAndScroll(postElement)) return;
     
     // Если не нашли, загружаем конкретный пост из Firebase
     database.ref('slices/' + postId).once('value').then(function(snapshot) {
@@ -2500,30 +2513,26 @@ function loadAndScrollToPost(postId) {
         
         // Ждём загрузки ленты и затем скроллим
         var checkInterval = setInterval(function() {
-            if (scrollToPost(postId)) {
+            var element = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
+            if (element) {
                 clearInterval(checkInterval);
+                highlightAndScroll(element);
             }
-        }, 500);
+        }, 300);
         
-        // Останавливаем проверку через 10 секунд
+        // Останавливаем проверку через 5 секунд
         setTimeout(function() {
             clearInterval(checkInterval);
-            showNotification('Пост загружается...', 'info');
-        }, 10000);
+            var finalElement = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
+            if (!finalElement) {
+                showNotification('Пост загружается, обновите страницу', 'info');
+            }
+        }, 5000);
     }).catch(function(err) {
         console.error('Ошибка загрузки поста:', err);
+        showNotification('Ошибка загрузки поста', 'error');
     });
 }
-
-// Проверяем URL при загрузке страницы
-window.addEventListener('load', function() {
-    var postId = getPostIdFromUrl();
-    if (postId) {
-        setTimeout(function() {
-            loadAndScrollToPost(postId);
-        }, 1500);
-    }
-});
 // ========== ПЕРЕХОД К ПОСТУ ПО ССЫЛКЕ ==========
 function getPostIdFromUrl() {
     var params = new URLSearchParams(window.location.search);
