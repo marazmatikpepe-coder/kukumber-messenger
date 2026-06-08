@@ -2961,7 +2961,7 @@ await database.ref('chats/' + botChatId).set({
     isBot: true,
     botType: 'favorites',
     name: 'Избранное',
-    avatar: 'https://i.ibb.co/My7L4c1X/FB06-B57-E-7-E8-C-458-F-AA4-E-04-EA2-E55697-A.png',  // ⭐ НОВАЯ АВАТАРКА
+   avatar: 'https://i.ibb.co/My7L4c1X/FB06-B57-E-7-E8-C-458-F-AA4-E-04-EA2-E55697-A.png',
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     lastMessage: '📌 Добро пожаловать в Избранное!',
     lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
