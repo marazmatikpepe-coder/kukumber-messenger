@@ -2482,10 +2482,11 @@ function scrollToPost(postId) {
 function loadAndScrollToPost(postId) {
     if (!postId) return;
     
-    function highlightAndScroll(element) {
+    function highlightPost(element) {
         if (!element) return false;
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         var forestColor = getComputedStyle(document.documentElement).getPropertyValue('--forest').trim();
+        if (!forestColor) forestColor = '#228B22';
         element.style.transition = 'background-color 0.3s ease';
         element.style.backgroundColor = forestColor + '40';
         setTimeout(function() {
@@ -2496,9 +2497,9 @@ function loadAndScrollToPost(postId) {
     
     // Сначала пробуем найти пост в уже загруженной ленте
     var postElement = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
-    if (highlightAndScroll(postElement)) return;
+    if (highlightPost(postElement)) return;
     
-    // Если не нашли, загружаем конкретный пост из Firebase
+    // Если не нашли, загружаем и ждём
     database.ref('slices/' + postId).once('value').then(function(snapshot) {
         var post = snapshot.val();
         if (!post) {
@@ -2511,23 +2512,31 @@ function loadAndScrollToPost(postId) {
             switchToTab('reels');
         }
         
-        // Ждём загрузки ленты и затем скроллим
+        var attempts = 0;
+        var maxAttempts = 30;
+        
         var checkInterval = setInterval(function() {
+            attempts++;
             var element = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
+            
             if (element) {
                 clearInterval(checkInterval);
-                highlightAndScroll(element);
+                highlightPost(element);
+            } else if (attempts === 5) {
+                // Перезагружаем ленту если не нашли
+                if (typeof loadSlices === 'function') {
+                    loadSlices();
+                }
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                var finalElement = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
+                if (finalElement) {
+                    highlightPost(finalElement);
+                } else {
+                    showNotification('Пост не загрузился, обновите страницу', 'info');
+                }
             }
         }, 300);
-        
-        // Останавливаем проверку через 5 секунд
-        setTimeout(function() {
-            clearInterval(checkInterval);
-            var finalElement = document.querySelector('.slice-card[data-slice-id="' + postId + '"]');
-            if (!finalElement) {
-                showNotification('Пост загружается, обновите страницу', 'info');
-            }
-        }, 5000);
     }).catch(function(err) {
         console.error('Ошибка загрузки поста:', err);
         showNotification('Ошибка загрузки поста', 'error');
